@@ -3948,8 +3948,10 @@ async function initApp() {
         // 從 Firebase 載入銷售記錄
         salesHistory = await loadSalesFromFirestore();
         
-        // 遷移資料到新格式
-        migrateOldDataToNew();
+        // 只有在沒有從 Firebase 載入到資料時，才執行遷移（初次使用）
+        if (!hasData || products.length === 0) {
+            migrateOldDataToNew();
+        }
         
         // 為沒有 ID 的折扣補上 ID
         let needsSave = false;
@@ -3960,7 +3962,10 @@ async function initApp() {
             }
         });
         
-        migrateBrandNames();
+        // 只在初次使用時執行品牌名稱遷移
+        if (!hasData) {
+            migrateBrandNames();
+        }
         
         if (needsSave) {
             saveDataToFirestore();
