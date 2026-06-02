@@ -7563,38 +7563,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // ============================================
 
         function init() {
-            // 先嘗試載入保存的資料
-            const hasLoadedData = loadDataFromLocalStorage();
-            
-            // 遷移資料到新格式,生成 products 陣列
-            migrateOldDataToNew();
-            
-            // 為沒有 ID 的折扣補上 ID
-            let needsSaveDiscounts = false;
-            discountButtons.forEach((discount, index) => {
-                if (!discount.id) {
-                    discount.id = 'discount_' + Date.now() + '_' + index;
-                    needsSaveDiscounts = true;
-                }
-            });
-            if (needsSaveDiscounts) {
-                saveDataToLocalStorage();
-            }
-            
-            // 自動遷移舊品牌名稱（只執行一次）
-            migrateBrandNames();
-            
-            // 如果沒有保存的資料，使用預設資料
-            if (!hasLoadedData && Object.keys(productData.ta || {}).length === 0) {
-                initDefaultProducts();
-                saveDataToLocalStorage(); // 保存預設資料
-            }
-            
-            renderBrandTabs(); // 新增：動態渲染品牌標籤（會自動調用 loadCategories, loadSubCategories, loadProducts）
-            loadDiscountButtons();
-            loadGiftButtons();
-            loadAddonItems(); // 載入加購項目
-            loadSaleLocationOptions(); // 載入銷售地點選單
+            // ⚠️ 線上版：此函數已被 initApp() 取代，不執行任何動作
+            // Firebase 版本的初始化在 initApp() 中處理
+            console.log('init() called but skipped — using initApp() instead');
         }
 
         // 品牌名稱遷移函數（一次性執行）
