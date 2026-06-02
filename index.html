@@ -6,6 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💎</text></svg>">
     <title>TimuAnchi 銷售系統 v2.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Firebase SDKs -->
@@ -3954,8 +3955,8 @@ async function initApp() {
         // 從 Firebase 載入銷售記錄
         salesHistory = await loadSalesFromFirestore();
         
-        // 只有在沒有從 Firebase 載入到資料時，才執行遷移（初次使用）
-        if (!hasData || products.length === 0) {
+        // 只有完全沒有 Firebase 資料時（初次使用）才執行遷移
+        if (!hasData) {
             migrateOldDataToNew();
         }
         
@@ -6244,8 +6245,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                           `已新增: ${addCount} 個商品\n\n` +
                           '頁面即將重新載入...');
                     
-                    // 重新初始化
-                    init();
+                    // 重新初始化畫面
+                    renderBrandTabs();
+                    loadDiscountButtons();
+                    loadGiftButtons();
+                    loadAddonItems();
+                    loadSaleLocationOptions();
                     closeImportModal();
                     
                 } catch (error) {
@@ -8471,24 +8476,38 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             let idCounter = 1;
             
             // 重建categories
-            categories = {
-                brands: [],  // 改為空陣列
-                mainCategories: {},
-                subCategories: {}
-            };
+            // 線上版修正：不重置 categories，保留從 Firebase 載入的分類資料
+            // 只確保結構存在
+            if (!categories) categories = { brands: [], mainCategories: {}, subCategories: {} };
+            if (!categories.brands) categories.brands = [];
+            if (!categories.mainCategories) categories.mainCategories = {};
+            if (!categories.subCategories) categories.subCategories = {};
             
             Object.keys(productData).forEach(brand => {
                 // 動態添加品牌
                 if (!categories.brands.includes(brand)) {
                     categories.brands.push(brand);
                 }
-                categories.mainCategories[brand] = Object.keys(productData[brand]);
-                categories.subCategories[brand] = {};
+                // 線上版修正：合併而非覆蓋 categories，保留手動新增的分類
+                if (!categories.mainCategories[brand]) {
+                    categories.mainCategories[brand] = [];
+                }
+                if (!categories.subCategories[brand]) {
+                    categories.subCategories[brand] = {};
+                }
                 
                 Object.keys(productData[brand]).forEach(mainCat => {
-                    categories.subCategories[brand][mainCat] = Object.keys(productData[brand][mainCat]);
-                    
+                    // 只補上 categories 裡沒有的分類，不覆蓋已有的
+                    if (!categories.mainCategories[brand].includes(mainCat)) {
+                        categories.mainCategories[brand].push(mainCat);
+                    }
+                    if (!categories.subCategories[brand][mainCat]) {
+                        categories.subCategories[brand][mainCat] = [];
+                    }
                     Object.keys(productData[brand][mainCat]).forEach(subCat => {
+                        if (!categories.subCategories[brand][mainCat].includes(subCat)) {
+                            categories.subCategories[brand][mainCat].push(subCat);
+                        }
                         productData[brand][mainCat][subCat].forEach(oldProduct => {
                             products.push({
                                 id: idCounter++,
@@ -8536,9 +8555,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             productData = {};  // 改為空物件
             categories = { brands: [], mainCategories: {}, subCategories: {} };  // brands 改為空陣列
             nextProductId = 1;
+            brandOrder = [];
             saveDataToLocalStorage();
             showNotification('✅ 商品資料已清除');
-            init();
+            renderBrandTabs();
             closeClearDataModal();
         }
         
@@ -8547,8 +8567,21 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (!confirm('⚠️ 確定要清除所有銷售記錄嗎？\n此操作無法復原！')) return;
             
             salesHistory = [];
-            saveDataToLocalStorage();
-            showNotification('✅ 銷售記錄已清除');
+            // 線上版：同步刪除 Firebase 中所有銷售記錄
+            if (db && currentUser && currentUserRole === 'admin') {
+                db.collection('sales').get().then(snapshot => {
+                    const batch = db.batch();
+                    snapshot.forEach(doc => batch.delete(doc.ref));
+                    return batch.commit();
+                }).then(() => {
+                    showNotification('✅ 銷售記錄已清除');
+                }).catch(e => {
+                    console.error('清除銷售記錄失敗:', e);
+                    showNotification('⚠️ 清除失敗，請重試');
+                });
+            } else {
+                showNotification('✅ 銷售記錄已清除');
+            }
             filterByTime(currentTimeFilter);
             closeClearDataModal();
         }
@@ -8802,7 +8835,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 重新載入主畫面
             if (currentBrand === brand) {
-                init();
+                renderBrandTabs();
+                loadCategories();
             }
         }
 
