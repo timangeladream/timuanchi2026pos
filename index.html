@@ -4355,7 +4355,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         </div>
                     </div>
                 </div>
-            `; }).join('');
+            `).join('');
         }
 
         function updateLocationAnalysis() {
@@ -10140,7 +10140,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         `).join('')}
                     </div>
                 </div>
-            `).join('');
+            `; }).join('');
             
             document.getElementById('variantModal').classList.add('show');
         }
@@ -11403,10 +11403,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <div class="variant-option" onclick="selectAddonVariant('${variantName}', '${option}')">
                                 ${option}
                             </div>
-                        `; }).join('')}
+                        `).join('')}
                     </div>
                 </div>
-            `).join('');
+            `; }).join('');
             
             document.getElementById('variantModal').classList.add('show');
         }
