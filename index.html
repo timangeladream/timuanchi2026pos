@@ -3658,6 +3658,7 @@ async function saveDataToFirestore() {
             products,
             categories,
             brandFullNames,
+            brandOrder,
             nextProductId,
             discountButtons,
             giftRules,
@@ -3695,6 +3696,8 @@ async function loadDataFromFirestore() {
             productData = data.productData || {};
             categories = data.categories || { brands: [], mainCategories: {}, subCategories: {} };
             nextProductId = data.nextProductId || 1;
+            // 載入品牌順序，若無則用 productData 的 key 順序
+            brandOrder = data.brandOrder || Object.keys(data.productData || {});
             discountButtons = data.discountButtons || [];
             giftRules = data.giftRules || [];
             saleLocations = data.saleLocations || [];
@@ -4004,6 +4007,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         
         // 品牌對照表（簡稱 → 全稱）
         let brandFullNames = {};
+        let brandOrder = []; // 品牌排序陣列（線上版新增，解決 Firestore 不保證順序問題）
         
         // 分類資訊（僅用於篩選）
         let categories = {
@@ -7385,7 +7389,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const container = document.getElementById('brandManageList');
             if (!container) return;
             
-            const brands = Object.keys(productData);
+            // 使用 brandOrder 維持順序，並補上未在 brandOrder 中的新品牌
+            const allBrands = Object.keys(productData);
+            brandOrder = brandOrder.filter(b => allBrands.includes(b)); // 移除已刪除的
+            allBrands.forEach(b => { if (!brandOrder.includes(b)) brandOrder.push(b); }); // 補上新的
+            const brands = brandOrder;
             
             if (brands.length === 0) {
                 container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">尚未新增品牌</div>';
@@ -7461,6 +7469,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 delete categories.subCategories[oldName];
             }
             
+            // 更新 brandOrder 中的品牌名稱
+            const orderIdx = brandOrder.indexOf(oldName);
+            if (orderIdx !== -1) brandOrder[orderIdx] = newName;
+            
             saveDataToLocalStorage();
             loadBrandManageList();
             renderBrandTabs();
@@ -7470,22 +7482,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 上移品牌
         function moveBrandUp(index) {
-            const brands = Object.keys(productData);
             if (index === 0) return;
-            
-            // 交換位置
-            const temp = {};
-            brands.forEach((brand, i) => {
-                if (i === index - 1) {
-                    temp[brands[index]] = productData[brands[index]];
-                } else if (i === index) {
-                    temp[brands[index - 1]] = productData[brands[index - 1]];
-                } else {
-                    temp[brand] = productData[brand];
-                }
-            });
-            
-            productData = temp;
+            // 同步 brandOrder
+            const allBrands = Object.keys(productData);
+            brandOrder = brandOrder.filter(b => allBrands.includes(b));
+            allBrands.forEach(b => { if (!brandOrder.includes(b)) brandOrder.push(b); });
+            // 交換 brandOrder 中的位置
+            [brandOrder[index - 1], brandOrder[index]] = [brandOrder[index], brandOrder[index - 1]];
             saveDataToLocalStorage();
             loadBrandManageList();
             renderBrandTabs();
@@ -7494,22 +7497,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 下移品牌
         function moveBrandDown(index) {
-            const brands = Object.keys(productData);
-            if (index === brands.length - 1) return;
-            
-            // 交換位置
-            const temp = {};
-            brands.forEach((brand, i) => {
-                if (i === index) {
-                    temp[brands[index + 1]] = productData[brands[index + 1]];
-                } else if (i === index + 1) {
-                    temp[brands[index]] = productData[brands[index]];
-                } else {
-                    temp[brand] = productData[brand];
-                }
-            });
-            
-            productData = temp;
+            // 同步 brandOrder
+            const allBrands = Object.keys(productData);
+            brandOrder = brandOrder.filter(b => allBrands.includes(b));
+            allBrands.forEach(b => { if (!brandOrder.includes(b)) brandOrder.push(b); });
+            if (index === brandOrder.length - 1) return;
+            // 交換 brandOrder 中的位置
+            [brandOrder[index], brandOrder[index + 1]] = [brandOrder[index + 1], brandOrder[index]];
             saveDataToLocalStorage();
             loadBrandManageList();
             renderBrandTabs();
@@ -7532,6 +7526,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
             
             productData[brandName] = {};
+            brandOrder.push(brandName); // 新品牌加到排序陣列末尾
             saveDataToLocalStorage();
             
             input.value = '';
@@ -7548,6 +7543,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
             
             delete productData[brandKey];
+            brandOrder = brandOrder.filter(b => b !== brandKey); // 從排序中移除
             saveDataToLocalStorage();
             loadBrandManageList();
             renderBrandTabs();
@@ -7747,8 +7743,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const container = document.querySelector('.brand-tabs');
             if (!container) return;
             
-            // 按照 productData 的順序顯示（物件的 key 順序）
-            const brands = Object.keys(productData);
+            // 使用 brandOrder 維持正確順序
+            const allBrands = Object.keys(productData);
+            brandOrder = brandOrder.filter(b => allBrands.includes(b));
+            allBrands.forEach(b => { if (!brandOrder.includes(b)) brandOrder.push(b); });
+            const brands = brandOrder;
             
             container.innerHTML = brands.map((brandKey, index) => {
                 const isActive = index === 0 ? 'active' : '';
