@@ -4355,7 +4355,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `; }).join('');
         }
 
         function updateLocationAnalysis() {
@@ -9324,7 +9324,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             variantGroupCounter = 0;
             
             if (product.variants && Object.keys(product.variants).length > 0) {
-                Object.entries(product.variants).forEach(([variantName, options]) => {
+                const _variantKeys_a = (product.variantKeyOrder || []).filter(k => product.variants[k]);
+                Object.keys(product.variants).forEach(k => { if (!_variantKeys_a.includes(k)) _variantKeys_a.push(k); });
+                _variantKeys_a.forEach(variantName => {
+                    const options = product.variants[variantName];
+                    if (!options) return;
                     const groupId = variantGroupCounter++;
                     const groupHtml = `
                         <div class="variant-group-builder" id="variantGroup${groupId}">
@@ -9479,7 +9483,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 document.getElementById('simplePriceSection').style.display = 'none';
                 document.getElementById('simpleStockSection').style.display = 'none';
                 
-                Object.entries(product.variants).forEach(([variantName, options]) => {
+                // 按 variantKeyOrder 排序確保順序一致
+                const _vkeys_edit = (product.variantKeyOrder || []).filter(k => product.variants[k]);
+                Object.keys(product.variants).forEach(k => { if (!_vkeys_edit.includes(k)) _vkeys_edit.push(k); });
+                _vkeys_edit.forEach(variantName => {
+                    const options = product.variants[variantName];
+                    if (!options) return;
                     const groupId = variantGroupCounter++;
                     const groupHtml = `
                         <div class="variant-group-builder" id="variantGroup${groupId}">
@@ -9997,6 +10006,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
                 if (hasValidVariant) {
                     product.variants = variants;
+                    // 儲存規格 key 的順序，確保 Firestore 讀回後順序一致
+                    product.variantKeyOrder = Object.keys(variants);
                     
                     // 收集規格貨號
                     const variantSkus = {};
@@ -10116,7 +10127,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('variantProductPrice').textContent = `NT$ ${product.price}`;
             
             const container = document.getElementById('variantGroups');
-            container.innerHTML = Object.entries(product.variants).map(([variantName, options]) => `
+            const _vkeys = (product.variantKeyOrder || []).filter(k => product.variants[k]);
+            Object.keys(product.variants).forEach(k => { if (!_vkeys.includes(k)) _vkeys.push(k); });
+            container.innerHTML = _vkeys.map(variantName => { const options = product.variants[variantName]; return `
                 <div class="variant-group">
                     <div class="variant-label">${variantName}</div>
                     <div class="variant-options">
@@ -11380,7 +11393,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('variantProductStock').textContent = '';
             
             const container = document.getElementById('variantGroups');
-            container.innerHTML = Object.entries(addon.variants).map(([variantName, options]) => `
+            const _akeys = (addon.variantKeyOrder || []).filter(k => addon.variants[k]);
+            Object.keys(addon.variants).forEach(k => { if (!_akeys.includes(k)) _akeys.push(k); });
+            container.innerHTML = _akeys.map(variantName => { const options = addon.variants[variantName]; return `
                 <div class="variant-group">
                     <div class="variant-label">${variantName}</div>
                     <div class="variant-options">
@@ -11388,7 +11403,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <div class="variant-option" onclick="selectAddonVariant('${variantName}', '${option}')">
                                 ${option}
                             </div>
-                        `).join('')}
+                        `; }).join('')}
                     </div>
                 </div>
             `).join('');
@@ -11622,7 +11637,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 載入規格資料
             if (addon.variants && Object.keys(addon.variants).length > 0) {
                 // 重建規格群組
-                Object.entries(addon.variants).forEach(([variantName, options]) => {
+                const _akeys_load = (addon.variantKeyOrder || []).filter(k => addon.variants[k]);
+                Object.keys(addon.variants).forEach(k => { if (!_akeys_load.includes(k)) _akeys_load.push(k); });
+                _akeys_load.forEach(variantName => {
+                    const options = addon.variants[variantName];
+                    if (!options) return;
                     const groupId = addonVariantGroupCounter++;
                     const container = document.getElementById('addonVariantGroupsContainer');
                     
@@ -12367,6 +12386,30 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             updateSystemTitle();  // 更新標題
             showNotification('✅ 設定已儲存');
             closeSystemSettings();
+        }
+
+
+        // ===== 規格順序正規化 =====
+        // Firestore 不保證物件 key 順序，載入後統一轉成陣列格式確保順序穩定
+        function normalizeProductVariants(product) {
+            if (!product.variants || typeof product.variants !== 'object' || Array.isArray(product.variants)) return;
+            
+            // 已是陣列格式則跳過
+            const keys = Object.keys(product.variants);
+            if (keys.length === 0) return;
+            
+            // 保留原本的 variants 物件（用於 generateCombinations）
+            // 關鍵：確保每個規格的選項陣列順序正確
+            // variantPrices/Stock/Skus 的 key 是用規格值 join(',') 產生
+            // 只要 variants 的 key 順序一致，combo key 就會一致
+            // 所以我們需要記錄 variants 的 key 順序
+            if (!product.variantKeyOrder) {
+                product.variantKeyOrder = keys;
+            }
+        }
+        
+        function normalizeAllProducts() {
+            products.forEach(p => normalizeProductVariants(p));
         }
 
         // Firebase 啟動 (取代原本的 init())
