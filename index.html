@@ -3962,6 +3962,8 @@ async function initApp() {
         // 從 Firebase 載入設定資料
         const hasData = await loadDataFromFirestore();
         
+        console.log('📌 載入後 addOnItems:', addOnItems.length);
+        
         // 從 Firebase 載入銷售記錄
         salesHistory = await loadSalesFromFirestore();
         
@@ -3969,6 +3971,8 @@ async function initApp() {
         if (!hasData) {
             migrateOldDataToNew();
         }
+        
+        console.log('📌 migrate後 addOnItems:', addOnItems.length);
         
         // 為沒有 ID 的折扣補上 ID
         let needsSave = false;
@@ -3989,11 +3993,13 @@ async function initApp() {
         }
         
         // 渲染 UI
+        console.log('📌 渲染前 addOnItems:', addOnItems.length);
         renderBrandTabs();
         loadDiscountButtons();
         loadGiftButtons();
         loadAddonItems();
         loadSaleLocationOptions();
+        console.log('📌 渲染後 addOnItems:', addOnItems.length);
         
     } catch (e) {
         console.error('initApp 失敗:', e);
