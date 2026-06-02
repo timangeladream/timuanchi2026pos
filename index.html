@@ -6835,7 +6835,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 if (product.variants && Object.keys(product.variants).length > 0) {
                     // 多規格商品
-                    const variantNames = Object.keys(product.variants);
+                    const variantNames = (() => { const vk = (product.variantKeyOrder||[]).filter(k=>product.variants[k]); Object.keys(product.variants).forEach(k=>{if(!vk.includes(k))vk.push(k);}); return vk; })();
                     const variantOptions = Object.values(product.variants);
                     const combinations = generateCombinations(variantOptions);
                     
@@ -6989,7 +6989,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 if (hasVariants) {
                     // 多規格項目 - 展開所有規格組合
-                    const variantNames = Object.keys(item.variants);
+                    const variantNames = (() => { const vk = (item.variantKeyOrder||[]).filter(k=>item.variants[k]); Object.keys(item.variants).forEach(k=>{if(!vk.includes(k))vk.push(k);}); return vk; })();
                     const variantOptions = Object.values(item.variants);
                     
                     // 生成所有規格組合的輔助函數
@@ -10189,12 +10189,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
-            const requiredVariants = Object.keys(currentSelectedProduct.variants || {});
+            // 使用 variantKeyOrder 確保規格順序一致
+            const requiredVariants = (() => {
+                const vkeys = (currentSelectedProduct.variantKeyOrder || []).filter(k => (currentSelectedProduct.variants || {})[k]);
+                Object.keys(currentSelectedProduct.variants || {}).forEach(k => { if (!vkeys.includes(k)) vkeys.push(k); });
+                return vkeys;
+            })();
             const selectedVariantKeys = Object.keys(selectedVariants);
             
             if (requiredVariants.length === selectedVariantKeys.length) {
-                // 所有規格都已選擇，生成組合key
-                const variantKey = requiredVariants.map(key => selectedVariants[key]).join(',');
+                // 所有規格都已選擇，生成組合key（使用 variantKeyOrder 確保順序一致）
+                const orderedKeys = (currentSelectedProduct.variantKeyOrder || []).filter(k => currentSelectedProduct.variants[k]);
+                requiredVariants.forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+                const variantKey = orderedKeys.map(key => selectedVariants[key]).join(',');
                 const sku = currentSelectedProduct.variantSkus[variantKey];
                 const stock = currentSelectedProduct.variantStock ? currentSelectedProduct.variantStock[variantKey] : null;
                 const price = currentSelectedProduct.variantPrices ? currentSelectedProduct.variantPrices[variantKey] : null;
@@ -10268,8 +10275,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             if (!item) return;
             
-            // 檢查是否所有規格都已選擇
-            const requiredVariants = Object.keys(item.variants || {});
+            // 檢查是否所有規格都已選擇（使用 variantKeyOrder 確保順序一致）
+            const requiredVariants = (() => {
+                const vkeys = (item.variantKeyOrder || []).filter(k => (item.variants || {})[k]);
+                Object.keys(item.variants || {}).forEach(k => { if (!vkeys.includes(k)) vkeys.push(k); });
+                return vkeys;
+            })();
             const selectedVariantKeys = Object.keys(selectedVariants);
             
             if (requiredVariants.length > selectedVariantKeys.length) {
@@ -11451,8 +11462,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const selectedVariantKeys = Object.keys(selectedVariants);
             
             if (requiredVariants.length === selectedVariantKeys.length) {
-                // 所有規格都已選擇，生成組合key
-                const variantKey = requiredVariants.map(key => selectedVariants[key]).join(',');
+                // 所有規格都已選擇，生成組合key（使用 variantKeyOrder 確保順序一致）
+                const orderedKeys = (currentSelectedProduct.variantKeyOrder || []).filter(k => currentSelectedProduct.variants[k]);
+                requiredVariants.forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+                const variantKey = orderedKeys.map(key => selectedVariants[key]).join(',');
                 const sku = currentSelectedAddon.variantSkus ? currentSelectedAddon.variantSkus[variantKey] : null;
                 const price = currentSelectedAddon.variantPrices ? currentSelectedAddon.variantPrices[variantKey] : null;
                 const stock = currentSelectedAddon.variantStock ? currentSelectedAddon.variantStock[variantKey] : null;
