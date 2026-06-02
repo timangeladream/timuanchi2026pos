@@ -4566,13 +4566,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             updateOrdersList();
         }
 
-        function toggleSalesDetail(index) {
-            const detailElement = document.getElementById(`salesDetail_${index}`);
-            if (!detailElement) return;
-            
-            const isVisible = detailElement.style.display !== 'none';
-            detailElement.style.display = isVisible ? 'none' : 'block';
-        }
+        // toggleSalesDetail: 完整版定義在下方，此處略過
 
         // 載入折扣按鈕
         function loadDiscountButtons() {
@@ -8411,34 +8405,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         
         // 儲存資料到 localStorage
         function saveDataToLocalStorage() {
-            try {
-                const dataToSave = {
-                    productData,  // 直接儲存 productData（包含所有品牌，即使是空的）
-                    products,  // 同時儲存新格式
-                    categories,
-                    brandFullNames,  // 加入品牌對照表
-                    nextProductId,
-                    discountButtons,
-                    giftRules,
-                    saleLocations,
-                    addOnItems,
-                    systemSettings,
-                    systemConfig,  // 加入系統配置
-                    salesHistory,
-                    lastSaved: new Date().toISOString(),
-                    version: 3  // 版本號更新為 3
-                };
-                localStorage.setItem('jewelryPosData', JSON.stringify(dataToSave));
-                console.log('資料已自動保存', dataToSave);
-            } catch (error) {
-                console.error('保存資料失敗:', error);
+            // 線上版：儲存到 Firebase（非同步）
+            if (!db || !currentUser) {
+                console.warn('⚠️ Firebase 未就緒，略過儲存');
+                return;
             }
+            saveDataToFirestore().then(() => {
+                console.log('✅ 已儲存到 Firebase');
+            }).catch(e => {
+                console.error('❌ Firebase 儲存失敗:', e);
+            });
         }
 
-        // 從 localStorage 載入資料
+        // 從 localStorage 載入資料（線上版：由 Firebase 處理，此函數僅作備用）
         function loadDataFromLocalStorage() {
+            // 線上版：資料由 initApp() 透過 Firebase 載入，此函數不執行
+            return false;
             try {
-                const savedData = localStorage.getItem('jewelryPosData');
+                const savedData = localStorage.getItem('jewelryPosData_DISABLED');
                 if (savedData) {
                     const data = JSON.parse(savedData);
                     
@@ -8606,10 +8590,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (!confirm('⚠️ 確定要清除快取資料嗎？\n\n這將清除本系統的所有資料：\n• 商品資料\n• 銷售記錄\n• 所有設定\n\n清除後頁面將重新載入。\n\n此操作無法復原！')) {
                 return;
             }
-            
-            localStorage.removeItem('jewelryPosData');
-            alert('✅ 快取已清除！\n頁面即將重新載入...');
-            location.reload();
+            // 線上版：清除 Firebase 設定資料
+            if (db && currentUser) {
+                db.collection('settings').doc('system').delete()
+                    .then(() => { alert('✅ 快取已清除！\n頁面即將重新載入...'); location.reload(); })
+                    .catch(e => { console.error(e); alert('清除失敗，請重試'); });
+            } else {
+                alert('✅ 快取已清除！\n頁面即將重新載入...');
+                location.reload();
+            }
         }
         
         // 確認重置系統
@@ -8626,19 +8615,18 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
-            // 執行重置：完全刪除 localStorage
-            localStorage.removeItem('jewelryPosData');
-            showNotification('✅ 系統已重置，頁面將重新載入');
-            setTimeout(() => location.reload(), 1500);
-        }
-        
-        function clearLocalStorage() {
-            if (confirm('確定要清除所有保存的資料嗎？此操作無法復原！')) {
-                localStorage.removeItem('jewelryPosData');
-                showNotification('✅ 資料已清除，頁面將重新載入');
-                setTimeout(() => location.reload(), 1000);
+            // 執行重置：清除 Firebase 資料
+            if (db && currentUser) {
+                db.collection('settings').doc('system').delete()
+                    .then(() => { showNotification('✅ 系統已重置，頁面將重新載入'); setTimeout(() => location.reload(), 1500); })
+                    .catch(e => { console.error(e); showNotification('⚠️ 重置失敗，請重試'); });
+            } else {
+                showNotification('✅ 系統已重置，頁面將重新載入');
+                setTimeout(() => location.reload(), 1500);
             }
         }
+        
+        // clearLocalStorage: 線上版已由上方的定義處理（已移除重複定義）
 
         // === 分類管理功能 ===
         
