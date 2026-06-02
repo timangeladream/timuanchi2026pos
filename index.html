@@ -3672,7 +3672,12 @@ async function saveDataToFirestore() {
         });
         
         await batch.commit();
-        console.log('✅ 資料已儲存到 Firebase');
+        console.log('✅ 資料已儲存到 Firebase', {
+            addOnItems: addOnItems.length,
+            products: products.length,
+            discountButtons: discountButtons.length,
+            brandOrder: brandOrder
+        });
     } catch (e) {
         console.error('Firebase 儲存失敗:', e);
         // fallback to localStorage
@@ -3710,7 +3715,12 @@ async function loadDataFromFirestore() {
                 footerText: '感謝您的購買！\n歡迎再次光臨'
             };
             systemConfig = data.systemConfig || { systemName: '', theme: 'blue' };
-            console.log('✅ 資料已從 Firebase 載入');
+            console.log('✅ 資料已從 Firebase 載入', {
+                addOnItems: addOnItems.length,
+                products: products.length,
+                discountButtons: discountButtons.length,
+                brandOrder: brandOrder
+            });
             return true;
         }
     } catch (e) {
