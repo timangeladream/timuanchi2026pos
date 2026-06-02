@@ -10594,6 +10594,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
+            // 檢查訂單中至少有1件商品（排除加購和贈品）
+            const productCount = orderItems.filter(item => !item.isAddon && !item.isGift).length;
+            if (productCount === 0) {
+                alert('訂單中沒有商品，無法套用折扣！');
+                return;
+            }
+            
             const existing = discounts.find(d => d.discountId === discountId);
             if (existing) {
                 alert('此折扣已套用！');
@@ -10616,6 +10623,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 檢查是否已有折扣(互斥)
             if (discounts.length > 0) {
                 alert('已有折扣套用,一次只能使用一個折扣!');
+                return;
+            }
+            
+            // 檢查訂單中至少有1件商品（排除加購和贈品）
+            const productCount = orderItems.filter(item => !item.isAddon && !item.isGift).length;
+            if (productCount === 0) {
+                alert('訂單中沒有商品，無法套用折扣！');
                 return;
             }
             
@@ -10644,9 +10658,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
-            // 只計算一般商品數量,排除加購項目
+            // 只計算一般商品數量，排除加購項目和贈品
             const totalItems = orderItems
-                .filter(item => !item.isAddon)
+                .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
             
             if (totalItems < count) {
