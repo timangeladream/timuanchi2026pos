@@ -8417,9 +8417,23 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
             
             container.innerHTML = saleLocations.map((location, index) => `
-                <div class="location-item">
-                    <div class="location-item-name">${location}</div>
-                    <button class="delete-location-btn" onclick="deleteLocation(${index})">刪除</button>
+                <div class="location-item" id="location-row-${index}" style="flex-direction:column;align-items:stretch;gap:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div class="location-item-name" id="location-name-${index}">${location}</div>
+                        <div style="display:flex;gap:6px;">
+                            <button onclick="startEditLocation(${index})" style="padding:4px 10px;background:#6c757d;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">✏️ 編輯</button>
+                            <button class="delete-location-btn" onclick="deleteLocation(${index})">刪除</button>
+                        </div>
+                    </div>
+                    <div id="location-edit-${index}" style="display:none;">
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="text" id="location-input-${index}" value="${location}"
+                                style="flex:1;padding:8px;border:2px solid var(--primary-color);border-radius:8px;font-size:14px;"
+                                onkeypress="if(event.key==='Enter')confirmEditLocation(${index})">
+                            <button onclick="confirmEditLocation(${index})" style="padding:8px 14px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">儲存</button>
+                            <button onclick="cancelEditLocation(${index})" style="padding:8px 14px;background:#6c757d;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;">取消</button>
+                        </div>
+                    </div>
                 </div>
             `).join('');
         }
@@ -8457,6 +8471,37 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
         }
         
+        // 編輯銷售地點
+        function startEditLocation(index) {
+            document.querySelectorAll('[id^="location-edit-"]').forEach(el => el.style.display = 'none');
+            const editArea = document.getElementById(`location-edit-${index}`);
+            if (editArea) {
+                editArea.style.display = 'block';
+                const input = document.getElementById(`location-input-${index}`);
+                if (input) { input.focus(); input.select(); }
+            }
+        }
+
+        function cancelEditLocation(index) {
+            const editArea = document.getElementById(`location-edit-${index}`);
+            if (editArea) editArea.style.display = 'none';
+        }
+
+        function confirmEditLocation(index) {
+            const input = document.getElementById(`location-input-${index}`);
+            if (!input) return;
+            const newName = input.value.trim();
+            if (!newName) { alert('地點名稱不能為空白'); return; }
+            if (saleLocations.includes(newName) && saleLocations[index] !== newName) {
+                alert('此地點名稱已存在'); return;
+            }
+            saleLocations[index] = newName;
+            saveDataToLocalStorage();
+            loadLocationList();
+            loadSaleLocationOptions();
+            showNotification('✅ 地點已更新');
+        }
+
         // 切換訂單資訊表單顯示
         function toggleOrderInfoForm() {
             const form = document.getElementById('orderInfoForm');
