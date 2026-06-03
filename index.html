@@ -2515,7 +2515,7 @@
                 </div>
                 <div class="order-info-field">
                     <label>銷售人員</label>
-                    <input type="text" id="salesPerson" placeholder="請輸入姓名" />
+                    <input type="text" id="salesPerson" readonly style="background:#f8f9fa;cursor:default;" />
                 </div>
             </div>
             
@@ -3607,6 +3607,11 @@ function updateUserInfo() {
                 ${currentUserName} (${roleLabel})
             </span>
         `;
+    }
+    // 自動帶入銷售人員欄位
+    const salesPersonEl = document.getElementById('salesPerson');
+    if (salesPersonEl && !salesPersonEl.value) {
+        salesPersonEl.value = currentUserName;
     }
 }
 
@@ -8497,7 +8502,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 清空訂單資訊
         function clearOrderInfo() {
             document.getElementById('saleLocation').value = '';
-            document.getElementById('salesPerson').value = '';
+            document.getElementById('salesPerson').value = currentUserName || '';
             document.getElementById('memberAccount').value = '';
             document.getElementById('memberName').value = '';
             document.getElementById('memberPhone').value = '';
