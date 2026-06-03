@@ -1152,6 +1152,22 @@
             box-shadow: 0 4px 10px rgba(76, 175, 80, 0.35);
         }
 
+        .discount-btn-disabled {
+            background: #ccc !important;
+            color: #888 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7;
+        }
+        .discount-btn-disabled:hover {
+            background: #ccc !important;
+            transform: none !important;
+        }
+        .discount-btn-eligible {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+        }
+        .discount-btn-applied {
+            background: #28a745 !important;
+        }
         .gift-btn-disabled {
             background: linear-gradient(135deg, #ccc 0%, #999 100%);
             box-shadow: 0 2px 6px rgba(153, 153, 153, 0.15);
@@ -4578,12 +4594,60 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // toggleSalesDetail: 完整版定義在下方，此處略過
 
-        // 載入折扣按鈕
+        // 載入折扣按鈕（含條件判斷，未達條件自動停用）
         function loadDiscountButtons() {
-            console.log('🔍 discountButtons:', discountButtons.map(b => ({name:b.name, type:b.type, count:b.count, discount:b.discount, id:b.id})));
             const container = document.getElementById('discountButtons');
-            container.innerHTML = discountButtons.map((btn, index) => {
+            
+            // 計算商品金額與件數（排除加購和贈品）
+            const productSubtotal = orderItems
+                .filter(item => !item.isAddon && !item.isGift)
+                .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const productCount = orderItems
+                .filter(item => !item.isAddon && !item.isGift)
+                .reduce((sum, item) => sum + item.quantity, 0);
+            const hasDiscount = discounts.length > 0;
+            
+            container.innerHTML = discountButtons.map((btn) => {
                 let onclick = '';
+                let isEligible = true;
+                let statusText = '';
+                let btnClass = 'discount-btn';
+                
+                // 判斷條件是否滿足
+                if (btn.type === 'percent' || btn.type === 'fixed') {
+                    // 全單折扣：至少要有1件商品
+                    isEligible = productCount > 0;
+                    if (!isEligible) statusText = ' (無商品)';
+                    
+                } else if (btn.type === 'minAmountPercent' || btn.type === 'minAmountFixed') {
+                    // 滿額折扣：商品金額需達門檻
+                    isEligible = productSubtotal >= btn.minAmount;
+                    if (!isEligible) {
+                        const diff = btn.minAmount - productSubtotal;
+                        statusText = ` 還差${diff}元`;
+                    }
+                    
+                } else if (btn.type === 'buyNPercent' || btn.type === 'buyNFixed' || btn.type === 'buyN') {
+                    // 任選N件：商品件數需達門檻
+                    isEligible = productCount >= btn.count;
+                    if (!isEligible) {
+                        const diff = btn.count - productCount;
+                        statusText = ` 還差${diff}件`;
+                    }
+                }
+                
+                // 已套用其他折扣則全部停用
+                if (hasDiscount) {
+                    isEligible = false;
+                    statusText = '';
+                }
+                
+                // 設定按鈕樣式
+                if (!isEligible) {
+                    btnClass = 'discount-btn discount-btn-disabled';
+                }
+                
+                // 設定 onclick
                 if (btn.type === 'percent') {
                     onclick = `applyPercentDiscount('${btn.id}', '${btn.name}', ${btn.value})`;
                 } else if (btn.type === 'fixed') {
@@ -4599,7 +4663,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 } else if (btn.type === 'buyN') {
                     onclick = `applyBuyNDiscount('${btn.id}', '${btn.name}', ${btn.count}, ${btn.discount})`;
                 }
-                return `<button class="discount-btn" onclick="${onclick}">${btn.name}</button>`;
+                
+                return `<button class="${btnClass}" onclick="${onclick}" ${!isEligible ? 'disabled' : ''}>${btn.name}${statusText}</button>`;
             }).join('');
         }
 
@@ -10474,8 +10539,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             updateTotal();
             
-            // 更新贈品按鈕狀態
+            // 更新贈品與折扣按鈕狀態
             loadGiftButtons();
+            loadDiscountButtons();
             
             // 更新按鈕狀態
             const checkoutBtn = document.getElementById('checkoutBtn');
@@ -10655,7 +10721,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 任選N件折扣
         function applyBuyNDiscount(discountId, name, count, discount) {
-            console.log('🔍 applyBuyNDiscount 被呼叫', {count, discount, orderItems: orderItems.length});
             // 檢查是否已有折扣(互斥)
             if (discounts.length > 0) {
                 alert('已有折扣套用,一次只能使用一個折扣!');
@@ -10808,7 +10873,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 任選N件固定金額折扣
         function applyBuyNFixedDiscount(discountId, name, count, discount) {
-            console.log('🔍 applyBuyNFixedDiscount 被呼叫', {count, discount, orderItems: orderItems.length});
             // 檢查是否已有折扣(互斥)
             if (discounts.length > 0) {
                 alert('已有折扣套用,一次只能使用一個折扣!');
