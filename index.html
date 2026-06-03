@@ -4727,12 +4727,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 // 已贈完標籤
                 const outOfStockLabel = isOutOfStock ? '<div class="sold-out-label">已贈完</div>' : '';
                 
-                // 組合顯示文字
+                // 組合顯示文字（加入贈品名稱）
+                const giftNameText = gift.giftName ? `<br><span style="font-size: 11px; opacity: 0.9;">🎁 ${gift.giftName}${gift.giftQty > 1 ? ' x' + gift.giftQty : ''}</span>` : '';
                 let displayText = gift.name + statusText;
                 const skuText = gift.giftSku ? `<br><span style="font-size: 10px; opacity: 0.8;">貨號: ${gift.giftSku}</span>` : '';
                 const stockText = gift.giftStock !== undefined ? `<br><span style="font-size: 10px; opacity: 0.8;">庫存: ${gift.giftStock}</span>` : '';
                 
-                return `<button class="${buttonClass}" onclick="applyGift('${gift.id}')" id="gift-btn-${gift.id}" ${!isEligible || alreadyGifted || isOutOfStock ? 'disabled' : ''} style="position: relative;">${displayText}${skuText}${stockText}${outOfStockLabel}</button>`;
+                return `<button class="${buttonClass}" onclick="applyGift('${gift.id}')" id="gift-btn-${gift.id}" ${!isEligible || alreadyGifted || isOutOfStock ? 'disabled' : ''} style="position: relative;">${displayText}${giftNameText}${skuText}${stockText}${outOfStockLabel}</button>`;
             }).join('');
         }
 
