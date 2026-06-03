@@ -11015,7 +11015,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (item.isAddon) {
                     // 加購項目
                     targetItem = addOnItems.find(addon => addon.id === item.id);
-                    console.log('🔍 加購庫存扣除 前', item.name, 'stock:', targetItem ? targetItem.stock : '找不到');
                 } else {
                     // 一般商品
                     targetItem = products.find(p => p.id === item.id);
@@ -11023,7 +11022,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 if (targetItem) {
                     // 如果有規格，扣除對應規格的庫存
-                    const stockBefore = item.isAddon ? (targetItem.stock) : null;
                     if (item.selectedVariants && Object.keys(item.selectedVariants).length > 0) {
                         if (targetItem.variantStock) {
                             // 使用 variantKeyOrder 確保 key 順序與儲存時一致
@@ -11045,9 +11043,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             // 確保庫存不會是負數
                             if (targetItem.stock < 0) {
                                 targetItem.stock = 0;
-                            }
-                            if (item.isAddon) {
-                                console.log('🔍 加購庫存扣除 後', item.name, 'stock:', targetItem.stock, 'addOnItems同步:', addOnItems.find(a=>a.id===item.id)?.stock);
                             }
                             
                             // 同時更新 productData
@@ -11122,6 +11117,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 重新載入商品列表以顯示更新後的庫存
             loadProducts();
+            loadAddonItems(); // 更新加購項目庫存顯示
             
             // 儲存商品庫存變動到 Firebase
             saveDataToLocalStorage();
@@ -12271,7 +12267,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (item.isAddon) {
                     // 加購項目
                     targetItem = addOnItems.find(addon => addon.id === item.id);
-                    console.log('🔍 加購庫存扣除 前', item.name, 'stock:', targetItem ? targetItem.stock : '找不到');
                 } else {
                     // 一般商品
                     targetItem = products.find(p => p.id === item.id);
@@ -12333,6 +12328,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             saveDataToLocalStorage();
             loadProducts();
+            loadAddonItems(); // 更新加購項目庫存顯示
             filterByTime(currentTimeFilter);
             showNotification('✅ 訂單已取消，庫存已回復');
         }
