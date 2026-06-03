@@ -4490,7 +4490,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 顯示訂單列表
             container.innerHTML = currentPageData.map(sale => {
                 const actualIndex = salesHistory.indexOf(sale);
-                const displayTime = sale.timestampDisplay || new Date(sale.timestamp).toLocaleString('zh-TW');
+                const displayTime = sale.timestampDisplay ? sale.timestampDisplay.replace(/上午|下午/g, '').replace(/(\d+):(\d+):(\d+)/, (m, h, min, s) => { const isPM = sale.timestampDisplay.includes('下午'); let hour = parseInt(h); if (isPM && hour !== 12) hour += 12; if (!isPM && hour === 12) hour = 0; return String(hour).padStart(2,'0') + ':' + min + ':' + s; }) : (sale.timestamp ? new Date(sale.timestamp).toLocaleString('zh-TW', {hour12: false}) : '');
                 return `
                     <div class="sales-record-item">
                         <div class="sales-record-header">
@@ -4515,7 +4515,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         </div>
                         
                         <div id="salesDetail_${actualIndex}" class="sales-detail" style="display: none;">
-                            ${sale.status === 'cancelled' ? '<div class="order-cancelled-notice">❌ 此訂單已取消</div>' : ''}
+                            ${sale.status === 'cancelled' ? `<div class="order-cancelled-notice">❌ 此訂單已取消${sale.cancelledAtDisplay ? `<span style="font-size:11px;font-weight:400;margin-left:8px;opacity:0.8;">（${sale.cancelledAtDisplay}）</span>` : ''}</div>` : ''}
                             ${sale.memberName || sale.memberPhone ? `
                             <div class="sales-record-info" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
                                 顧客：${sale.memberName || ''} ${sale.memberPhone ? `(${sale.memberPhone})` : ''}
@@ -11167,7 +11167,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const saleRecord = {
                 ...orderInfo,
                 timestamp: firebase.firestore.Timestamp.now(),
-                timestampDisplay: new Date().toLocaleString('zh-TW'),
+                timestampDisplay: new Date().toLocaleString('zh-TW', {hour12: false}),
                 items: JSON.parse(JSON.stringify(orderItems)),
                 discounts: discountSnapshot,
                 discountName: discountSnapshot.map(d => d.name).join(', ') || '無',
@@ -11250,7 +11250,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 準備訂單資訊
             const orderInfo = {
                 orderNumber: sale.orderNumber || '無',
-                orderDate: sale.timestampDisplay || new Date(sale.timestamp).toLocaleString('zh-TW'),
+                orderDate: sale.timestampDisplay || new Date(sale.timestamp).toLocaleString('zh-TW', {hour12: false}),
                 saleLocation: sale.saleLocation || '',
                 salesPerson: sale.salesPerson || '',
                 memberAccount: sale.memberAccount || '',
@@ -12394,7 +12394,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 標記訂單為已取消
             sale.status = 'cancelled';
             sale.cancelledAt = new Date().toISOString();
-            sale.cancelledAtDisplay = new Date().toLocaleString('zh-TW');
+            sale.cancelledAtDisplay = new Date().toLocaleString('zh-TW', {hour12: false});
             
             // 同步到 Firebase
             if (sale._firebaseId) {
