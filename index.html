@@ -11071,19 +11071,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 加購項目庫存有規格的情況也用 variantKeyOrder 確保 key 正確
             // （上方 variantKey 生成已使用 variantKeyOrder，這裡不需額外處理）
             
-            // 記錄銷售（包含訂單資訊）
-            salesHistory.push({
-                ...orderInfo,
-                timestamp: new Date().toISOString(),
-                timestampDisplay: new Date().toLocaleString('zh-TW'),
-                items: JSON.parse(JSON.stringify(orderItems)),
-                discounts: discountSnapshot, // 儲存折扣快照陣列
-                discountName: discountSnapshot.map(d => d.name).join(', ') || '無',
-                discountAmount: discountAmount,
-                subtotal: subtotal,
-                total: total
-            });
-
             // 儲存銷售記錄到 Firebase
             const saleRecord = {
                 ...orderInfo,
