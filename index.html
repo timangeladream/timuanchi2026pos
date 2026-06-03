@@ -3847,24 +3847,44 @@ async function loadUserList() {
         }
         
         container.innerHTML = users.map(u => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;">
-                <div>
-                    <div style="font-weight:600;font-size:14px;">${u.name || '未設定姓名'}</div>
-                    <div style="font-size:12px;color:#666;">${u.email}</div>
-                    <div style="font-size:11px;color:${u.role === 'admin' ? '#D4AF37' : '#28a745'};">
-                        ${u.role === 'admin' ? '👑 管理員' : '💰 銷售員'}
+            <div id="user-row-${u.id}" style="padding:12px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <div id="user-name-display-${u.id}" style="font-weight:600;font-size:14px;">${u.name || '未設定姓名'}</div>
+                        <div style="font-size:12px;color:#666;">${u.email}</div>
+                        <div style="font-size:11px;color:${u.role === 'admin' ? '#D4AF37' : '#28a745'};">
+                            ${u.role === 'admin' ? '👑 管理員' : '💰 銷售員'}
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                        <button onclick="startEditUserName('${u.id}','${(u.name || '').replace(/'/g, "\'")}')" style="padding:6px 10px;background:#6c757d;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">
+                            ✏️ 改名
+                        </button>
+                        ${u.id !== currentUser.uid ? `
+                        <button onclick="toggleUserRole('${u.id}','${u.role}')" style="padding:6px 10px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">
+                            切換角色
+                        </button>
+                        <button onclick="deleteUser('${u.id}','${u.name || u.email}')" style="padding:6px 10px;background:#dc3545;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">
+                            刪除
+                        </button>
+                        ` : '<span style="font-size:12px;color:#999;">(目前帳號)</span>'}
                     </div>
                 </div>
-                ${u.id !== currentUser.uid ? `
-                <div style="display:flex;gap:8px;">
-                    <button onclick="toggleUserRole('${u.id}','${u.role}')" style="padding:6px 12px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">
-                        切換角色
-                    </button>
-                    <button onclick="deleteUser('${u.id}','${u.name || u.email}')" style="padding:6px 12px;background:#dc3545;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">
-                        刪除
-                    </button>
+                <!-- 編輯名稱區域（預設隱藏） -->
+                <div id="user-edit-${u.id}" style="display:none;margin-top:10px;display:none;">
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="text" id="user-name-input-${u.id}" value="${u.name || ''}" 
+                            placeholder="輸入新名稱"
+                            style="flex:1;padding:8px;border:2px solid var(--primary-color);border-radius:8px;font-size:14px;"
+                            onkeypress="if(event.key==='Enter')confirmEditUserName('${u.id}')">
+                        <button onclick="confirmEditUserName('${u.id}')" style="padding:8px 14px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">
+                            儲存
+                        </button>
+                        <button onclick="cancelEditUserName('${u.id}')" style="padding:8px 14px;background:#6c757d;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;">
+                            取消
+                        </button>
+                    </div>
                 </div>
-                ` : '<span style="font-size:12px;color:#999;">(目前帳號)</span>'}
             </div>
         `).join('');
     } catch (e) {
