@@ -3593,7 +3593,7 @@ async function showApp() {
 function updateUserInfo() {
     const userInfoEl = document.getElementById('headerUserInfo');
     if (userInfoEl) {
-        const roleLabel = currentUserRole === 'admin' ? '管理員' : '收銀員';
+        const roleLabel = currentUserRole === 'admin' ? '管理員' : '銷售員';
         const roleColor = currentUserRole === 'admin' ? '#D4AF37' : '#a8d8ea';
         userInfoEl.innerHTML = `
             <span style="font-size:12px; color:${roleColor};">
@@ -3610,7 +3610,7 @@ function applyRolePermissions() {
         document.querySelectorAll('.admin-only').forEach(el => {
             el.style.display = 'none';
         });
-        // 隱藏歷史記錄 Tab (收銀員在 history tab 只看自己的，用 filter)
+        // 隱藏歷史記錄 Tab (銷售員在 history tab 只看自己的，用 filter)
     }
 }
 
@@ -3739,7 +3739,7 @@ async function loadDataFromFirestore() {
 async function saveSaleToFirestore(saleData) {
     if (!db || !currentUser) return;
     try {
-        // 加入收銀員資訊
+        // 加入銷售員資訊
         const saleWithCashier = {
             ...saleData,
             cashierId: currentUser.uid,
@@ -3762,7 +3762,7 @@ async function loadSalesFromFirestore() {
             // 管理員看全部
             query = db.collection('sales').orderBy('timestamp', 'desc').limit(500);
         } else {
-            // 收銀員只看自己的
+            // 銷售員只看自己的
             query = db.collection('sales')
                 .where('cashierId', '==', currentUser.uid)
                 .orderBy('timestamp', 'desc')
@@ -3845,7 +3845,7 @@ async function loadUserList() {
                     <div style="font-weight:600;font-size:14px;">${u.name || '未設定姓名'}</div>
                     <div style="font-size:12px;color:#666;">${u.email}</div>
                     <div style="font-size:11px;color:${u.role === 'admin' ? '#D4AF37' : '#28a745'};">
-                        ${u.role === 'admin' ? '👑 管理員' : '💰 收銀員'}
+                        ${u.role === 'admin' ? '👑 管理員' : '💰 銷售員'}
                     </div>
                 </div>
                 ${u.id !== currentUser.uid ? `
@@ -3919,7 +3919,7 @@ async function createNewUser() {
 
 async function toggleUserRole(uid, currentRole) {
     const newRole = currentRole === 'admin' ? 'cashier' : 'admin';
-    const roleName = newRole === 'admin' ? '管理員' : '收銀員';
+    const roleName = newRole === 'admin' ? '管理員' : '銷售員';
     if (!confirm(`確定要將此帳號切換為「${roleName}」嗎？`)) return;
     
     try {
@@ -4012,7 +4012,7 @@ async function initApp() {
 }
 
 // ============================================================
-// 修改 checkout 加入收銀員資訊
+// 修改 checkout 加入銷售員資訊
 // ============================================================
 const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
@@ -12536,7 +12536,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <div class="form-group">
                     <label>角色</label>
                     <select id="newUserRole" style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:14px;">
-                        <option value="cashier">💰 收銀員</option>
+                        <option value="cashier">💰 銷售員</option>
                         <option value="admin">👑 管理員</option>
                     </select>
                 </div>
