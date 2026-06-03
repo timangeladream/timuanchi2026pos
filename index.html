@@ -4454,7 +4454,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                     ${sale.orderNumber || '無'} <span style="font-size: 12px; color: #999;">▼</span>
                                 </div>
                                 <div class="sales-record-info">
-                                    ${displayTime} ${sale.saleLocation ? `｜ ${sale.saleLocation}` : ''}
+                                    ${displayTime}
+                                    ${(sale.saleLocation || sale.cashierName) ? `<br>${sale.saleLocation || ''} ${sale.cashierName ? `｜ ${sale.cashierName}` : ''}` : ''}
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
