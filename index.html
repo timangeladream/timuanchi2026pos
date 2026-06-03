@@ -11015,7 +11015,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (item.isAddon) {
                     // 加購項目
                     targetItem = addOnItems.find(addon => addon.id === item.id);
-                    console.log('🔍 加購庫存扣除', item.name, 'targetItem:', targetItem ? `stock:${targetItem.stock}` : '找不到');
+                    console.log('🔍 加購庫存扣除 前', item.name, 'stock:', targetItem ? targetItem.stock : '找不到');
                 } else {
                     // 一般商品
                     targetItem = products.find(p => p.id === item.id);
@@ -11023,6 +11023,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 if (targetItem) {
                     // 如果有規格，扣除對應規格的庫存
+                    const stockBefore = item.isAddon ? (targetItem.stock) : null;
                     if (item.selectedVariants && Object.keys(item.selectedVariants).length > 0) {
                         if (targetItem.variantStock) {
                             // 使用 variantKeyOrder 確保 key 順序與儲存時一致
@@ -11044,6 +11045,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             // 確保庫存不會是負數
                             if (targetItem.stock < 0) {
                                 targetItem.stock = 0;
+                            }
+                            if (item.isAddon) {
+                                console.log('🔍 加購庫存扣除 後', item.name, 'stock:', targetItem.stock, 'addOnItems同步:', addOnItems.find(a=>a.id===item.id)?.stock);
                             }
                             
                             // 同時更新 productData
@@ -12267,7 +12271,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (item.isAddon) {
                     // 加購項目
                     targetItem = addOnItems.find(addon => addon.id === item.id);
-                    console.log('🔍 加購庫存扣除', item.name, 'targetItem:', targetItem ? `stock:${targetItem.stock}` : '找不到');
+                    console.log('🔍 加購庫存扣除 前', item.name, 'stock:', targetItem ? targetItem.stock : '找不到');
                 } else {
                     // 一般商品
                     targetItem = products.find(p => p.id === item.id);
