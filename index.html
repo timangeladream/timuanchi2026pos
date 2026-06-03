@@ -4580,6 +4580,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 載入折扣按鈕
         function loadDiscountButtons() {
+            console.log('🔍 discountButtons:', discountButtons.map(b => ({name:b.name, type:b.type, count:b.count, discount:b.discount, id:b.id})));
             const container = document.getElementById('discountButtons');
             container.innerHTML = discountButtons.map((btn, index) => {
                 let onclick = '';
@@ -10654,6 +10655,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 任選N件折扣
         function applyBuyNDiscount(discountId, name, count, discount) {
+            console.log('🔍 applyBuyNDiscount 被呼叫', {count, discount, orderItems: orderItems.length});
             // 檢查是否已有折扣(互斥)
             if (discounts.length > 0) {
                 alert('已有折扣套用,一次只能使用一個折扣!');
@@ -10806,6 +10808,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 任選N件固定金額折扣
         function applyBuyNFixedDiscount(discountId, name, count, discount) {
+            console.log('🔍 applyBuyNFixedDiscount 被呼叫', {count, discount, orderItems: orderItems.length});
             // 檢查是否已有折扣(互斥)
             if (discounts.length > 0) {
                 alert('已有折扣套用,一次只能使用一個折扣!');
