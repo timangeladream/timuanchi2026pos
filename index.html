@@ -2345,7 +2345,10 @@
     <div class="header">
         <div class="header-content">
             <div style="display:flex;flex-direction:column;gap:2px;">
-                <h1 id="systemTitle">銷售系統</h1>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <h1 id="systemTitle">銷售系統</h1>
+                    <span id="headerDate" style="font-size:12px;color:rgba(255,255,255,0.75);font-weight:400;"></span>
+                </div>
                 <div id="headerUserInfo"></div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
@@ -3613,6 +3616,15 @@ function updateUserInfo() {
     const salesPersonEl = document.getElementById('salesPerson');
     if (salesPersonEl && !salesPersonEl.value) {
         salesPersonEl.value = currentUserName;
+    }
+    // 顯示今日日期
+    const dateEl = document.getElementById('headerDate');
+    if (dateEl) {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        dateEl.textContent = `${y}/${m}/${d}`;
     }
 }
 
