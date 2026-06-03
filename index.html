@@ -4595,6 +4595,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     onclick = `applyBuyNPercentDiscount('${btn.id}', '${btn.name}', ${btn.count}, ${btn.value})`;
                 } else if (btn.type === 'buyNFixed') {
                     onclick = `applyBuyNFixedDiscount('${btn.id}', '${btn.name}', ${btn.count}, ${btn.discount})`;
+                } else if (btn.type === 'buyN') {
+                    onclick = `applyBuyNDiscount('${btn.id}', '${btn.name}', ${btn.count}, ${btn.discount})`;
                 }
                 return `<button class="discount-btn" onclick="${onclick}">${btn.name}</button>`;
             }).join('');
