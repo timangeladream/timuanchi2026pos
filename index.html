@@ -4251,6 +4251,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         const maxDisplayRecords = 50;  // 最多顯示50筆
 
         function filterByTime(filter) {
+            console.log('📌 filterByTime 呼叫:', filter, 'salesHistory:', salesHistory.length);
             currentTimeFilter = filter;
             currentPage = 1;  // 重置到第一頁
             
