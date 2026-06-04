@@ -3915,7 +3915,7 @@ async function loadUserList() {
                     </div>
                 </div>
                 <!-- 編輯名稱區域（預設隱藏） -->
-                <div id="user-edit-${u.id}" style="display:none;margin-top:10px;display:none;">
+                <div id="user-edit-${u.id}" style="display:none;margin-top:10px;">
                     <div style="display:flex;gap:8px;align-items:center;">
                         <input type="text" id="user-name-input-${u.id}" value="${u.name || ''}" 
                             placeholder="輸入新名稱"
@@ -4002,7 +4002,66 @@ async function toggleUserRole(uid, currentRole) {
     }
 }
 
-async function deleteUser(uid, name) {
+// 開始編輯名稱
+        function startEditUserName(uid, currentName) {
+            document.querySelectorAll('[id^="user-edit-"]').forEach(el => el.style.display = 'none');
+            const editArea = document.getElementById('user-edit-' + uid);
+            if (editArea) {
+                editArea.style.display = 'block';
+                const input = document.getElementById('user-name-input-' + uid);
+                if (input) { input.focus(); input.select(); }
+            }
+        }
+
+        function cancelEditUserName(uid) {
+            const editArea = document.getElementById('user-edit-' + uid);
+            if (editArea) editArea.style.display = 'none';
+        }
+
+        async function confirmEditUserName(uid) {
+            const input = document.getElementById('user-name-input-' + uid);
+            if (!input) return;
+            const newName = input.value.trim();
+            if (!newName) { alert('名稱不能為空白'); return; }
+
+            try {
+                // 更新用戶名稱
+                await db.collection('users').doc(uid).update({ name: newName });
+
+                // 同步更新該用戶所有歷史訂單的 cashierName
+                showNotification('⏳ 更新中，請稍候...');
+                const salesSnapshot = await db.collection('sales')
+                    .where('cashierId', '==', uid)
+                    .get();
+
+                if (!salesSnapshot.empty) {
+                    const batch = db.batch();
+                    salesSnapshot.forEach(doc => {
+                        batch.update(doc.ref, { cashierName: newName });
+                    });
+                    await batch.commit();
+                    console.log('✅ 已更新 ' + salesSnapshot.size + ' 筆訂單的銷售員名稱');
+                }
+
+                // 如果是目前登入的用戶，同步更新 header 顯示
+                if (uid === currentUser.uid) {
+                    currentUserName = newName;
+                    updateUserInfo();
+                }
+
+                // 重新載入銷售記錄
+                salesHistory = await loadSalesFromFirestore();
+                filterByTime(currentTimeFilter);
+
+                showNotification('✅ 名稱已更新，歷史訂單同步完成');
+                await loadUserList();
+            } catch (e) {
+                console.error('更新失敗:', e);
+                alert('更新失敗，請重試');
+            }
+        }
+
+        async function deleteUser(uid, name) {
     if (!confirm(`確定要刪除帳號「${name}」嗎？\n此操作無法復原！`)) return;
     
     try {
