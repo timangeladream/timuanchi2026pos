@@ -3772,7 +3772,11 @@ async function saveSaleToFirestore(saleData) {
             cashierName: currentUserName,
             cashierRole: currentUserRole
         };
-        await db.collection('sales').add(saleWithCashier);
+        // 清除所有 undefined 值（Firebase 不允許 undefined）
+        const cleanData = JSON.parse(JSON.stringify(saleWithCashier, (key, value) => {
+            return value === undefined ? null : value;
+        }));
+        await db.collection('sales').add(cleanData);
         console.log('✅ 銷售記錄已儲存到 Firebase');
     } catch (e) {
         console.error('銷售記錄儲存失敗:', e);
