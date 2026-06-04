@@ -4299,6 +4299,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return new Date(ts); // ISO string
             };
 
+            // Debug: 印出每筆訂單的 timestamp 解析結果
+            salesHistory.forEach((sale, i) => {
+                const d = parseTimestamp(sale.timestamp);
+                console.log(`📌 訂單 ${i}: timestamp=${JSON.stringify(sale.timestamp)}, parsed=${d}, inRange=${d >= startDate && d <= endDate}`);
+            });
+            console.log('📌 startDate:', startDate, 'endDate:', endDate);
+
             // 用於統計的篩選 (排除已取消)
             filteredSales = salesHistory.filter(sale => {
                 const saleDate = parseTimestamp(sale.timestamp);
