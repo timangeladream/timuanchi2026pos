@@ -3784,13 +3784,12 @@ async function loadSalesFromFirestore() {
     try {
         let query;
         if (currentUserRole === 'admin') {
-            // 管理員看全部
+            // 管理員看全部（依時間排序）
             query = db.collection('sales').orderBy('timestamp', 'desc').limit(500);
         } else {
-            // 銷售員只看自己的
+            // 銷售員只看自己的（不加 orderBy 避免複合索引問題，在記憶體中排序）
             query = db.collection('sales')
                 .where('cashierId', '==', currentUser.uid)
-                .orderBy('timestamp', 'desc')
                 .limit(200);
         }
         const snapshot = await query.get();
@@ -3802,6 +3801,12 @@ async function loadSalesFromFirestore() {
                 _firebaseId: doc.id,
                 timestamp: data.timestamp?.toDate?.()?.toISOString() || data.timestamp
             });
+        });
+        // 在記憶體中依時間排序（新到舊）
+        sales.sort((a, b) => {
+            const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return tb - ta;
         });
         return sales;
     } catch (e) {

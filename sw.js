@@ -1,4 +1,4 @@
-const CACHE_NAME = 'timuanchi-pos-v1';
+const CACHE_NAME = 'timuanchi-pos-v2';
 const urlsToCache = [
   './',
   './index.html'
@@ -27,12 +27,22 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// 攔截請求：優先使用網路，失敗才用快取
+// 攔截請求：只快取 GET 請求，POST 等其他方法直接走網路
 self.addEventListener('fetch', event => {
+  // 只處理 GET 請求
+  if (event.request.method !== 'GET') return;
+  
+  // Firebase API 請求直接走網路，不快取
+  if (event.request.url.includes('firestore.googleapis.com') ||
+      event.request.url.includes('identitytoolkit.googleapis.com') ||
+      event.request.url.includes('firebase') ||
+      event.request.url.includes('googleapis.com')) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // 網路請求成功，更新快取
         if (response && response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then(cache => {
@@ -42,7 +52,6 @@ self.addEventListener('fetch', event => {
         return response;
       })
       .catch(() => {
-        // 網路失敗，從快取取得
         return caches.match(event.request);
       })
   );
