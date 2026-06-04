@@ -2171,11 +2171,18 @@
             border-radius: 12px;
             box-shadow: var(--shadow);
             margin: 10px 10px 10px 10px;
+            display: flex;
+            align-items: center;
+            padding-right: 10px;
+        }
+        .search-box {
+            flex: 1;
         }
         .search-box {
             position: relative;
             display: flex;
             align-items: center;
+            flex: 1;
         }
         .search-input {
             flex: 1;
@@ -12848,9 +12855,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             } catch (e) {
                 closeScanner();
                 if (e.name === 'NotAllowedError') {
-                    alert('請允許相機存取權限後再試');
+                    alert('請允許相機存取權限\n\n設定方式：\niPhone：設定 → Safari → 相機 → 允許\nAndroid：點網址列左側鎖頭 → 相機 → 允許');
+                } else if (e.name === 'NotFoundError') {
+                    alert('找不到相機裝置，請確認設備有相機');
+                } else if (e.name === 'NotSupportedError') {
+                    alert('此瀏覽器不支援相機功能，請使用 Safari（iPhone）或 Chrome（Android）');
                 } else {
-                    alert('無法開啟相機：' + e.message);
+                    alert('無法開啟相機：' + e.message + '\n\n請確認：\n1. 使用 Safari（iPhone）或 Chrome（Android）\n2. 網址為 https:// 開頭\n3. 已允許相機存取權限');
                 }
             }
         }
