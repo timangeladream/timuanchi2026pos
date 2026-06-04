@@ -10873,8 +10873,53 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         function updateQuantity(index, change) {
-            orderItems[index].quantity += change;
-            if (orderItems[index].quantity <= 0) {
+            const item = orderItems[index];
+            
+            // 增加數量時檢查庫存上限
+            if (change > 0) {
+                let maxStock = 0;
+
+                if (item.isAddon) {
+                    // 加購項目
+                    const targetAddon = addOnItems.find(a => a.id === item.id);
+                    if (targetAddon) {
+                        if (item.selectedVariants && targetAddon.variantStock) {
+                            const orderedKeys = (targetAddon.variantKeyOrder || []).filter(k => (targetAddon.variants || {})[k]);
+                            Object.keys(targetAddon.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+                            const variantKey = orderedKeys.map(k => item.selectedVariants[k]).join(',');
+                            maxStock = targetAddon.variantStock[variantKey] ?? 0;
+                        } else {
+                            maxStock = targetAddon.stock ?? 0;
+                        }
+                    }
+                } else if (item.isGift) {
+                    // 贈品
+                    const targetGift = giftRules.find(g => g.id === item.id);
+                    maxStock = targetGift?.giftStock ?? 0;
+                } else {
+                    // 一般商品
+                    if (item.selectedVariants) {
+                        const targetProduct = products.find(p => p.id === item.id);
+                        if (targetProduct && targetProduct.variantStock) {
+                            const orderedKeys = (targetProduct.variantKeyOrder || []).filter(k => (targetProduct.variants || {})[k]);
+                            Object.keys(targetProduct.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+                            const variantKey = orderedKeys.map(k => item.selectedVariants[k]).join(',');
+                            maxStock = targetProduct.variantStock[variantKey] ?? 0;
+                        }
+                    } else {
+                        const targetProduct = products.find(p => p.id === item.id);
+                        maxStock = targetProduct?.stock ?? 0;
+                    }
+                }
+
+                if (item.quantity >= maxStock) {
+                    showNotification(`⚠️ 已達庫存上限（${maxStock} 件）`);
+                    return;
+                }
+            }
+            
+            item.quantity += change;
+            if (item.quantity <= 0) {
                 orderItems.splice(index, 1);
             }
             checkAndRemoveInvalidDiscounts();
