@@ -3809,9 +3809,10 @@ async function loadSalesFromFirestore() {
             const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
             return tb - ta;
         });
+        console.log('📌 Firebase 載入銷售記錄:', sales.length, '筆');
         return sales;
     } catch (e) {
-        console.error('載入銷售記錄失敗:', e);
+        console.error('❌ 載入銷售記錄失敗:', e);
         return [];
     }
 }
@@ -4021,6 +4022,7 @@ async function initApp() {
         
         // 從 Firebase 載入銷售記錄
         salesHistory = await loadSalesFromFirestore();
+        console.log('📌 salesHistory 載入完成:', salesHistory.length, '筆');
         
         // 只有完全沒有 Firebase 資料時（初次使用）才執行遷移
         if (!hasData) {
