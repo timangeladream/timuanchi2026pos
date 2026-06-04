@@ -4494,8 +4494,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            // 只取最新的 50 筆記錄
-            const reversedSales = [...salesToDisplay].reverse().slice(0, maxDisplayRecords);
+            // 依時間排序（新到舊），只取最新的 50 筆
+            const reversedSales = [...salesToDisplay].sort((a, b) => {
+                const parseTs = ts => {
+                    if (!ts) return 0;
+                    if (ts.toDate) return ts.toDate().getTime();
+                    if (ts.seconds) return ts.seconds * 1000;
+                    return new Date(ts).getTime();
+                };
+                return parseTs(b.timestamp) - parseTs(a.timestamp);
+            }).slice(0, maxDisplayRecords);
             
             // 計算總頁數
             const totalPages = Math.ceil(reversedSales.length / itemsPerPage);
@@ -4517,7 +4525,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 顯示訂單列表
             container.innerHTML = currentPageData.map(sale => {
-                const actualIndex = salesHistory.indexOf(sale);
+                const actualIndex = salesHistory.findIndex(s => s._firebaseId ? s._firebaseId === sale._firebaseId : s === sale);
                 const displayTime = sale.timestampDisplay ? sale.timestampDisplay.replace(/上午|下午/g, '').replace(/(\d+):(\d+):(\d+)/, (m, h, min, s) => { const isPM = sale.timestampDisplay.includes('下午'); let hour = parseInt(h); if (isPM && hour !== 12) hour += 12; if (!isPM && hour === 12) hour = 0; return String(hour).padStart(2,'0') + ':' + min + ':' + s; }) : (sale.timestamp ? new Date(sale.timestamp).toLocaleString('zh-TW', {hour12: false}) : '');
                 return `
                     <div class="sales-record-item">
