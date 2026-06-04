@@ -3809,7 +3809,6 @@ async function loadSalesFromFirestore() {
             const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
             return tb - ta;
         });
-        console.log('📌 Firebase 載入銷售記錄:', sales.length, '筆');
         return sales;
     } catch (e) {
         console.error('❌ 載入銷售記錄失敗:', e);
@@ -4022,7 +4021,6 @@ async function initApp() {
         
         // 從 Firebase 載入銷售記錄
         salesHistory = await loadSalesFromFirestore();
-        console.log('📌 salesHistory 載入完成:', salesHistory.length, '筆');
         
         // 只有完全沒有 Firebase 資料時（初次使用）才執行遷移
         if (!hasData) {
@@ -4251,7 +4249,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         const maxDisplayRecords = 50;  // 最多顯示50筆
 
         function filterByTime(filter) {
-            console.log('📌 filterByTime 呼叫:', filter, 'salesHistory:', salesHistory.length);
             currentTimeFilter = filter;
             currentPage = 1;  // 重置到第一頁
             
@@ -4291,9 +4288,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
             }
 
+            // 解析 timestamp（相容 Firebase Timestamp 物件和 ISO 字串）
+            const parseTimestamp = (ts) => {
+                if (!ts) return new Date(0);
+                if (ts.toDate) return ts.toDate(); // Firebase Timestamp
+                return new Date(ts); // ISO string
+            };
+
             // 用於統計的篩選 (排除已取消)
             filteredSales = salesHistory.filter(sale => {
-                const saleDate = new Date(sale.timestamp);
+                const saleDate = parseTimestamp(sale.timestamp);
                 const isInDateRange = saleDate >= startDate && saleDate <= endDate;
                 const isNotCancelled = sale.status !== 'cancelled';
                 return isInDateRange && isNotCancelled;
@@ -4301,7 +4305,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 用於顯示列表的篩選 (包含已取消)
             const filteredSalesForList = salesHistory.filter(sale => {
-                const saleDate = new Date(sale.timestamp);
+                const saleDate = parseTimestamp(sale.timestamp);
                 const isInDateRange = saleDate >= startDate && saleDate <= endDate;
                 return isInDateRange;
             });
