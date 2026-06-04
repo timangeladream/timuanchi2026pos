@@ -12821,36 +12821,57 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // ===== QR Code / 條碼掃描功能 =====
         let scannerStream = null;
         let scannerInterval = null;
-        let jsQRLoaded = false;
-
-        // 動態載入 jsQR 函式庫
-        function loadJsQR() {
-            return new Promise((resolve, reject) => {
-                if (window.jsQR) { resolve(); return; }
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
-        }
 
         async function openScanner() {
+            // 檢查瀏覽器支援
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('此瀏覽器不支援相機功能\n請使用 Safari（iPhone）或 Chrome（Android）');
+                return;
+            }
+
             try {
-                await loadJsQR();
                 document.getElementById('scannerModal').style.display = 'flex';
                 document.getElementById('scannerStatus').textContent = '掃描中...';
 
                 scannerStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' }
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
 
                 const video = document.getElementById('scannerVideo');
                 video.srcObject = scannerStream;
                 await video.play();
 
-                // 開始掃描
-                scannerInterval = setInterval(() => scanFrame(video), 200);
+                // 優先使用原生 BarcodeDetector API（Chrome/Android 支援）
+                if ('BarcodeDetector' in window) {
+                    const detector = new BarcodeDetector({ formats: ['qr_code', 'code_128', 'ean_13', 'code_39'] });
+                    scannerInterval = setInterval(async () => {
+                        try {
+                            const barcodes = await detector.detect(video);
+                            if (barcodes.length > 0) {
+                                closeScanner();
+                                processScannedCode(barcodes[0].rawValue.trim());
+                            }
+                        } catch (_) {}
+                    }, 300);
+                } else {
+                    // fallback: 提示用戶輸入
+                    document.getElementById('scannerStatus').textContent = '請對準 QR Code（或手動輸入貨號後按 Enter）';
+                    // 仍然顯示鏡頭畫面，但改為手動輸入模式
+                    const manualInput = document.createElement('input');
+                    manualInput.type = 'text';
+                    manualInput.placeholder = '手動輸入貨號...';
+                    manualInput.id = 'scannerManualInput';
+                    manualInput.style.cssText = 'margin-top:12px;padding:10px;border-radius:8px;border:2px solid #D4AF37;font-size:16px;width:90%;text-align:center;';
+                    manualInput.onkeydown = (e) => {
+                        if (e.key === 'Enter' && e.target.value.trim()) {
+                            closeScanner();
+                            processScannedCode(e.target.value.trim());
+                        }
+                    };
+                    const modal = document.getElementById('scannerModal');
+                    modal.insertBefore(manualInput, modal.lastElementChild);
+                    setTimeout(() => manualInput.focus(), 100);
+                }
 
             } catch (e) {
                 closeScanner();
@@ -12866,20 +12887,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
         }
 
-        function scanFrame(video) {
-            if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
-            if (code && code.data) {
-                closeScanner();
-                processScannedCode(code.data.trim());
-            }
-        }
+        // scanFrame 已整合到 openScanner 的 BarcodeDetector 內
 
         function closeScanner() {
             document.getElementById('scannerModal').style.display = 'none';
