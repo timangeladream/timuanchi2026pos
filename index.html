@@ -3774,9 +3774,9 @@ async function saveSaleToFirestore(saleData) {
         // 加入銷售員資訊
         const saleWithCashier = {
             ...saleData,
-            cashierId: currentUser.uid,
-            cashierName: currentUserName,
-            cashierRole: currentUserRole
+            salesPersonId: currentUser.uid,
+            salesPersonName: currentUserName,
+            salesPersonRole: currentUserRole
         };
         // 清除所有 undefined 值（Firebase 不允許 undefined）
         // 注意：不能用 JSON.parse/stringify，會破壞 Firebase Timestamp 物件
@@ -3810,7 +3810,7 @@ async function loadSalesFromFirestore() {
         } else {
             // 銷售員只看自己的（不加 orderBy 避免複合索引問題，在記憶體中排序）
             query = db.collection('sales')
-                .where('cashierId', '==', currentUser.uid)
+                .where('salesPersonId', '==', currentUser.uid)
                 .limit(200);
         }
         const snapshot = await query.get();
@@ -4028,29 +4028,34 @@ async function toggleUserRole(uid, currentRole) {
                 // 更新用戶名稱
                 await db.collection('users').doc(uid).update({ name: newName });
 
-                // 同步更新該用戶所有歷史訂單的 cashierName
+                // 同步更新該用戶所有歷史訂單的 salesPersonName
                 showNotification('⏳ 更新中，請稍候...');
                 const salesSnapshot = await db.collection('sales')
-                    .where('cashierId', '==', uid)
+                    .where('salesPersonId', '==', uid)
                     .get();
 
                 if (!salesSnapshot.empty) {
                     const batch = db.batch();
                     salesSnapshot.forEach(doc => {
-                        batch.update(doc.ref, { cashierName: newName });
+                        batch.update(doc.ref, { salesPersonName: newName });
                     });
                     await batch.commit();
                     console.log('✅ 已更新 ' + salesSnapshot.size + ' 筆訂單的銷售員名稱');
                 }
 
-                // 如果是目前登入的用戶，同步更新 header 顯示
+                // 如果是目前登入的用戶，同步更新 header 和銷售人員欄位
                 if (uid === currentUser.uid) {
                     currentUserName = newName;
                     updateUserInfo();
+                    const salesPersonEl = document.getElementById('salesPerson');
+                    if (salesPersonEl) salesPersonEl.value = newName;
                 }
 
                 // 重新載入銷售記錄
                 salesHistory = await loadSalesFromFirestore();
+        
+        // 資料遷移：將舊的 cashier 欄位名稱統一改為 salesPerson
+        await migrateCashierFields();
                 filterByTime(currentTimeFilter);
 
                 showNotification('✅ 名稱已更新，歷史訂單同步完成');
@@ -4088,6 +4093,54 @@ function loadDataFromLocalStorage() {
 }
 
 // ============================================================
+// 資料遷移：cashier → salesPerson 欄位名稱統一
+// ============================================================
+async function migrateCashierFields() {
+    if (!db || !currentUser) return;
+    try {
+        // 找出還有 cashierName 舊欄位的訂單
+        const snapshot = await db.collection('sales')
+            .where('cashierName', '!=', null)
+            .get();
+        
+        if (snapshot.empty) return;
+        
+        console.log(`🔄 開始遷移 ${snapshot.size} 筆訂單欄位名稱...`);
+        
+        const batch = db.batch();
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const updates = {};
+            if (data.cashierName !== undefined) {
+                updates.salesPersonName = data.cashierName;
+                updates.cashierName = firebase.firestore.FieldValue.delete();
+            }
+            if (data.cashierId !== undefined) {
+                updates.salesPersonId = data.cashierId;
+                updates.cashierId = firebase.firestore.FieldValue.delete();
+            }
+            if (data.cashierRole !== undefined) {
+                updates.salesPersonRole = data.cashierRole;
+                updates.cashierRole = firebase.firestore.FieldValue.delete();
+            }
+            if (Object.keys(updates).length > 0) {
+                batch.update(doc.ref, updates);
+            }
+        });
+        
+        await batch.commit();
+        console.log('✅ 欄位名稱遷移完成');
+        
+        // 重新載入銷售記錄以使用新欄位名稱
+        salesHistory = await loadSalesFromFirestore();
+        
+    } catch (e) {
+        // 若查詢失敗（例如沒有舊資料）則忽略
+        console.log('遷移略過（可能已完成）:', e.message);
+    }
+}
+
+// ============================================================
 // 修改 initApp (非同步版本的 init)
 // ============================================================
 async function initApp() {
@@ -4100,6 +4153,9 @@ async function initApp() {
         
         // 從 Firebase 載入銷售記錄
         salesHistory = await loadSalesFromFirestore();
+        
+        // 資料遷移：將舊的 cashier 欄位名稱統一改為 salesPerson
+        await migrateCashierFields();
         
         // 只有完全沒有 Firebase 資料時（初次使用）才執行遷移
         if (!hasData) {
@@ -4555,7 +4611,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const cashierStats = {};
 
             filteredSales.forEach(sale => {
-                const name = sale.cashierName || sale.salesPerson || '未指定';
+                const name = sale.salesPersonName || sale.salesPerson || '未指定';
                 if (!cashierStats[name]) cashierStats[name] = { orders: 0, revenue: 0, avgOrder: 0 };
                 cashierStats[name].orders++;
                 cashierStats[name].revenue += sale.total || 0;
@@ -4647,7 +4703,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 </div>
                                 <div class="sales-record-info">
                                     ${displayTime}
-                                    ${(sale.saleLocation || sale.cashierName) ? `<br>${sale.saleLocation || ''} ${sale.cashierName ? `｜ ${sale.cashierName}` : ''}` : ''}
+                                    ${(sale.saleLocation || sale.salesPersonName) ? `<br>${sale.saleLocation || ''} ${sale.salesPersonName ? `｜ ${sale.salesPersonName}` : ''}` : ''}
                                 </div>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
