@@ -3773,9 +3773,19 @@ async function saveSaleToFirestore(saleData) {
             cashierRole: currentUserRole
         };
         // 清除所有 undefined 值（Firebase 不允許 undefined）
-        const cleanData = JSON.parse(JSON.stringify(saleWithCashier, (key, value) => {
-            return value === undefined ? null : value;
-        }));
+        // 注意：不能用 JSON.parse/stringify，會破壞 Firebase Timestamp 物件
+        function removeUndefined(obj) {
+            if (Array.isArray(obj)) return obj.map(removeUndefined);
+            if (obj && typeof obj === 'object' && !obj.toDate) {
+                const clean = {};
+                Object.keys(obj).forEach(k => {
+                    if (obj[k] !== undefined) clean[k] = removeUndefined(obj[k]);
+                });
+                return clean;
+            }
+            return obj;
+        }
+        const cleanData = removeUndefined(saleWithCashier);
         await db.collection('sales').add(cleanData);
         console.log('✅ 銷售記錄已儲存到 Firebase');
     } catch (e) {
@@ -3804,7 +3814,7 @@ async function loadSalesFromFirestore() {
             sales.push({
                 ...data,
                 _firebaseId: doc.id,
-                timestamp: data.timestamp?.toDate?.()?.toISOString() || data.timestamp
+                timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : (data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000).toISOString() : data.timestamp)
             });
         });
         // 在記憶體中依時間排序（新到舊）
@@ -4292,19 +4302,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
             }
 
-            // 解析 timestamp（相容 Firebase Timestamp 物件和 ISO 字串）
+            // 解析 timestamp（相容所有格式）
             const parseTimestamp = (ts) => {
                 if (!ts) return new Date(0);
-                if (ts.toDate) return ts.toDate(); // Firebase Timestamp
+                if (ts.toDate) return ts.toDate(); // Firebase Timestamp 物件
+                if (ts.seconds !== undefined) return new Date(ts.seconds * 1000); // 序列化後的 Timestamp
                 return new Date(ts); // ISO string
             };
-
-            // Debug: 印出每筆訂單的 timestamp 解析結果
-            salesHistory.forEach((sale, i) => {
-                const d = parseTimestamp(sale.timestamp);
-                console.log(`📌 訂單 ${i}: timestamp=${JSON.stringify(sale.timestamp)}, parsed=${d}, inRange=${d >= startDate && d <= endDate}`);
-            });
-            console.log('📌 startDate:', startDate, 'endDate:', endDate);
 
             // 用於統計的篩選 (排除已取消)
             filteredSales = salesHistory.filter(sale => {
