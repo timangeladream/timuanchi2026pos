@@ -2433,10 +2433,22 @@
                 class="search-input" 
                 placeholder="搜尋商品名稱或貨號..."
                 oninput="searchProducts(this.value)"
+                onkeydown="handleSearchKeydown(event)"
             >
             <button class="search-clear" id="searchClear" onclick="clearSearch()">×</button>
             <span class="search-icon">🔍</span>
         </div>
+        <button id="scanBtn" onclick="openScanner()" style="
+            padding: 10px 16px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-left: 8px;
+            flex-shrink: 0;
+        " title="掃描 QR Code">📷</button>
         <div class="search-results-count" id="searchResultsCount"></div>
     </div>
 
@@ -12798,6 +12810,175 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             products.forEach(p => normalizeProductVariants(p));
         }
 
+
+        // ===== QR Code / 條碼掃描功能 =====
+        let scannerStream = null;
+        let scannerInterval = null;
+        let jsQRLoaded = false;
+
+        // 動態載入 jsQR 函式庫
+        function loadJsQR() {
+            return new Promise((resolve, reject) => {
+                if (window.jsQR) { resolve(); return; }
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function openScanner() {
+            try {
+                await loadJsQR();
+                document.getElementById('scannerModal').style.display = 'flex';
+                document.getElementById('scannerStatus').textContent = '掃描中...';
+
+                scannerStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+
+                const video = document.getElementById('scannerVideo');
+                video.srcObject = scannerStream;
+                await video.play();
+
+                // 開始掃描
+                scannerInterval = setInterval(() => scanFrame(video), 200);
+
+            } catch (e) {
+                closeScanner();
+                if (e.name === 'NotAllowedError') {
+                    alert('請允許相機存取權限後再試');
+                } else {
+                    alert('無法開啟相機：' + e.message);
+                }
+            }
+        }
+
+        function scanFrame(video) {
+            if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            if (code && code.data) {
+                closeScanner();
+                processScannedCode(code.data.trim());
+            }
+        }
+
+        function closeScanner() {
+            document.getElementById('scannerModal').style.display = 'none';
+            if (scannerInterval) { clearInterval(scannerInterval); scannerInterval = null; }
+            if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+        }
+
+        // 外接掃描器：偵測搜尋欄 Enter 鍵
+        function handleSearchKeydown(event) {
+            if (event.key === 'Enter') {
+                const sku = document.getElementById('productSearch').value.trim();
+                if (sku) {
+                    processScannedCode(sku);
+                    event.preventDefault();
+                }
+            }
+        }
+
+        // 處理掃描結果（相機和外接掃描器共用）
+        function processScannedCode(sku) {
+            if (!sku) return;
+
+            // 在所有商品中搜尋貨號
+            const matched = products.filter(p => {
+                // 無規格商品直接比對 sku
+                if (p.sku && p.sku === sku) return true;
+                // 有規格商品比對 variantSkus
+                if (p.variantSkus) {
+                    return Object.values(p.variantSkus).includes(sku);
+                }
+                return false;
+            });
+
+            if (matched.length === 0) {
+                showNotification(`⚠️ 找不到貨號「${sku}」，請確認是否正確`);
+                return;
+            }
+
+            const product = matched[0];
+
+            // 檢查庫存
+            let stock = 0;
+            let selectedVariants = null;
+
+            if (product.variantSkus) {
+                // 找出對應的規格
+                const variantKey = Object.keys(product.variantSkus).find(k => product.variantSkus[k] === sku);
+                if (variantKey) {
+                    stock = product.variantStock?.[variantKey] ?? product.stock ?? 0;
+                    // 將 variantKey 還原成 selectedVariants
+                    const orderedKeys = (product.variantKeyOrder || []).filter(k => product.variants?.[k]);
+                    Object.keys(product.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+                    const values = variantKey.split(',');
+                    selectedVariants = {};
+                    orderedKeys.forEach((k, i) => { if (values[i]) selectedVariants[k] = values[i]; });
+                }
+            } else {
+                stock = product.stock ?? 0;
+            }
+
+            if (stock <= 0) {
+                showNotification(`⚠️ 「${product.name}」庫存不足，無法加入訂單`);
+                return;
+            }
+
+            // 檢查是否已在訂單中
+            const existing = orderItems.find(item => {
+                if (item.id !== product.id || item.isAddon || item.isGift) return false;
+                if (selectedVariants) {
+                    return JSON.stringify(item.selectedVariants) === JSON.stringify(selectedVariants);
+                }
+                return !item.selectedVariants;
+            });
+
+            if (existing) {
+                // 已在訂單中，詢問是否增加數量
+                if (confirm(`「${product.name}」已在訂單中，是否增加數量？`)) {
+                    existing.quantity++;
+                    updateOrder();
+                    showNotification(`✅ 已增加「${product.name}」數量`);
+                }
+                return;
+            }
+
+            // 加入訂單
+            const productToAdd = {
+                ...product,
+                selectedVariants: selectedVariants || undefined
+            };
+
+            // 設定價格（規格價格或基本價格）
+            if (selectedVariants && product.variantPrices) {
+                const orderedKeys = (product.variantKeyOrder || []).filter(k => product.variants?.[k]);
+                Object.keys(product.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+                const variantKey = orderedKeys.map(k => selectedVariants[k]).join(',');
+                if (product.variantPrices[variantKey]) {
+                    productToAdd.price = product.variantPrices[variantKey];
+                }
+            }
+
+            addToOrder(productToAdd);
+            
+            const variantText = selectedVariants ? ' (' + Object.values(selectedVariants).join(' / ') + ')' : '';
+            showNotification(`✅ 已加入「${product.name}${variantText}」`);
+            
+            // 清空搜尋欄
+            const searchEl = document.getElementById('productSearch');
+            if (searchEl) { searchEl.value = ''; searchProducts(''); }
+        }
+
         // Firebase 啟動 (取代原本的 init())
         initFirebase();
     </script>
@@ -12836,6 +13017,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             </div>
         </div>
     </div>
+</div>
+
+
+<!-- QR Code 掃描器 -->
+<div id="scannerModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:10000;flex-direction:column;align-items:center;justify-content:center;">
+    <div style="color:white;font-size:18px;font-weight:600;margin-bottom:16px;">📷 對準 QR Code 或條碼</div>
+    <div style="position:relative;width:90%;max-width:400px;">
+        <video id="scannerVideo" style="width:100%;border-radius:12px;" autoplay playsinline></video>
+        <!-- 掃描框 -->
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border:3px solid #D4AF37;border-radius:8px;box-shadow:0 0 0 999px rgba(0,0,0,0.4);"></div>
+    </div>
+    <div id="scannerStatus" style="color:#D4AF37;margin-top:16px;font-size:14px;">掃描中...</div>
+    <button onclick="closeScanner()" style="margin-top:20px;padding:12px 32px;background:#dc3545;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;">關閉</button>
 </div>
 
 </div><!-- end #appScreen -->
