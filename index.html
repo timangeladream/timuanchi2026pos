@@ -4496,7 +4496,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
 
             // 只取最新的 50 筆記錄
-            const reversedSales = [...salesToDisplay].reverse().slice(0, maxDisplayRecords);
+            const reversedSales = [...salesToDisplay].sort((a, b) => {
+                const parseTs = ts => {
+                    if (!ts) return 0;
+                    if (ts.toDate) return ts.toDate().getTime();
+                    if (ts.seconds !== undefined) return ts.seconds * 1000;
+                    return new Date(ts).getTime();
+                };
+                return parseTs(b.timestamp) - parseTs(a.timestamp);
+            }).slice(0, maxDisplayRecords);
             
             // 計算總頁數
             const totalPages = Math.ceil(reversedSales.length / itemsPerPage);
