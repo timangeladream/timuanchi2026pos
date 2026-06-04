@@ -4256,6 +4256,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         let currentTimeFilter = 'all';
         let filteredSales = [];
+        let filteredSalesForList = []; // 全域變數，包含已取消訂單
         
         // 分頁相關變數
         let currentPage = 1;
@@ -4319,7 +4320,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             });
             
             // 用於顯示列表的篩選 (包含已取消)
-            const filteredSalesForList = salesHistory.filter(sale => {
+            filteredSalesForList = salesHistory.filter(sale => {
                 const saleDate = parseTimestamp(sale.timestamp);
                 const isInDateRange = saleDate >= startDate && saleDate <= endDate;
                 return isInDateRange;
@@ -4494,16 +4495,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            // 依時間排序（新到舊），只取最新的 50 筆
-            const reversedSales = [...salesToDisplay].sort((a, b) => {
-                const parseTs = ts => {
-                    if (!ts) return 0;
-                    if (ts.toDate) return ts.toDate().getTime();
-                    if (ts.seconds) return ts.seconds * 1000;
-                    return new Date(ts).getTime();
-                };
-                return parseTs(b.timestamp) - parseTs(a.timestamp);
-            }).slice(0, maxDisplayRecords);
+            // 只取最新的 50 筆記錄
+            const reversedSales = [...salesToDisplay].reverse().slice(0, maxDisplayRecords);
             
             // 計算總頁數
             const totalPages = Math.ceil(reversedSales.length / itemsPerPage);
@@ -4525,7 +4518,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 顯示訂單列表
             container.innerHTML = currentPageData.map(sale => {
-                const actualIndex = salesHistory.findIndex(s => s._firebaseId ? s._firebaseId === sale._firebaseId : s === sale);
+                const actualIndex = salesHistory.indexOf(sale);
                 const displayTime = sale.timestampDisplay ? sale.timestampDisplay.replace(/上午|下午/g, '').replace(/(\d+):(\d+):(\d+)/, (m, h, min, s) => { const isPM = sale.timestampDisplay.includes('下午'); let hour = parseInt(h); if (isPM && hour !== 12) hour += 12; if (!isPM && hour === 12) hour = 0; return String(hour).padStart(2,'0') + ':' + min + ':' + s; }) : (sale.timestamp ? new Date(sale.timestamp).toLocaleString('zh-TW', {hour12: false}) : '');
                 return `
                     <div class="sales-record-item">
@@ -4659,19 +4652,18 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (direction === 'prev' && currentPage > 1) {
                 currentPage--;
             } else if (direction === 'next') {
-                const reversedSales = [...filteredSales].reverse().slice(0, maxDisplayRecords);
-                const totalPages = Math.ceil(reversedSales.length / itemsPerPage);
+                const totalPages = Math.ceil(Math.min(filteredSalesForList.length, maxDisplayRecords) / itemsPerPage);
                 if (currentPage < totalPages) {
                     currentPage++;
                 }
             }
-            updateOrdersList();
+            updateOrdersList(filteredSalesForList);
         }
         
         // 跳到指定頁面
         function goToPage(page) {
             currentPage = page;
-            updateOrdersList();
+            updateOrdersList(filteredSalesForList);
         }
 
         // toggleSalesDetail: 完整版定義在下方，此處略過
