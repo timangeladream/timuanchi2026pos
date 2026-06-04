@@ -2956,6 +2956,12 @@
                 <h3>📍 銷售地點分析</h3>
                 <div id="locationAnalysis" class="location-list"></div>
             </div>
+
+            <!-- 銷售員分析 -->
+            <div class="analysis-section">
+                <h3>👤 銷售員分析</h3>
+                <div id="cashierAnalysis" class="location-list"></div>
+            </div>
         </div>
     </div>
     <!-- 銷售記錄頁面結束 -->
@@ -4330,6 +4336,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             updateTopProducts();
             updateDiscountAnalysis();
             updateLocationAnalysis();
+            updateCashierAnalysis();
             updateOrdersList(filteredSalesForList);
         }
 
@@ -4479,6 +4486,50 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         <div class="location-stat-item">
                             <div class="location-stat-label">銷售額</div>
                             <div class="location-stat-value">NT$ ${stats.revenue.toLocaleString()}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateCashierAnalysis() {
+            const cashierStats = {};
+
+            filteredSales.forEach(sale => {
+                const name = sale.cashierName || sale.salesPerson || '未指定';
+                if (!cashierStats[name]) cashierStats[name] = { orders: 0, revenue: 0, avgOrder: 0 };
+                cashierStats[name].orders++;
+                cashierStats[name].revenue += sale.total || 0;
+            });
+
+            // 計算平均客單價
+            Object.values(cashierStats).forEach(s => {
+                s.avgOrder = s.orders > 0 ? Math.round(s.revenue / s.orders) : 0;
+            });
+
+            const cashiers = Object.entries(cashierStats).sort((a, b) => b[1].revenue - a[1].revenue);
+            const container = document.getElementById('cashierAnalysis');
+
+            if (cashiers.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">暫無銷售資料</div>';
+                return;
+            }
+
+            container.innerHTML = cashiers.map(([name, stats]) => `
+                <div class="location-item">
+                    <div class="location-name">${name}</div>
+                    <div class="location-stats">
+                        <div class="location-stat-item">
+                            <div class="location-stat-label">訂單數</div>
+                            <div class="location-stat-value">${stats.orders} 筆</div>
+                        </div>
+                        <div class="location-stat-item">
+                            <div class="location-stat-label">銷售額</div>
+                            <div class="location-stat-value">NT$ ${stats.revenue.toLocaleString()}</div>
+                        </div>
+                        <div class="location-stat-item">
+                            <div class="location-stat-label">平均客單</div>
+                            <div class="location-stat-value">NT$ ${stats.avgOrder.toLocaleString()}</div>
                         </div>
                     </div>
                 </div>
