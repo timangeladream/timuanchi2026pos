@@ -12963,6 +12963,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             if (matched.length === 0) {
                 showNotification(`⚠️ 找不到貨號「${sku}」，請確認是否正確`);
+                const searchElNotFound = document.getElementById('productSearch');
+                if (searchElNotFound) { searchElNotFound.value = ''; searchProducts(''); }
                 return;
             }
 
@@ -12990,6 +12992,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             if (stock <= 0) {
                 showNotification(`⚠️ 「${product.name}」庫存不足，無法加入訂單`);
+                // 清空搜尋欄
+                const searchElStock = document.getElementById('productSearch');
+                if (searchElStock) { searchElStock.value = ''; searchProducts(''); }
                 if (_scannerWasOpen) {
                     if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
                     const statusEl = document.getElementById('scannerStatus');
