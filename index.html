@@ -12906,7 +12906,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             scanHandled = true;
                             clearInterval(scannerInterval);
                             scannerInterval = null;
-                            closeScanner();
+                            // 不立即關閉相機，由 processScannedCode 處理（顯示提示後再重開）
                             processScannedCode(result.getText().trim());
                         }
                     } catch (_) {}
@@ -12990,6 +12990,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             if (stock <= 0) {
                 showNotification(`⚠️ 「${product.name}」庫存不足，無法加入訂單`);
+                if (_scannerWasOpen) {
+                    if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+                    const statusEl = document.getElementById('scannerStatus');
+                    if (statusEl) {
+                        statusEl.innerHTML = `⚠️ <span style="font-size:11px;">庫存不足，無法加入</span>`;
+                        statusEl.style.color = '#e74c3c';
+                    }
+                    setTimeout(() => openScanner(), 1500);
+                }
                 return;
             }
 
@@ -13016,6 +13025,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     showNotification(`✅ 已增加「${product.name}${variantDesc}」數量`);
                     // 掃描畫面提示
                     if (_scannerWasOpen) {
+                        if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
                         const statusEl = document.getElementById('scannerStatus');
                         if (statusEl) {
                             statusEl.innerHTML = `✅ <span style="font-size:11px;">${product.name}${variantDesc} 數量+1</span>`;
@@ -13056,14 +13066,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 如果是從相機掃描的，在掃描畫面顯示成功提示後自動繼續
             if (_scannerWasOpen) {
+                // 停止目前的鏡頭串流但保留 Modal 畫面
+                if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+                
                 const statusEl = document.getElementById('scannerStatus');
                 if (statusEl) {
                     statusEl.innerHTML = `✅ <span style="font-size:11px;">${product.name}${variantText} 已加入</span>`;
                     statusEl.style.color = '#4CAF50';
                 }
-                setTimeout(() => {
-                    openScanner();
-                }, 1200);
+                setTimeout(() => openScanner(), 1200);
             }
         }
         
