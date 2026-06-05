@@ -7624,9 +7624,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     Object.keys(productData[brand]).forEach(mainCat => {
                         Object.keys(productData[brand][mainCat]).forEach(subCat => {
                             productData[brand][mainCat][subCat].forEach(product => {
+                                const variantSkuMatch = product.variantSkus && 
+                                    Object.values(product.variantSkus).some(s => s && s.toLowerCase().includes(searchQuery));
                                 if (product.name.toLowerCase().includes(searchQuery) ||
                                     (product.code && product.code.toLowerCase().includes(searchQuery)) ||
-                                    (product.sku && product.sku.toLowerCase().includes(searchQuery))) {
+                                    (product.sku && product.sku.toLowerCase().includes(searchQuery)) ||
+                                    variantSkuMatch) {
                                     filteredProducts.push({...product, brand, mainCat, subCat});
                                 }
                             });
