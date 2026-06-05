@@ -339,7 +339,7 @@
         }
 
         .stat-icon {
-            font-size: 30px;
+            font-size: 25px;
             width: 40px;
             height: 40px;
             display: flex;
@@ -354,12 +354,12 @@
         }
 
         .stat-label {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-light);
         }
 
         .stat-value {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: 700;
             color: #d4af37;
         }
@@ -446,7 +446,7 @@
         }
 
         .location-name {
-            font-size: 16px;
+            font-size: 12px;
             font-weight: 600;
         }
 
@@ -466,6 +466,7 @@
         }
 
         .location-stat-value {
+            font-size: 12px;
             font-weight: 600;
             color: var(--primary-color);
         }
@@ -506,6 +507,7 @@
         }
 
         .discount-stat-value {
+            font-size: 12px;
             font-weight: 600;
             color: var(--primary-color);
         }
@@ -2943,6 +2945,7 @@
                     <div class="stat-info">
                         <div class="stat-label">訂單數量</div>
                         <div class="stat-value" id="statOrders">0 筆</div>
+                        <div id="statOrdersDetail" style="font-size:11px;color:var(--text-light);margin-top:2px;"></div>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -4499,8 +4502,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return sum + sale.items.reduce((itemSum, item) => itemSum + item.quantity, 0);
             }, 0);
 
+            // 計算已成立和已取消（filteredSalesForList 包含已取消）
+            const completedOrders = filteredSalesForList.filter(s => s.status !== 'cancelled').length;
+            const cancelledOrders = filteredSalesForList.filter(s => s.status === 'cancelled').length;
+
             document.getElementById('statRevenue').textContent = `NT$ ${totalRevenue.toLocaleString()}`;
             document.getElementById('statOrders').textContent = `${totalOrders} 筆`;
+            document.getElementById('statOrdersDetail').textContent = `已成立：${completedOrders} 筆｜已取消：${cancelledOrders} 筆`;
             document.getElementById('statAvg').textContent = `NT$ ${avgValue.toLocaleString()}`;
             document.getElementById('statItems').textContent = `${totalItems} 件`;
         }
