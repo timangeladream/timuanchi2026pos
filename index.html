@@ -4508,7 +4508,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             document.getElementById('statRevenue').textContent = `NT$ ${totalRevenue.toLocaleString()}`;
             document.getElementById('statOrders').textContent = `${totalOrders} 筆`;
-            document.getElementById('statOrdersDetail').textContent = `已成立：${completedOrders} 筆｜已取消：${cancelledOrders} 筆`;
+            document.getElementById('statOrdersDetail').textContent = `（已成立：${completedOrders} 筆｜已取消：${cancelledOrders} 筆）`;
             document.getElementById('statAvg').textContent = `NT$ ${avgValue.toLocaleString()}`;
             document.getElementById('statItems').textContent = `${totalItems} 件`;
         }
