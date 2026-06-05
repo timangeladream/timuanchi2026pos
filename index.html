@@ -1917,6 +1917,19 @@
             border-color: var(--secondary-color);
         }
 
+        .variant-option.out-of-stock {
+            background: #f5f5f5;
+            color: #bbb;
+            border-color: #e0e0e0;
+            cursor: not-allowed;
+            text-decoration: line-through;
+            position: relative;
+        }
+        .variant-option.out-of-stock:hover {
+            background: #f5f5f5;
+            border-color: #e0e0e0;
+            transform: none;
+        }
         .variant-option.selected {
             background: var(--secondary-color);
             border-color: var(--secondary-color);
@@ -10525,7 +10538,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div class="variant-label">${variantName}</div>
                     <div class="variant-options">
                         ${options.map(option => `
-                            <div class="variant-option" onclick="selectVariant('${variantName}', '${option}')">
+                            <div class="variant-option" 
+                                data-variant="${variantName}" 
+                                data-option="${option}"
+                                onclick="selectVariant('${variantName}', '${option}')">
                                 ${option}
                             </div>
                         `).join('')}
@@ -10534,6 +10550,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             `; }).join('');
             
             document.getElementById('variantModal').classList.add('show');
+            
+            // 初始化庫存狀態（開啟時就顯示哪些選項缺貨）
+            if (product.variantStock) {
+                setTimeout(() => updateVariantStockStatus(product), 50);
+            }
         }
 
         // 關閉規格選擇彈窗
@@ -10542,6 +10563,58 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             currentSelectedProduct = null;
             currentSelectedAddon = null;
             selectedVariants = {};
+        }
+
+        // 計算指定規格選項的庫存（考慮已選規格）
+        function getVariantOptionStock(product, variantName, option) {
+            if (!product.variantStock) return 999;
+            const orderedKeys = (product.variantKeyOrder || []).filter(k => product.variants?.[k]);
+            Object.keys(product.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+            
+            // 建立測試用的選擇（包含目前要測試的選項）
+            const testVariants = { ...selectedVariants, [variantName]: option };
+            
+            // 找出所有包含此選項的組合，計算庫存總和
+            let totalStock = 0;
+            const getStockForCombo = (keys, currentCombo) => {
+                if (keys.length === 0) {
+                    const key = orderedKeys.map(k => currentCombo[k]).join(',');
+                    totalStock += product.variantStock[key] || 0;
+                    return;
+                }
+                const [first, ...rest] = keys;
+                if (testVariants[first] !== undefined) {
+                    getStockForCombo(rest, { ...currentCombo, [first]: testVariants[first] });
+                } else {
+                    (product.variants[first] || []).forEach(opt => {
+                        getStockForCombo(rest, { ...currentCombo, [first]: opt });
+                    });
+                }
+            };
+            getStockForCombo([...orderedKeys], {});
+            return totalStock;
+        }
+
+        // 更新所有規格選項的庫存狀態（灰色/可選）
+        function updateVariantStockStatus(product) {
+            const orderedKeys = (product.variantKeyOrder || []).filter(k => product.variants?.[k]);
+            Object.keys(product.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+            
+            orderedKeys.forEach(variantName => {
+                const options = product.variants[variantName] || [];
+                options.forEach(option => {
+                    const optionEl = document.querySelector(`.variant-option[data-variant="${variantName}"][data-option="${option}"]`);
+                    if (!optionEl) return;
+                    const stock = getVariantOptionStock(product, variantName, option);
+                    if (stock <= 0) {
+                        optionEl.classList.add('out-of-stock');
+                        optionEl.onclick = null;
+                    } else {
+                        optionEl.classList.remove('out-of-stock');
+                        optionEl.onclick = () => selectVariant(variantName, option);
+                    }
+                });
+            });
         }
 
         // 選擇規格選項
@@ -10564,6 +10637,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
             });
             
+            // 更新其他規格選項庫存狀態
+            if (currentSelectedProduct) {
+                updateVariantStockStatus(currentSelectedProduct);
+            }
             // 更新顯示的貨號
             updateVariantSku();
         }
