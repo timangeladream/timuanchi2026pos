@@ -12877,6 +12877,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
+            _scannerWasOpen = true;
+
             try {
                 document.getElementById('scannerModal').style.display = 'flex';
                 document.getElementById('scannerStatus').textContent = '掃描中...';
@@ -12924,7 +12926,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // scanFrame 已整合到 openScanner 的 BarcodeDetector 內
 
-        function closeScanner() {
+        function closeScanner(manual = false) {
+            if (manual) _scannerWasOpen = false; // 手動關閉時不重開
             document.getElementById('scannerModal').style.display = 'none';
             if (scannerInterval) { clearInterval(scannerInterval); scannerInterval = null; }
             if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
@@ -12999,7 +13002,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             if (existing) {
                 // 已在訂單中，詢問是否增加數量
-                if (confirm(`「${product.name}」已在訂單中，是否增加數量？`)) {
+                const variantDesc = selectedVariants ? ' (' + Object.values(selectedVariants).join(' / ') + ')' : '';
+                if (confirm(`「${product.name}${variantDesc}」已在訂單中，是否增加數量？`)) {
                     // 檢查庫存上限
                     if (existing.quantity >= stock) {
                         showNotification(`⚠️ 已達庫存上限（${stock} 件）`);
@@ -13036,7 +13040,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 清空搜尋欄
             const searchEl = document.getElementById('productSearch');
             if (searchEl) { searchEl.value = ''; searchProducts(''); }
+            
+            // 如果是從相機掃描的，自動重新開啟繼續掃描
+            if (_scannerWasOpen) {
+                setTimeout(() => openScanner(), 800);
+            }
         }
+        
+        // 記錄相機是否開啟中（供 processScannedCode 判斷）
+        let _scannerWasOpen = false;
 
         // Firebase 啟動 (取代原本的 init())
         initFirebase();
@@ -13088,7 +13100,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border:3px solid #D4AF37;border-radius:8px;box-shadow:0 0 0 999px rgba(0,0,0,0.4);"></div>
     </div>
     <div id="scannerStatus" style="color:#D4AF37;margin-top:16px;font-size:14px;">掃描中...</div>
-    <button onclick="closeScanner()" style="margin-top:20px;padding:12px 32px;background:#dc3545;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;">關閉</button>
+    <button onclick="closeScanner(true)" style="margin-top:20px;padding:12px 32px;background:#dc3545;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;">關閉</button>
 </div>
 
 </div><!-- end #appScreen -->
