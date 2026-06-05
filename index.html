@@ -7625,7 +7625,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         Object.keys(productData[brand][mainCat]).forEach(subCat => {
                             productData[brand][mainCat][subCat].forEach(product => {
                                 if (product.name.toLowerCase().includes(searchQuery) ||
-                                    (product.code && product.code.toLowerCase().includes(searchQuery))) {
+                                    (product.code && product.code.toLowerCase().includes(searchQuery)) ||
+                                    (product.sku && product.sku.toLowerCase().includes(searchQuery))) {
                                     filteredProducts.push({...product, brand, mainCat, subCat});
                                 }
                             });
