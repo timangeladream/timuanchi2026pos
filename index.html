@@ -10551,10 +10551,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             document.getElementById('variantModal').classList.add('show');
             
-            // 初始化庫存狀態（開啟時就顯示哪些選項缺貨）
-            if (product.variantStock) {
-                setTimeout(() => updateVariantStockStatus(product), 50);
-            }
+            // 初始化時不做庫存篩選，讓使用者先選第一個規格
         }
 
         // 關閉規格選擇彈窗
