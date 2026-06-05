@@ -13000,6 +13000,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (existing) {
                 // 已在訂單中，詢問是否增加數量
                 if (confirm(`「${product.name}」已在訂單中，是否增加數量？`)) {
+                    // 檢查庫存上限
+                    if (existing.quantity >= stock) {
+                        showNotification(`⚠️ 已達庫存上限（${stock} 件）`);
+                        return;
+                    }
                     existing.quantity++;
                     updateOrder();
                     showNotification(`✅ 已增加「${product.name}」數量`);
