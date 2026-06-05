@@ -12881,7 +12881,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             try {
                 document.getElementById('scannerModal').style.display = 'flex';
-                document.getElementById('scannerStatus').textContent = '掃描中...';
+                const statusEl = document.getElementById('scannerStatus');
+                statusEl.textContent = '掃描中...';
+                statusEl.style.color = '#D4AF37';
 
                 scannerStream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
@@ -13011,7 +13013,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     }
                     existing.quantity++;
                     updateOrder();
-                    showNotification(`✅ 已增加「${product.name}」數量`);
+                    showNotification(`✅ 已增加「${product.name}${variantDesc}」數量`);
+                    // 掃描畫面提示
+                    if (_scannerWasOpen) {
+                        const statusEl = document.getElementById('scannerStatus');
+                        if (statusEl) {
+                            statusEl.innerHTML = `✅ <span style="font-size:11px;">${product.name}${variantDesc} 數量+1</span>`;
+                            statusEl.style.color = '#4CAF50';
+                        }
+                        setTimeout(() => openScanner(), 1200);
+                    }
                 }
                 return;
             }
@@ -13035,15 +13046,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             addToOrder(productToAdd);
             
             const variantText = selectedVariants ? ' (' + Object.values(selectedVariants).join(' / ') + ')' : '';
+            
+            // 右上角綠色提示
             showNotification(`✅ 已加入「${product.name}${variantText}」`);
             
             // 清空搜尋欄
             const searchEl = document.getElementById('productSearch');
             if (searchEl) { searchEl.value = ''; searchProducts(''); }
             
-            // 如果是從相機掃描的，自動重新開啟繼續掃描
+            // 如果是從相機掃描的，在掃描畫面顯示成功提示後自動繼續
             if (_scannerWasOpen) {
-                setTimeout(() => openScanner(), 800);
+                const statusEl = document.getElementById('scannerStatus');
+                if (statusEl) {
+                    statusEl.innerHTML = `✅ <span style="font-size:11px;">${product.name}${variantText} 已加入</span>`;
+                    statusEl.style.color = '#4CAF50';
+                }
+                setTimeout(() => {
+                    openScanner();
+                }, 1200);
             }
         }
         
