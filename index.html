@@ -12891,18 +12891,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
                 // 使用 ZXing（支援 iPhone Safari 和 Android Chrome）
                 const codeReader = new ZXing.BrowserMultiFormatReader();
-                codeReader.decodeFromVideoElement(video).then(result => {
-                    if (result) {
-                        closeScanner();
-                        processScannedCode(result.getText().trim());
-                    }
-                }).catch(() => {});
+                let scanHandled = false; // 防止重複觸發
 
                 // 持續掃描
                 scannerInterval = setInterval(async () => {
+                    if (scanHandled) return;
                     try {
                         const result = await codeReader.decodeOnce(video);
-                        if (result) {
+                        if (result && !scanHandled) {
+                            scanHandled = true;
+                            clearInterval(scannerInterval);
+                            scannerInterval = null;
                             closeScanner();
                             processScannedCode(result.getText().trim());
                         }
