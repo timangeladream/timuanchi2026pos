@@ -10842,6 +10842,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         function addToOrder(product) {
+            console.log('📌 addToOrder called:', product.name, product.selectedVariants);
             // 如果有規格，需要比對規格是否相同
             let existingItem = null;
             if (product.selectedVariants) {
@@ -10850,6 +10851,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     !item.isDiscount &&
                     JSON.stringify(normalizeVariants(item.selectedVariants, product)) === JSON.stringify(normalizeVariants(product.selectedVariants, product))
                 );
+                console.log('📌 existingItem:', existingItem ? 'found' : 'not found');
             } else {
                 existingItem = orderItems.find(item => 
                     item.name === product.name && 
