@@ -10816,20 +10816,22 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             if (isAddon) {
                 // 加購項目：加入訂單
+                const _normAddon = normalizeVariants({...selectedVariants}, item);
                 const addonWithVariants = {
                     ...item,
-                    selectedVariants: {...selectedVariants},
-                    displayName: item.name + ' (' + Object.values(selectedVariants).join(', ') + ')',
+                    selectedVariants: _normAddon,
+                    displayName: item.name + ' (' + Object.values(_normAddon).join(', ') + ')',
                     sku: variantSku || item.sku,
                     price: variantPrice
                 };
                 addAddonToOrder(item.id, addonWithVariants);
             } else {
                 // 商品：加入訂單
+                const _normProduct = normalizeVariants({...selectedVariants}, item);
                 const productWithVariants = {
                     ...item,
-                    selectedVariants: {...selectedVariants},
-                    displayName: item.name + ' (' + Object.values(selectedVariants).join(', ') + ')',
+                    selectedVariants: _normProduct,
+                    displayName: item.name + ' (' + Object.values(_normProduct).join(', ') + ')',
                     sku: variantSku || item.sku,
                     price: variantPrice
                 };
