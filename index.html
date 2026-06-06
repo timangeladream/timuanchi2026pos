@@ -10820,7 +10820,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 existingItem = orderItems.find(item => 
                     item.name === product.name && 
                     !item.isDiscount &&
-                    JSON.stringify(item.selectedVariants) === JSON.stringify(product.selectedVariants)
+                    JSON.stringify(normalizeVariants(item.selectedVariants, product)) === JSON.stringify(normalizeVariants(product.selectedVariants, product))
                 );
             } else {
                 existingItem = orderItems.find(item => 
@@ -12079,7 +12079,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 existingIndex = orderItems.findIndex(item => 
                     item.id === addonId && 
                     item.isAddon &&
-                    JSON.stringify(item.selectedVariants) === JSON.stringify(addon.selectedVariants)
+                    JSON.stringify(normalizeVariants(item.selectedVariants, addon)) === JSON.stringify(normalizeVariants(addon.selectedVariants, addon))
                 );
             } else {
                 existingIndex = orderItems.findIndex(item => 
@@ -13039,6 +13039,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
         }
 
+        // 將 selectedVariants 依 variantKeyOrder 排序，確保比對一致
+        function normalizeVariants(variants, product) {
+            if (!variants || !product) return variants;
+            const orderedKeys = (product.variantKeyOrder || []).filter(k => (product.variants || {})[k]);
+            Object.keys(product.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+            const normalized = {};
+            orderedKeys.forEach(k => { if (variants[k] !== undefined) normalized[k] = variants[k]; });
+            return normalized;
+        }
+
         // 處理掃描結果（相機和外接掃描器共用）
         function processScannedCode(sku) {
             if (!sku) return;
@@ -13104,7 +13114,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const existing = orderItems.find(item => {
                 if (item.id !== product.id || item.isAddon || item.isGift) return false;
                 if (selectedVariants) {
-                    return JSON.stringify(item.selectedVariants) === JSON.stringify(selectedVariants);
+                    return JSON.stringify(normalizeVariants(item.selectedVariants, product)) === JSON.stringify(normalizeVariants(selectedVariants, product));
                 }
                 return !item.selectedVariants;
             });
@@ -13138,7 +13148,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 加入訂單
             const productToAdd = {
                 ...product,
-                selectedVariants: selectedVariants || undefined
+                selectedVariants: selectedVariants ? normalizeVariants(selectedVariants, product) : undefined
             };
 
             // 設定價格（規格價格或基本價格）
