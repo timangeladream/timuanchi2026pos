@@ -10764,13 +10764,36 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
-            // 檢查該規格組合的庫存
+            // 檢查該規格組合的庫存（含訂單中已有的數量）
             if (item.variantStock) {
                 const variantKey = requiredVariants.map(key => selectedVariants[key]).join(',');
                 const stock = item.variantStock[variantKey] || 0;
                 
                 if (stock <= 0) {
                     alert('此規格已售罄，無法加入訂單');
+                    return;
+                }
+                
+                // 計算訂單中已有的數量
+                const normalizedSelected = normalizeVariants(selectedVariants, item);
+                const existingQty = orderItems
+                    .filter(oi => oi.id === item.id && !oi.isAddon &&
+                        JSON.stringify(normalizeVariants(oi.selectedVariants, item)) === JSON.stringify(normalizedSelected))
+                    .reduce((sum, oi) => sum + oi.quantity, 0);
+                
+                if (existingQty >= stock) {
+                    alert(`此規格庫存僅剩 ${stock} 件，訂單中已有 ${existingQty} 件`);
+                    return;
+                }
+            } else if (item.stock !== undefined && !isAddon) {
+                // 無規格商品的庫存檢查
+                const stock = item.stock || 0;
+                const existingQty = orderItems
+                    .filter(oi => oi.id === item.id && !oi.isAddon && !oi.selectedVariants)
+                    .reduce((sum, oi) => sum + oi.quantity, 0);
+                
+                if (existingQty >= stock) {
+                    alert(`此商品庫存僅剩 ${stock} 件，訂單中已有 ${existingQty} 件`);
                     return;
                 }
             }
