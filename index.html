@@ -2379,6 +2379,7 @@
                 <div id="headerUserInfo"></div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
+                <button onclick="showCustomerQR()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">👁️</button>
                 <button onclick="location.reload()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">🔄</button>
                 <button onclick="doLogout()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">登出</button>
                 <button class="menu-toggle" onclick="toggleMenu();">
@@ -10947,6 +10948,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 更新贈品與折扣按鈕狀態
             loadGiftButtons();
             loadDiscountButtons();
+            syncActiveOrder(); // 即時同步到顧客顯示
             
             // 更新按鈕狀態
             const checkoutBtn = document.getElementById('checkoutBtn');
@@ -11555,6 +11557,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 重新載入商品列表以顯示更新後的庫存
             loadProducts();
             loadAddonItems(); // 更新加購項目庫存顯示
+            
+            // 清空顧客顯示畫面
+            clearActiveOrder();
             
             // 儲存商品庫存變動到 Firebase
             saveDataToLocalStorage();
@@ -13174,6 +13179,88 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 記錄相機是否開啟中（供 processScannedCode 判斷）
         let _scannerWasOpen = false;
 
+
+        // ===== 顧客顯示：即時同步進行中訂單 =====
+        let _syncTimeout = null;
+
+        function syncActiveOrder() {
+            if (!db || !currentUser) return;
+            // 防抖：避免頻繁寫入
+            clearTimeout(_syncTimeout);
+            _syncTimeout = setTimeout(async () => {
+                try {
+                    const orderData = {
+                        salesPersonId: currentUser.uid,
+                        salesPersonName: currentUserName,
+                        items: orderItems.map(item => ({
+                            name: item.name,
+                            price: item.price,
+                            quantity: item.quantity,
+                            isAddon: item.isAddon || false,
+                            isGift: item.isGift || false,
+                            selectedVariants: item.selectedVariants || null,
+                            brand: item.brand || ''
+                        })),
+                        discounts: discounts.map(d => ({
+                            name: d.name,
+                            amount: d.amount || 0
+                        })),
+                        subtotal: orderItems.reduce((sum, item) => {
+                            if (!item.isGift) return sum + (item.price * item.quantity);
+                            return sum;
+                        }, 0),
+                        total: parseInt(document.getElementById('total')?.textContent?.replace(/[^0-9]/g, '') || '0'),
+                        status: orderItems.length > 0 ? 'active' : 'empty',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        shopName: systemSettings?.shopName || 'TimuAnchi'
+                    };
+                    await db.collection('activeOrders').doc(currentUser.uid).set(orderData);
+                } catch (e) {
+                    console.error('同步訂單失敗:', e);
+                }
+            }, 300);
+        }
+
+        // 結帳完成後清空顧客顯示
+        async function clearActiveOrder() {
+            if (!db || !currentUser) return;
+            try {
+                await db.collection('activeOrders').doc(currentUser.uid).set({
+                    salesPersonId: currentUser.uid,
+                    salesPersonName: currentUserName,
+                    items: [],
+                    discounts: [],
+                    subtotal: 0,
+                    total: 0,
+                    status: 'completed',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    shopName: systemSettings?.shopName || 'TimuAnchi'
+                });
+            } catch (e) {
+                console.error('清空訂單失敗:', e);
+            }
+        }
+
+
+        // ===== 顧客顯示 QR Code =====
+        function showCustomerQR() {
+            if (!currentUser) return;
+            const baseUrl = window.location.href.split('?')[0].replace('index.html', '');
+            const customerUrl = `${baseUrl}customer.html?id=${currentUser.uid}`;
+            
+            document.getElementById('customerQRUrl').textContent = customerUrl;
+            
+            // 用 QR Code API 產生
+            const qrContainer = document.getElementById('customerQRCode');
+            qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(customerUrl)}" style="width:200px;height:200px;border-radius:8px;">`;
+            
+            document.getElementById('customerQRModal').style.display = 'flex';
+        }
+
+        function closeCustomerQR() {
+            document.getElementById('customerQRModal').style.display = 'none';
+        }
+
         // Firebase 啟動 (取代原本的 init())
         initFirebase();
     </script>
@@ -13225,6 +13312,18 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
     </div>
     <div id="scannerStatus" style="color:#D4AF37;margin-top:16px;font-size:14px;">掃描中...</div>
     <button onclick="closeScanner(true)" style="margin-top:20px;padding:12px 32px;background:#dc3545;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;">關閉</button>
+</div>
+
+
+<!-- 顧客顯示 QR Code Modal -->
+<div id="customerQRModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:20px;padding:32px;width:90%;max-width:360px;text-align:center;">
+        <h3 style="margin:0 0 8px;color:var(--primary-color);">👁️ 顧客顯示畫面</h3>
+        <p style="font-size:13px;color:#666;margin:0 0 20px;">請顧客掃描以下 QR Code</p>
+        <div id="customerQRCode" style="margin:0 auto 20px;"></div>
+        <p id="customerQRUrl" style="font-size:11px;color:#999;word-break:break-all;margin:0 0 20px;"></p>
+        <button onclick="closeCustomerQR()" style="width:100%;padding:12px;background:var(--primary-color);color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;">關閉</button>
+    </div>
 </div>
 
 </div><!-- end #appScreen -->

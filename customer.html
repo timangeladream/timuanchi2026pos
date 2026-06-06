@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>顧客顯示</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a5276, #2e86c1);
+            color: white;
+            padding: 20px 24px;
+            text-align: center;
+        }
+        .shop-name {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .header-sub {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        /* Main content */
+        .content {
+            flex: 1;
+            padding: 20px 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; }
+        .empty-text { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .empty-sub { font-size: 14px; }
+
+        /* Thank you state */
+        .thankyou-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #2e86c1;
+        }
+        .thankyou-icon { font-size: 72px; margin-bottom: 16px; }
+        .thankyou-text { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .thankyou-sub { font-size: 15px; color: #666; }
+
+        /* Order items */
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .order-item {
+            background: white;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item-left { flex: 1; }
+        .item-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+        .item-variant {
+            font-size: 12px;
+            color: #888;
+        }
+        .item-tag {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 4px;
+            font-weight: 600;
+        }
+        .tag-addon { background: #e3f2fd; color: #1565c0; }
+        .tag-gift { background: #fce4ec; color: #c62828; }
+        .item-right { text-align: right; }
+        .item-price {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .item-qty {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        /* Discount */
+        .discount-item {
+            background: #fff3cd;
+            border-radius: 10px;
+            padding: 10px 16px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .discount-name { color: #856404; font-weight: 600; }
+        .discount-amount { color: #e74c3c; font-weight: 600; }
+
+        /* Summary */
+        .summary {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .summary-row.total {
+            border-top: 2px solid #e9ecef;
+            margin-top: 8px;
+            padding-top: 14px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a5276;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 16px;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid #e9ecef;
+            border-top-color: #2e86c1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="shop-name" id="shopName">載入中...</div>
+    <div class="header-sub">感謝您的光臨</div>
+</div>
+
+<div class="content" id="mainContent">
+    <div class="loading">
+        <div class="spinner"></div>
+        連線中...
+    </div>
+</div>
+
+<div class="footer" id="footerText"></div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAdUjtB_b2ArOnFhDlZLG_EsIVeE-3NG1M",
+        authDomain: "timuanchi2026pos.firebaseapp.com",
+        projectId: "timuanchi2026pos",
+        storageBucket: "timuanchi2026pos.firebasestorage.app",
+        messagingSenderId: "816721531919",
+        appId: "1:816721531919:web:05c3fcd1a0f4c4a053bf7a"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 取得 URL 參數中的 salesPersonId
+    const params = new URLSearchParams(window.location.search);
+    const salesPersonId = params.get('id');
+
+    if (!salesPersonId) {
+        document.getElementById('mainContent').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">⚠️</div>
+                <div class="empty-text">無效的連結</div>
+                <div class="empty-sub">請向收銀員取得正確的 QR Code</div>
+            </div>`;
+    } else {
+        // 即時監聽進行中訂單
+        db.collection('activeOrders').doc(salesPersonId)
+            .onSnapshot(doc => {
+                if (!doc.exists) {
+                    renderEmpty();
+                    return;
+                }
+                const data = doc.data();
+                document.getElementById('shopName').textContent = data.shopName || 'TimuAnchi';
+                
+                if (data.status === 'completed') {
+                    renderThankYou();
+                } else if (!data.items || data.items.length === 0) {
+                    renderEmpty();
+                } else {
+                    renderOrder(data);
+                }
+            }, err => {
+                console.error(err);
+                document.getElementById('mainContent').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚠️</div>
+                        <div class="empty-text">連線失敗</div>
+                        <div class="empty-sub">請重新整理頁面</div>
+                    </div>`;
+            });
+    }
+
+    function renderEmpty() {
+        document.getElementById('mainContent').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🛍️</div>
+                <div class="empty-text">等待結帳中</div>
+                <div class="empty-sub">商品加入後將顯示在此處</div>
+            </div>`;
+    }
+
+    function renderThankYou() {
+        document.getElementById('mainContent').innerHTML = `
+            <div class="thankyou-state">
+                <div class="thankyou-icon">🎉</div>
+                <div class="thankyou-text">感謝您的購買！</div>
+                <div class="thankyou-sub">歡迎再次光臨</div>
+            </div>`;
+        // 5秒後回到等待畫面
+        setTimeout(() => renderEmpty(), 5000);
+    }
+
+    function renderOrder(data) {
+        const { items = [], discounts = [], subtotal = 0, total = 0 } = data;
+        
+        const normalItems = items.filter(i => !i.isAddon && !i.isGift);
+        const addonItems = items.filter(i => i.isAddon);
+        const giftItems = items.filter(i => i.isGift);
+        const discountAmount = discounts.reduce((sum, d) => sum + (d.amount || 0), 0);
+
+        const renderItem = (item) => {
+            const variantText = item.selectedVariants 
+                ? Object.values(item.selectedVariants).join(' / ') 
+                : '';
+            const tag = item.isAddon 
+                ? '<span class="item-tag tag-addon">加購</span>' 
+                : item.isGift 
+                    ? '<span class="item-tag tag-gift">贈品</span>' 
+                    : '';
+            return `
+                <div class="order-item">
+                    <div class="item-left">
+                        <div class="item-name">${tag}${item.name}</div>
+                        ${variantText ? `<div class="item-variant">${variantText}</div>` : ''}
+                    </div>
+                    <div class="item-right">
+                        ${item.isGift ? '<div class="item-price" style="color:#e74c3c;">贈品</div>' : `<div class="item-price">NT$ ${(item.price * item.quantity).toLocaleString()}</div>`}
+                        <div class="item-qty">× ${item.quantity}</div>
+                    </div>
+                </div>`;
+        };
+
+        let html = '';
+
+        if (normalItems.length > 0) {
+            html += `<div class="section-title">📋 商品明細</div>`;
+            html += normalItems.map(renderItem).join('');
+        }
+
+        if (addonItems.length > 0) {
+            html += `<div class="section-title" style="margin-top:16px;">➕ 加購項目</div>`;
+            html += addonItems.map(renderItem).join('');
+        }
+
+        if (giftItems.length > 0) {
+            html += `<div class="section-title" style="margin-top:16px;">🎁 贈品</div>`;
+            html += giftItems.map(renderItem).join('');
+        }
+
+        if (discounts.length > 0) {
+            html += `<div class="section-title" style="margin-top:16px;">🎟️ 優惠折扣</div>`;
+            html += discounts.map(d => `
+                <div class="discount-item">
+                    <span class="discount-name">${d.name}</span>
+                    <span class="discount-amount">- NT$ ${(d.amount || 0).toLocaleString()}</span>
+                </div>`).join('');
+        }
+
+        html += `
+            <div class="summary">
+                <div class="summary-row">
+                    <span>小計</span>
+                    <span>NT$ ${subtotal.toLocaleString()}</span>
+                </div>
+                ${discountAmount > 0 ? `
+                <div class="summary-row">
+                    <span>折扣</span>
+                    <span style="color:#e74c3c;">- NT$ ${discountAmount.toLocaleString()}</span>
+                </div>` : ''}
+                <div class="summary-row total">
+                    <span>總計</span>
+                    <span>NT$ ${total.toLocaleString()}</span>
+                </div>
+            </div>`;
+
+        document.getElementById('mainContent').innerHTML = html;
+    }
+</script>
+</body>
+</html>
