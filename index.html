@@ -4551,9 +4551,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 // 處理規格顯示
                 let variantInfo = '';
                 if (product.selectedVariants && Object.keys(product.selectedVariants).length > 0) {
-                    const variantText = Object.entries(product.selectedVariants)
-                        .map(([key, value]) => `${key}: ${value}`)
-                        .join(' | ');
+                    const _targetP3 = products.find(p => p.id === product.id);
+                    const _vkeys3 = (_targetP3?.variantKeyOrder || []).filter(k => product.selectedVariants[k]);
+                    Object.keys(product.selectedVariants).forEach(k => { if (!_vkeys3.includes(k)) _vkeys3.push(k); });
+                    const variantText = _vkeys3.map(k => `${k}: ${product.selectedVariants[k]}`).join(' | ');
                     variantInfo = `<div style="font-size: 11px; color: #999; margin-top: 2px;">${variantText}</div>`;
                 }
                 
@@ -7525,8 +7526,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 // 輸出一般商品
                 products.forEach((item) => {
-                    const variantText = item.selectedVariants ? 
-                        Object.entries(item.selectedVariants).map(([k, v]) => `${k}:${v}`).join(', ') : '';
+                    const _targetP4 = products.find(p => p.id === item.id) || addOnItems.find(a => a.id === item.id);
+                    const _vkeys4 = item.selectedVariants ? (_targetP4?.variantKeyOrder || []).filter(k => item.selectedVariants[k]) : [];
+                    if (item.selectedVariants) Object.keys(item.selectedVariants).forEach(k => { if (!_vkeys4.includes(k)) _vkeys4.push(k); });
+                    const variantText = item.selectedVariants ? _vkeys4.map(k => `${k}:${item.selectedVariants[k]}`).join(', ') : '';
                     
                     // 處理折扣資訊（只在第一行顯示）
                     let discountName = '';
@@ -10934,9 +10937,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         // 處理規格顯示
                         let variantInfo = '';
                         if (item.selectedVariants && Object.keys(item.selectedVariants).length > 0) {
-                            const variantText = Object.entries(item.selectedVariants)
-                                .map(([key, value]) => `${key}: ${value}`)
-                                .join(' | ');
+                            const _vkeys1 = (targetItem?.variantKeyOrder || []).filter(k => item.selectedVariants[k]);
+                            Object.keys(item.selectedVariants).forEach(k => { if (!_vkeys1.includes(k)) _vkeys1.push(k); });
+                            const variantText = _vkeys1.map(k => `${k}: ${item.selectedVariants[k]}`).join(' | ');
                             variantInfo = `<div style="font-size: 11px; color: #999;">${variantText}</div>`;
                         }
                         
@@ -11789,9 +11792,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         // 處理規格顯示
                         let variantInfo = '';
                         if (item.selectedVariants && Object.keys(item.selectedVariants).length > 0) {
-                            const variantText = Object.entries(item.selectedVariants)
-                                .map(([key, value]) => `${key}: ${value}`)
-                                .join(' | ');
+                            const _targetP2 = products.find(p => p.id === item.id) || addOnItems.find(a => a.id === item.id);
+                            const _vkeys2 = (_targetP2?.variantKeyOrder || []).filter(k => item.selectedVariants[k]);
+                            Object.keys(item.selectedVariants).forEach(k => { if (!_vkeys2.includes(k)) _vkeys2.push(k); });
+                            const variantText = _vkeys2.map(k => `${k}: ${item.selectedVariants[k]}`).join(' | ');
                             variantInfo = `<br><span style="font-size: 10px; color: #000;">${variantText}</span>`;
                         }
                         
