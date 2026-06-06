@@ -10862,8 +10862,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             if (existingItem) {
                 existingItem.quantity++;
+                showNotification(`📌 數量增加 total=${orderItems.length}`);
             } else {
                 orderItems.push({ ...product, quantity: 1, isDiscount: false });
+                showNotification(`📌 已push total=${orderItems.length} name=${product.name}`);
             }
             updateOrder();
         }
