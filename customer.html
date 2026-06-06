@@ -186,8 +186,7 @@
 <body>
 
 <div class="header">
-    <div class="shop-name" id="shopName">載入中...</div>
-    <div class="header-sub">感謝您的光臨</div>
+    <div class="shop-name">訂單明細</div>
 </div>
 
 <div class="content" id="mainContent">
@@ -232,7 +231,7 @@
                     return;
                 }
                 const data = doc.data();
-                document.getElementById('shopName').textContent = data.shopName || 'TimuAnchi';
+
                 
                 if (data.status === 'completed') {
                     renderThankYou();
@@ -305,7 +304,7 @@
         let html = '';
 
         if (normalItems.length > 0) {
-            html += `<div class="section-title">📋 商品明細</div>`;
+            html += `<div class="section-title">📋 訂單明細</div>`;
             html += normalItems.map(renderItem).join('');
         }
 
