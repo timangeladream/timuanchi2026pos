@@ -10872,6 +10872,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         function updateOrder() {
             const container = document.getElementById('orderList');
+            showNotification(`📌 updateOrder orderItems=${orderItems.length} container=${container ? 'ok' : 'null'}`);
             
             // 分類：商品在前，加購項目，贈品，最後折扣
             const products = orderItems.filter(item => !item.isAddon && !item.isGift);
