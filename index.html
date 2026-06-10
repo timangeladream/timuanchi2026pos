@@ -13444,6 +13444,51 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
         }
 
+        async function createNewCustomer() {
+            const name = document.getElementById('newCustomerName').value.trim();
+            const phone = document.getElementById('newCustomerPhone').value.trim();
+            const email = document.getElementById('newCustomerEmail').value.trim();
+            const account = document.getElementById('newCustomerAccount').value.trim();
+
+            if (!name && !phone && !email && !account) {
+                alert('請至少填寫一項資料');
+                return;
+            }
+
+            // 檢查是否已存在相同電話或Email
+            if (phone) {
+                const snap = await db.collection('customers').where('phone', '==', phone).limit(1).get();
+                if (!snap.empty) { alert('此電話號碼已存在！'); return; }
+            }
+            if (email) {
+                const snap = await db.collection('customers').where('email', '==', email).limit(1).get();
+                if (!snap.empty) { alert('此 Email 已存在！'); return; }
+            }
+
+            try {
+                const now = firebase.firestore.Timestamp.now();
+                await db.collection('customers').add({
+                    name, phone, email, account,
+                    totalOrders: 0,
+                    totalSpent: 0,
+                    firstVisit: now,
+                    lastVisit: now,
+                    createdBy: currentUser.uid
+                });
+
+                // 清空表單
+                document.getElementById('newCustomerName').value = '';
+                document.getElementById('newCustomerPhone').value = '';
+                document.getElementById('newCustomerEmail').value = '';
+                document.getElementById('newCustomerAccount').value = '';
+
+                showNotification('✅ 顧客已建立');
+                await loadCustomerList();
+            } catch (e) {
+                alert('建立失敗，請重試');
+            }
+        }
+
         async function openCustomerDetail(customerId) {
             const doc = await db.collection('customers').doc(customerId).get();
             if (!doc.exists) return;
@@ -13607,7 +13652,31 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:14px;box-sizing:border-box;"
                         oninput="clearTimeout(customerSearchTimeout); customerSearchTimeout = setTimeout(() => loadCustomerList(this.value), 300)">
                 </div>
-                <div id="customerList" style="max-height:500px;overflow-y:auto;"></div>
+                <div id="customerList" style="max-height:300px;overflow-y:auto;margin-bottom:16px;"></div>
+                
+                <!-- 新增顧客 -->
+                <div style="border-top:2px solid var(--border-color);padding-top:16px;">
+                    <h4 style="margin-bottom:12px;color:var(--primary-color);">➕ 新增顧客</h4>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>姓名</label>
+                            <input type="text" id="newCustomerName" placeholder="顧客姓名" />
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>電話</label>
+                            <input type="tel" id="newCustomerPhone" placeholder="09XX-XXX-XXX" />
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Email</label>
+                            <input type="email" id="newCustomerEmail" placeholder="example@email.com" />
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>會員帳號</label>
+                            <input type="text" id="newCustomerAccount" placeholder="帳號" />
+                        </div>
+                    </div>
+                    <button class="add-discount-btn" onclick="createNewCustomer()" style="margin-top:12px;">💾 建立顧客</button>
+                </div>
             </div>
             <!-- 詳細頁 -->
             <div id="customerDetailView" style="display:none;">
