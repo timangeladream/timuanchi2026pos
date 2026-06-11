@@ -2567,7 +2567,10 @@
                 </div>
             </div>
             
-            <div class="order-info-divider">👤 顧客資訊</div>
+            <div class="order-info-divider" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>👤 顧客資訊</span>
+                <button type="button" onclick="openCustomerSearchModal()" style="padding:4px 10px;font-size:12px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500;">🔍 查詢顧客</button>
+            </div>
             
             <div class="order-info-grid">
                 <div class="order-info-field">
@@ -2578,15 +2581,9 @@
                     <label>會員名稱</label>
                     <input type="text" id="memberName" placeholder="請輸入姓名" />
                 </div>
-                <div class="order-info-field" style="position:relative;">
-                    <label style="display:flex;justify-content:space-between;align-items:center;">
-                        <span>聯絡電話</span>
-                        <button type="button" onclick="searchCustomerByInput()" style="padding:2px 8px;font-size:11px;background:var(--secondary-color);color:white;border:none;border-radius:4px;cursor:pointer;">🔍 查詢顧客</button>
-                    </label>
-                    <input type="tel" id="memberPhone" placeholder="09XX-XXX-XXX"
-                        oninput="onCustomerPhoneInput(this.value)" 
-                        onblur="setTimeout(()=>hideCustomerDropdown(), 200)" />
-                    <div id="customerSearchDropdown" class="customer-search-dropdown" style="display:none;"></div>
+                <div class="order-info-field">
+                    <label>聯絡電話</label>
+                    <input type="tel" id="memberPhone" placeholder="09XX-XXX-XXX" />
                 </div>
                 <div class="order-info-field">
                     <label>電子信箱</label>
@@ -13770,84 +13767,76 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
 
-        // ===== 訂單資訊顧客快速查詢 =====
+        // ===== 訂單資訊顧客查詢 Modal =====
         let _customerSearchTimeout = null;
 
-        function onCustomerPhoneInput(value) {
+        function openCustomerSearchModal() {
+            document.getElementById('customerSearchModal').style.display = 'flex';
+            document.getElementById('customerSearchQuery').value = '';
+            document.getElementById('customerSearchModalList').innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:13px;">輸入姓名或電話開始搜尋</div>';
+            setTimeout(() => document.getElementById('customerSearchQuery').focus(), 100);
+        }
+
+        function closeCustomerSearchModal() {
+            document.getElementById('customerSearchModal').style.display = 'none';
+        }
+
+        function searchCustomerModal(query) {
             clearTimeout(_customerSearchTimeout);
-            if (value.length < 2) { hideCustomerDropdown(); return; }
-            _customerSearchTimeout = setTimeout(() => searchCustomerByPhone(value), 400);
+            if (!query || query.length < 1) {
+                document.getElementById('customerSearchModalList').innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:13px;">輸入姓名或電話開始搜尋</div>';
+                return;
+            }
+            _customerSearchTimeout = setTimeout(() => doSearchCustomerModal(query), 300);
         }
 
-        async function searchCustomerByPhone(phone) {
-            if (!db || !phone) return;
-            try {
-                const snap = await db.collection('customers')
-                    .where('phone', '>=', phone)
-                    .where('phone', '<=', phone + '')
-                    .limit(5).get();
+        async function doSearchCustomerModal(query) {
+            if (!db) return;
+            const list = document.getElementById('customerSearchModalList');
+            list.innerHTML = '<div style="text-align:center;color:#999;padding:16px;font-size:13px;">搜尋中...</div>';
 
+            try {
+                // 同時搜尋電話和姓名
                 const results = [];
-                snap.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                const seen = new Set();
 
-                if (results.length === 0) { hideCustomerDropdown(); return; }
-                showCustomerDropdown(results);
-            } catch (e) { hideCustomerDropdown(); }
-        }
+                const phoneSnap = await db.collection('customers')
+                    .where('phone', '>=', query)
+                    .where('phone', '<=', query + '')
+                    .limit(5).get();
+                phoneSnap.forEach(doc => { if (!seen.has(doc.id)) { seen.add(doc.id); results.push({ id: doc.id, ...doc.data() }); } });
 
-        async function searchCustomerByInput() {
-            const phone = document.getElementById('memberPhone').value.trim();
-            const name = document.getElementById('memberName').value.trim();
-            const query = phone || name;
-            if (!query) { alert('請先輸入電話或姓名'); return; }
+                const nameSnap = await db.collection('customers')
+                    .where('name', '>=', query)
+                    .where('name', '<=', query + '')
+                    .limit(5).get();
+                nameSnap.forEach(doc => { if (!seen.has(doc.id)) { seen.add(doc.id); results.push({ id: doc.id, ...doc.data() }); } });
 
-            try {
-                let results = [];
-                if (phone) {
-                    const snap = await db.collection('customers')
-                        .where('phone', '>=', phone)
-                        .where('phone', '<=', phone + '')
-                        .limit(10).get();
-                    snap.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
-                }
-                if (results.length === 0 && name) {
-                    const snap = await db.collection('customers')
-                        .where('name', '>=', name)
-                        .where('name', '<=', name + '')
-                        .limit(10).get();
-                    snap.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
-                }
                 if (results.length === 0) {
-                    showNotification('⚠️ 查無此顧客');
+                    list.innerHTML = '<div style="text-align:center;color:#999;padding:20px;font-size:13px;">找不到符合的顧客</div>';
                     return;
                 }
-                showCustomerDropdown(results);
-            } catch (e) { console.error(e); }
-        }
 
-        function showCustomerDropdown(customers) {
-            const dropdown = document.getElementById('customerSearchDropdown');
-            dropdown.innerHTML = customers.map(c => `
-                <div class="customer-search-item" onclick="selectCustomerForOrder('${c.id}')">
-                    <div class="c-name">${c.name || '未填姓名'}</div>
-                    <div class="c-info">${c.phone || ''} ${c.email ? '｜' + c.email : ''}</div>
-                </div>
-            `).join('');
-            dropdown.style.display = 'block';
-        }
-
-        function hideCustomerDropdown() {
-            const dropdown = document.getElementById('customerSearchDropdown');
-            if (dropdown) dropdown.style.display = 'none';
+                list.innerHTML = results.map(c => `
+                    <div onclick="selectCustomerForOrder('${c.id}')" style="padding:12px 14px;border-bottom:1px solid var(--border-color);cursor:pointer;transition:background 0.1s;"
+                         onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background='white'">
+                        <div style="font-size:14px;font-weight:600;color:var(--text-dark);">${c.name || '未填姓名'}</div>
+                        <div style="font-size:12px;color:#888;margin-top:2px;">
+                            ${c.phone || ''} ${c.email ? '｜' + c.email : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                list.innerHTML = '<div style="text-align:center;color:red;padding:16px;font-size:13px;">搜尋失敗，請重試</div>';
+            }
         }
 
         async function selectCustomerForOrder(customerId) {
-            hideCustomerDropdown();
+            closeCustomerSearchModal();
             const doc = await db.collection('customers').doc(customerId).get();
             if (!doc.exists) return;
             const c = doc.data();
 
-            // 填入顧客資料
             document.getElementById('memberName').value = c.name || '';
             document.getElementById('memberPhone').value = c.phone || '';
             document.getElementById('memberEmail').value = c.email || '';
@@ -14009,6 +13998,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <input type="text" id="editCustomerAccount" placeholder="帳號" />
             </div>
             <button class="add-discount-btn" onclick="saveEditCustomer()">💾 儲存</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- 顧客查詢 Modal -->
+<div id="customerSearchModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;align-items:center;justify-content:center;">
+    <div style="background:white;border-radius:16px;width:90%;max-width:420px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h4 style="margin:0;color:var(--primary-color);">🔍 查詢顧客</h4>
+            <button onclick="closeCustomerSearchModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">×</button>
+        </div>
+        <input type="text" id="customerSearchQuery" placeholder="輸入姓名或電話搜尋..."
+            style="width:100%;padding:10px;border:2px solid var(--primary-color);border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:12px;"
+            oninput="searchCustomerModal(this.value)"
+            onkeypress="if(event.key==='Enter')searchCustomerModal(this.value)">
+        <div id="customerSearchModalList" style="max-height:300px;overflow-y:auto;">
+            <div style="text-align:center;color:#999;padding:20px;font-size:13px;">輸入姓名或電話開始搜尋</div>
         </div>
     </div>
 </div>
