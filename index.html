@@ -13395,6 +13395,58 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         async function openCustomerManager() {
             document.getElementById('customerManagerModal').classList.add('show');
             await loadCustomerList();
+            // 背景自動計算（不打擾使用者）
+            setTimeout(() => silentRecalculate(), 500);
+        }
+
+        // 靜默重新計算（不顯示確認框，背景執行）
+        async function silentRecalculate() {
+            if (!db || !currentUser) return;
+            try {
+                const salesSnap = await db.collection('sales').get();
+                const customerStats = {};
+
+                salesSnap.forEach(doc => {
+                    const sale = doc.data();
+                    if (sale.status === 'cancelled') return;
+                    const key = sale.memberPhone || sale.memberEmail || sale.memberAccount;
+                    if (!key) return;
+                    if (!customerStats[key]) customerStats[key] = { totalOrders: 0, totalSpent: 0 };
+                    customerStats[key].totalOrders++;
+                    customerStats[key].totalSpent += sale.total || 0;
+                });
+
+                const customersSnap = await db.collection('customers').get();
+                const batch = db.batch();
+                let needsUpdate = false;
+
+                customersSnap.forEach(doc => {
+                    const c = doc.data();
+                    const matchKey = [c.phone, c.email, c.account].find(k => k && customerStats[k]);
+                    if (matchKey) {
+                        const stats = customerStats[matchKey];
+                        if (c.totalOrders !== stats.totalOrders || c.totalSpent !== stats.totalSpent) {
+                            batch.update(doc.ref, {
+                                totalOrders: stats.totalOrders,
+                                totalSpent: stats.totalSpent
+                            });
+                            needsUpdate = true;
+                        }
+                    } else if (c.totalOrders > 0 || c.totalSpent > 0) {
+                        // 找不到對應訂單，重置為0
+                        batch.update(doc.ref, { totalOrders: 0, totalSpent: 0 });
+                        needsUpdate = true;
+                    }
+                });
+
+                if (needsUpdate) {
+                    await batch.commit();
+                    await loadCustomerList(document.getElementById('customerSearchInput')?.value || '');
+                    console.log('✅ 顧客統計已自動更新');
+                }
+            } catch (e) {
+                console.error('自動計算失敗:', e);
+            }
         }
 
         function closeCustomerManager() {
