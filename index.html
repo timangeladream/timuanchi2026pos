@@ -13421,26 +13421,65 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
                 
                 container.innerHTML = customers.map(c => `
-                    <div onclick="openCustomerDetail('${c.id}')" style="padding:12px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;cursor:pointer;border:2px solid transparent;" 
-                         onmouseover="this.style.borderColor='var(--primary-color)'" 
-                         onmouseout="this.style.borderColor='transparent'">
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <div>
-                                <div style="font-weight:600;font-size:14px;">${c.name || '未填姓名'}</div>
-                                <div style="font-size:12px;color:#666;margin-top:2px;">
-                                    ${c.phone ? `📱 ${c.phone}` : ''}
-                                    ${c.email ? ` ✉️ ${c.email}` : ''}
-                                </div>
-                            </div>
+                    <div style="padding:10px 12px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                        <div onclick="openCustomerDetail('${c.id}')" style="flex:1;cursor:pointer;">
+                            <div style="font-size:12px;font-weight:600;">${c.name || '未填姓名'}</div>
+                            <div style="font-size:12px;color:#666;margin-top:2px;">${c.phone || '未填電話'}</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
                             <div style="text-align:right;">
-                                <div style="font-size:13px;font-weight:600;color:var(--primary-color);">NT$ ${(c.totalSpent || 0).toLocaleString()}</div>
-                                <div style="font-size:11px;color:#999;">${c.totalOrders || 0} 筆訂單</div>
+                                <div style="font-size:12px;font-weight:600;color:var(--primary-color);">NT$ ${(c.totalSpent || 0).toLocaleString()}</div>
+                                <div style="font-size:12px;color:#999;">${c.totalOrders || 0} 筆訂單</div>
                             </div>
+                            <button onclick="openEditCustomer('${c.id}')" style="padding:6px 10px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">編輯</button>
                         </div>
                     </div>
                 `).join('');
             } catch (e) {
                 container.innerHTML = '<div style="color:red;">載入失敗</div>';
+            }
+        }
+
+        function toggleNewCustomerForm() {
+            const form = document.getElementById('newCustomerForm');
+            const isVisible = form.style.display !== 'none';
+            form.style.display = isVisible ? 'none' : 'block';
+            document.getElementById('toggleNewCustomerBtn').textContent = isVisible ? '➕ 新增' : '✕ 關閉';
+            if (!isVisible) document.getElementById('newCustomerName').focus();
+        }
+
+        async function openEditCustomer(customerId) {
+            const doc = await db.collection('customers').doc(customerId).get();
+            if (!doc.exists) return;
+            const c = doc.data();
+
+            document.getElementById('editCustomerId').value = customerId;
+            document.getElementById('editCustomerName').value = c.name || '';
+            document.getElementById('editCustomerPhone').value = c.phone || '';
+            document.getElementById('editCustomerEmail').value = c.email || '';
+            document.getElementById('editCustomerAccount').value = c.account || '';
+
+            document.getElementById('customerEditModal').classList.add('show');
+        }
+
+        function closeEditCustomer() {
+            document.getElementById('customerEditModal').classList.remove('show');
+        }
+
+        async function saveEditCustomer() {
+            const id = document.getElementById('editCustomerId').value;
+            const name = document.getElementById('editCustomerName').value.trim();
+            const phone = document.getElementById('editCustomerPhone').value.trim();
+            const email = document.getElementById('editCustomerEmail').value.trim();
+            const account = document.getElementById('editCustomerAccount').value.trim();
+
+            try {
+                await db.collection('customers').doc(id).update({ name, phone, email, account });
+                showNotification('✅ 顧客資料已更新');
+                closeEditCustomer();
+                await loadCustomerList(document.getElementById('customerSearchInput').value);
+            } catch (e) {
+                alert('更新失敗，請重試');
             }
         }
 
@@ -13523,10 +13562,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             document.getElementById('customerDetailContent').innerHTML = `
                 <div style="padding:16px;background:#f0f7ff;border-radius:12px;margin-bottom:20px;">
-                    <div style="font-size:20px;font-weight:700;margin-bottom:8px;">${c.name || '未填姓名'}</div>
-                    ${c.phone ? `<div style="font-size:13px;color:#555;margin-bottom:4px;">📱 ${c.phone}</div>` : ''}
-                    ${c.email ? `<div style="font-size:13px;color:#555;margin-bottom:4px;">✉️ ${c.email}</div>` : ''}
-                    ${c.account ? `<div style="font-size:13px;color:#555;margin-bottom:4px;">👤 ${c.account}</div>` : ''}
+                    <div style="font-size:14px;font-weight:700;margin-bottom:8px;">${c.name || '未填姓名'}</div>
+                    ${c.phone ? `<div style="font-size:12px;color:#555;margin-bottom:4px;">${c.phone}</div>` : ''}
+                    ${c.email ? `<div style="font-size:12px;color:#555;margin-bottom:4px;">${c.email}</div>` : ''}
+                    ${c.account ? `<div style="font-size:12px;color:#555;margin-bottom:4px;">${c.account}</div>` : ''}
                     <div style="display:flex;gap:16px;margin-top:12px;">
                         <div style="text-align:center;">
                             <div style="font-size:18px;font-weight:700;color:var(--primary-color);">NT$ ${(c.totalSpent || 0).toLocaleString()}</div>
@@ -13647,42 +13686,80 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         <div class="modal-body" style="overflow-y:auto;flex:1;">
             <!-- 列表頁 -->
             <div id="customerListView">
-                <div style="margin-bottom:12px;">
+                <div style="display:flex;gap:8px;margin-bottom:12px;">
                     <input type="text" id="customerSearchInput" placeholder="搜尋姓名、電話、Email..."
-                        style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:14px;box-sizing:border-box;"
+                        style="flex:1;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:14px;box-sizing:border-box;"
                         oninput="clearTimeout(customerSearchTimeout); customerSearchTimeout = setTimeout(() => loadCustomerList(this.value), 300)">
+                    <button onclick="toggleNewCustomerForm()" id="toggleNewCustomerBtn"
+                        style="padding:10px 14px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">
+                        ➕ 新增
+                    </button>
                 </div>
-                <div id="customerList" style="max-height:300px;overflow-y:auto;margin-bottom:16px;"></div>
                 
-                <!-- 新增顧客 -->
-                <div style="border-top:2px solid var(--border-color);padding-top:16px;">
-                    <h4 style="margin-bottom:12px;color:var(--primary-color);">➕ 新增顧客</h4>
+                <!-- 新增顧客表單（預設隱藏） -->
+                <div id="newCustomerForm" style="display:none;border:2px solid var(--primary-color);border-radius:10px;padding:16px;margin-bottom:16px;background:#f0f7ff;">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>姓名</label>
+                            <label style="font-size:12px;">姓名</label>
                             <input type="text" id="newCustomerName" placeholder="顧客姓名" />
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>電話</label>
+                            <label style="font-size:12px;">電話</label>
                             <input type="tel" id="newCustomerPhone" placeholder="09XX-XXX-XXX" />
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>Email</label>
+                            <label style="font-size:12px;">Email</label>
                             <input type="email" id="newCustomerEmail" placeholder="example@email.com" />
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label>會員帳號</label>
+                            <label style="font-size:12px;">會員帳號</label>
                             <input type="text" id="newCustomerAccount" placeholder="帳號" />
                         </div>
                     </div>
-                    <button class="add-discount-btn" onclick="createNewCustomer()" style="margin-top:12px;">💾 建立顧客</button>
+                    <div style="display:flex;gap:8px;margin-top:12px;">
+                        <button onclick="createNewCustomer()" style="flex:1;padding:10px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">💾 建立</button>
+                        <button onclick="toggleNewCustomerForm()" style="padding:10px 16px;background:#6c757d;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;">取消</button>
+                    </div>
                 </div>
+                
+                <div id="customerList" style="max-height:400px;overflow-y:auto;"></div>
             </div>
             <!-- 詳細頁 -->
             <div id="customerDetailView" style="display:none;">
                 <button onclick="backToCustomerList()" style="margin-bottom:16px;padding:8px 16px;background:var(--bg-light);border:1px solid var(--border-color);border-radius:8px;cursor:pointer;font-size:13px;">← 返回列表</button>
                 <div id="customerDetailContent" style="max-height:500px;overflow-y:auto;"></div>
             </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- 編輯顧客 Modal -->
+<div id="customerEditModal" class="modal">
+    <div class="modal-content" style="max-width:400px;">
+        <div class="modal-header">
+            <h3>✏️ 編輯顧客資料</h3>
+            <button class="modal-close" onclick="closeEditCustomer()">×</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editCustomerId">
+            <div class="form-group">
+                <label style="font-size:12px;">姓名</label>
+                <input type="text" id="editCustomerName" placeholder="顧客姓名" />
+            </div>
+            <div class="form-group">
+                <label style="font-size:12px;">電話</label>
+                <input type="tel" id="editCustomerPhone" placeholder="09XX-XXX-XXX" />
+            </div>
+            <div class="form-group">
+                <label style="font-size:12px;">Email</label>
+                <input type="email" id="editCustomerEmail" placeholder="example@email.com" />
+            </div>
+            <div class="form-group">
+                <label style="font-size:12px;">會員帳號</label>
+                <input type="text" id="editCustomerAccount" placeholder="帳號" />
+            </div>
+            <button class="add-discount-btn" onclick="saveEditCustomer()">💾 儲存</button>
         </div>
     </div>
 </div>
