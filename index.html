@@ -13610,6 +13610,72 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('customerDetailView').style.display = 'none';
         }
 
+        async function recalculateAllCustomers() {
+            if (!confirm('重新從所有訂單計算每位顧客的累計消費和訂單數？')) return;
+            showNotification('⏳ 計算中，請稍候...');
+
+            try {
+                // 載入所有訂單
+                const salesSnap = await db.collection('sales').get();
+                const customerStats = {};
+
+                salesSnap.forEach(doc => {
+                    const sale = doc.data();
+                    if (sale.status === 'cancelled') return;
+
+                    const keys = [sale.memberPhone, sale.memberEmail, sale.memberAccount].filter(Boolean);
+                    if (keys.length === 0) return;
+
+                    // 用第一個有效識別碼作為 key
+                    const key = keys[0];
+                    if (!customerStats[key]) {
+                        customerStats[key] = {
+                            totalOrders: 0,
+                            totalSpent: 0,
+                            lastVisit: null,
+                            phone: sale.memberPhone || '',
+                            email: sale.memberEmail || '',
+                            account: sale.memberAccount || '',
+                            name: sale.memberName || ''
+                        };
+                    }
+                    customerStats[key].totalOrders++;
+                    customerStats[key].totalSpent += sale.total || 0;
+                    const ts = sale.timestamp?.toDate ? sale.timestamp.toDate() : new Date(sale.timestamp?.seconds ? sale.timestamp.seconds * 1000 : sale.timestamp);
+                    if (!customerStats[key].lastVisit || ts > customerStats[key].lastVisit) {
+                        customerStats[key].lastVisit = ts;
+                    }
+                });
+
+                // 更新每個顧客
+                const customersSnap = await db.collection('customers').get();
+                const batch = db.batch();
+                let updatedCount = 0;
+
+                customersSnap.forEach(doc => {
+                    const c = doc.data();
+                    // 找到對應的統計資料
+                    const matchKey = [c.phone, c.email, c.account].find(k => k && customerStats[k]);
+                    if (matchKey) {
+                        const stats = customerStats[matchKey];
+                        batch.update(doc.ref, {
+                            totalOrders: stats.totalOrders,
+                            totalSpent: stats.totalSpent,
+                            lastVisit: stats.lastVisit ? firebase.firestore.Timestamp.fromDate(stats.lastVisit) : doc.data().lastVisit
+                        });
+                        updatedCount++;
+                    }
+                });
+
+                await batch.commit();
+                showNotification(`✅ 已更新 ${updatedCount} 位顧客的統計資料`);
+                await loadCustomerList(document.getElementById('customerSearchInput').value);
+            } catch (e) {
+                console.error(e);
+                alert('計算失敗，請重試');
+            }
+        }
+
         // Firebase 啟動 (取代原本的 init())
         initFirebase();
     </script>
@@ -13681,7 +13747,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
     <div class="modal-content" style="max-width:600px;max-height:90vh;display:flex;flex-direction:column;">
         <div class="modal-header">
             <h3>👤 顧客管理</h3>
-            <button class="modal-close" onclick="closeCustomerManager()">×</button>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button onclick="recalculateAllCustomers()" style="padding:5px 10px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">🔄 重新計算</button>
+                <button class="modal-close" onclick="closeCustomerManager()">×</button>
+            </div>
         </div>
         <div class="modal-body" style="overflow-y:auto;flex:1;">
             <!-- 列表頁 -->
