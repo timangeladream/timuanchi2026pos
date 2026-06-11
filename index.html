@@ -2578,9 +2578,15 @@
                     <label>會員名稱</label>
                     <input type="text" id="memberName" placeholder="請輸入姓名" />
                 </div>
-                <div class="order-info-field">
-                    <label>聯絡電話</label>
-                    <input type="tel" id="memberPhone" placeholder="09XX-XXX-XXX" />
+                <div class="order-info-field" style="position:relative;">
+                    <label style="display:flex;justify-content:space-between;align-items:center;">
+                        <span>聯絡電話</span>
+                        <button type="button" onclick="searchCustomerByInput()" style="padding:2px 8px;font-size:11px;background:var(--secondary-color);color:white;border:none;border-radius:4px;cursor:pointer;">🔍 查詢顧客</button>
+                    </label>
+                    <input type="tel" id="memberPhone" placeholder="09XX-XXX-XXX"
+                        oninput="onCustomerPhoneInput(this.value)" 
+                        onblur="setTimeout(()=>hideCustomerDropdown(), 200)" />
+                    <div id="customerSearchDropdown" class="customer-search-dropdown" style="display:none;"></div>
                 </div>
                 <div class="order-info-field">
                     <label>電子信箱</label>
@@ -13761,6 +13767,93 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 console.error(e);
                 alert('計算失敗，請重試');
             }
+        }
+
+
+        // ===== 訂單資訊顧客快速查詢 =====
+        let _customerSearchTimeout = null;
+
+        function onCustomerPhoneInput(value) {
+            clearTimeout(_customerSearchTimeout);
+            if (value.length < 2) { hideCustomerDropdown(); return; }
+            _customerSearchTimeout = setTimeout(() => searchCustomerByPhone(value), 400);
+        }
+
+        async function searchCustomerByPhone(phone) {
+            if (!db || !phone) return;
+            try {
+                const snap = await db.collection('customers')
+                    .where('phone', '>=', phone)
+                    .where('phone', '<=', phone + '')
+                    .limit(5).get();
+
+                const results = [];
+                snap.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+
+                if (results.length === 0) { hideCustomerDropdown(); return; }
+                showCustomerDropdown(results);
+            } catch (e) { hideCustomerDropdown(); }
+        }
+
+        async function searchCustomerByInput() {
+            const phone = document.getElementById('memberPhone').value.trim();
+            const name = document.getElementById('memberName').value.trim();
+            const query = phone || name;
+            if (!query) { alert('請先輸入電話或姓名'); return; }
+
+            try {
+                let results = [];
+                if (phone) {
+                    const snap = await db.collection('customers')
+                        .where('phone', '>=', phone)
+                        .where('phone', '<=', phone + '')
+                        .limit(10).get();
+                    snap.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                }
+                if (results.length === 0 && name) {
+                    const snap = await db.collection('customers')
+                        .where('name', '>=', name)
+                        .where('name', '<=', name + '')
+                        .limit(10).get();
+                    snap.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                }
+                if (results.length === 0) {
+                    showNotification('⚠️ 查無此顧客');
+                    return;
+                }
+                showCustomerDropdown(results);
+            } catch (e) { console.error(e); }
+        }
+
+        function showCustomerDropdown(customers) {
+            const dropdown = document.getElementById('customerSearchDropdown');
+            dropdown.innerHTML = customers.map(c => `
+                <div class="customer-search-item" onclick="selectCustomerForOrder('${c.id}')">
+                    <div class="c-name">${c.name || '未填姓名'}</div>
+                    <div class="c-info">${c.phone || ''} ${c.email ? '｜' + c.email : ''}</div>
+                </div>
+            `).join('');
+            dropdown.style.display = 'block';
+        }
+
+        function hideCustomerDropdown() {
+            const dropdown = document.getElementById('customerSearchDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+        }
+
+        async function selectCustomerForOrder(customerId) {
+            hideCustomerDropdown();
+            const doc = await db.collection('customers').doc(customerId).get();
+            if (!doc.exists) return;
+            const c = doc.data();
+
+            // 填入顧客資料
+            document.getElementById('memberName').value = c.name || '';
+            document.getElementById('memberPhone').value = c.phone || '';
+            document.getElementById('memberEmail').value = c.email || '';
+            document.getElementById('memberAccount').value = c.account || '';
+
+            showNotification(`✅ 已導入「${c.name || c.phone}」的資料`);
         }
 
         // Firebase 啟動 (取代原本的 init())
