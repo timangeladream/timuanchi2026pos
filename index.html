@@ -12720,7 +12720,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 清除銷售記錄
         // 取消訂單(回加庫存)
-        function cancelSalesOrder(index) {
+        async function cancelSalesOrder(index) {
             const sale = salesHistory[index];
             const orderNumber = sale.orderNumber || '無編號';
             
@@ -12802,18 +12802,28 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             sale.cancelledAt = new Date().toISOString();
             sale.cancelledAtDisplay = new Date().toLocaleString('zh-TW', {hour12: false});
             
-            // 同步到 Firebase
+            // 同步到 Firebase（等待完成確保狀態正確）
             if (sale._firebaseId) {
-                updateSaleInFirestore(sale._firebaseId, {
-                    status: 'cancelled',
-                    cancelledAt: firebase.firestore.Timestamp.now(),
-                    cancelledAtDisplay: sale.cancelledAtDisplay
-                }).catch(e => console.error('更新取消狀態失敗:', e));
+                try {
+                    await updateSaleInFirestore(sale._firebaseId, {
+                        status: 'cancelled',
+                        cancelledAt: firebase.firestore.Timestamp.now(),
+                        cancelledAtDisplay: sale.cancelledAtDisplay
+                    });
+                } catch(e) { console.error('更新取消狀態失敗:', e); }
             }
             
             saveDataToLocalStorage();
             loadProducts();
             loadAddonItems(); // 更新加購項目庫存顯示
+
+            // 同步更新顧客資料（扣除取消的訂單）
+            if (sale.memberPhone || sale.memberEmail || sale.memberAccount) {
+                updateCustomerOnCancel(sale);
+            }
+
+            // 重新從 Firebase 載入銷售記錄確保狀態正確
+            salesHistory = await loadSalesFromFirestore();
             filterByTime(currentTimeFilter);
             showNotification('✅ 訂單已取消，庫存已回復');
         }
@@ -13608,6 +13618,31 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function backToCustomerList() {
             document.getElementById('customerListView').style.display = 'block';
             document.getElementById('customerDetailView').style.display = 'none';
+        }
+
+        async function updateCustomerOnCancel(sale) {
+            if (!db || !currentUser) return;
+            try {
+                const key = sale.memberPhone || sale.memberEmail || sale.memberAccount;
+                if (!key) return;
+
+                let snap = null;
+                if (sale.memberPhone) snap = await db.collection('customers').where('phone', '==', sale.memberPhone).limit(1).get();
+                if ((!snap || snap.empty) && sale.memberEmail) snap = await db.collection('customers').where('email', '==', sale.memberEmail).limit(1).get();
+                if ((!snap || snap.empty) && sale.memberAccount) snap = await db.collection('customers').where('account', '==', sale.memberAccount).limit(1).get();
+
+                if (!snap || snap.empty) return;
+
+                const doc = snap.docs[0];
+                const data = doc.data();
+                await db.collection('customers').doc(doc.id).update({
+                    totalOrders: Math.max(0, (data.totalOrders || 1) - 1),
+                    totalSpent: Math.max(0, (data.totalSpent || 0) - (sale.total || 0))
+                });
+                console.log('✅ 顧客資料已更新（取消訂單）');
+            } catch (e) {
+                console.error('更新顧客資料失敗:', e);
+            }
         }
 
         async function recalculateAllCustomers() {
