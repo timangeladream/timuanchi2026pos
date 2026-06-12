@@ -2574,7 +2574,7 @@
             
             <div class="order-info-grid">
                 <div class="order-info-field">
-                    <label>會員帳號</label>
+                    <label>官網會員帳號</label>
                     <input type="text" id="memberAccount" placeholder="會員ID或帳號" />
                 </div>
                 <div class="order-info-field">
@@ -7521,7 +7521,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            const ws_data = [['訂單編號', '訂單日期', '結帳時間', '銷售地點', '銷售人員', '會員帳號', '會員姓名', '會員電話', '會員Email', '項目類型', '商品名稱', '貨號', '規格', '數量', '單價', '小計', '折扣名稱', '折扣類型', '折扣描述', '折扣比例', '折扣金額', '訂單總額', '訂單備註']];
+            const ws_data = [['訂單編號', '訂單日期', '結帳時間', '銷售地點', '銷售人員', '官網會員帳號', '會員姓名', '會員電話', '會員Email', '項目類型', '商品名稱', '貨號', '規格', '數量', '單價', '小計', '折扣名稱', '折扣類型', '折扣描述', '折扣比例', '折扣金額', '訂單總額', '訂單備註']];
             
             filteredSales.forEach(sale => {
                 let isFirstRow = true;
@@ -11774,7 +11774,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div class="receipt-section-title">顧客資訊</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; font-size: 10px;">
                         <div class="receipt-info-row">
-                            <span class="receipt-info-label">會員帳號：</span>
+                            <span class="receipt-info-label">官網會員帳號：</span>
                             <span class="receipt-info-value">${orderInfo.memberAccount || ''}</span>
                         </div>
                         <div class="receipt-info-row">
@@ -13961,7 +13961,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <input type="email" id="newCustomerEmail" placeholder="example@email.com" />
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
-                            <label style="font-size:12px;">會員帳號</label>
+                            <label style="font-size:12px;">官網會員帳號</label>
                             <input type="text" id="newCustomerAccount" placeholder="帳號" />
                         </div>
                     </div>
@@ -14005,7 +14005,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <input type="email" id="editCustomerEmail" placeholder="example@email.com" />
             </div>
             <div class="form-group">
-                <label style="font-size:12px;">會員帳號</label>
+                <label style="font-size:12px;">官網會員帳號</label>
                 <input type="text" id="editCustomerAccount" placeholder="帳號" />
             </div>
             <button class="add-discount-btn" onclick="saveEditCustomer()">💾 儲存</button>
