@@ -10637,6 +10637,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 選擇規格選項
         function selectVariant(variantName, option) {
+            // 如果點選已選取的選項，取消選取
+            if (selectedVariants[variantName] === option) {
+                delete selectedVariants[variantName];
+                // 更新該規格的選中狀態
+                document.querySelectorAll(`.variant-option[data-variant="${variantName}"]`).forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                if (currentSelectedProduct) updateVariantStockStatus(currentSelectedProduct);
+                updateVariantSku();
+                return;
+            }
             selectedVariants[variantName] = option;
             
             // 更新選中狀態
