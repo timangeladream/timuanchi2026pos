@@ -3740,6 +3740,40 @@ function clearLoginError() {
 // Firebase CRUD 函數 — 取代 localStorage
 // ============================================================
 
+// 清理 productData：空字串 key → '__none__'（Firestore 不允許空字串作為 field key）
+function sanitizeProductData(data) {
+    const result = {};
+    Object.keys(data).forEach(brand => {
+        result[brand] = {};
+        Object.keys(data[brand]).forEach(mainCat => {
+            const mainKey = mainCat === '' ? '__none__' : mainCat;
+            result[brand][mainKey] = {};
+            Object.keys(data[brand][mainCat]).forEach(subCat => {
+                const subKey = subCat === '' ? '__none__' : subCat;
+                result[brand][mainKey][subKey] = data[brand][mainCat][subCat];
+            });
+        });
+    });
+    return result;
+}
+
+// 還原 sanitize：'__none__' → 空字串
+function desanitizeProductData(data) {
+    const result = {};
+    Object.keys(data).forEach(brand => {
+        result[brand] = {};
+        Object.keys(data[brand]).forEach(mainKey => {
+            const mainCat = mainKey === '__none__' ? '' : mainKey;
+            result[brand][mainCat] = {};
+            Object.keys(data[brand][mainKey]).forEach(subKey => {
+                const subCat = subKey === '__none__' ? '' : subKey;
+                result[brand][mainCat][subCat] = data[brand][mainKey][subKey];
+            });
+        });
+    });
+    return result;
+}
+
 // 儲存所有資料到 Firestore
 async function saveDataToFirestore() {
     if (!db || !currentUser) return;
@@ -3748,7 +3782,7 @@ async function saveDataToFirestore() {
         
         // 儲存設定 (settings 集合)
         batch.set(db.collection('settings').doc('system'), {
-            productData,
+            productData: sanitizeProductData(productData),
             products,
             categories,
             brandFullNames,
@@ -3787,7 +3821,7 @@ async function loadDataFromFirestore() {
         if (doc.exists) {
             const data = doc.data();
             products = data.products || [];
-            productData = data.productData || {};
+            productData = desanitizeProductData(data.productData || {});
             categories = data.categories || { brands: [], mainCategories: {}, subCategories: {} };
             nextProductId = data.nextProductId || 1;
             // 載入品牌順序，若無則用 productData 的 key 順序
@@ -6628,6 +6662,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     loadAddonItems();
                     loadSaleLocationOptions();
                     closeImportModal();
+                    e.target.value = ''; // 重置 input，允許重複選同一檔案
                     
                 } catch (error) {
                     console.error('讀取錯誤:', error);
@@ -6636,7 +6671,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             };
             
             reader.readAsArrayBuffer(file);
-            e.target.value = '';
         });
         
         // 加購項目匯入
@@ -6897,6 +6931,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     saveDataToLocalStorage();
                     loadAddonItems();
                     closeImportModal();
+                    e.target.value = ''; // 重置 input，允許重複選同一檔案
                     
                     alert(`✅ 匯入完成！\n\n已更新: ${updateCount}\n已新增: ${addCount}`);
                     
@@ -6907,7 +6942,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             };
             
             reader.readAsArrayBuffer(file);
-            e.target.value = '';
         });
         
         
@@ -7045,6 +7079,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     saveDataToLocalStorage();
                     loadGiftButtons();
                     closeImportModal();
+                    e.target.value = ''; // 重置 input，允許重複選同一檔案
                     alert(`✅ 完成！\n\n更新: ${toUpdate.length}\n新增: ${toAdd.length}`);
                     
                 } catch (error) {
@@ -7053,7 +7088,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
             };
             reader.readAsArrayBuffer(file);
-            e.target.value = '';
         });
         
         // 加入或更新贈品規則的輔助函數
