@@ -3024,10 +3024,6 @@
             </div>
             <div class="modal-body">
                 <p style="color: #666; margin-bottom: 20px; font-size: 14px;">請選擇要匯入的資料類型：</p>
-                <input type="file" id="importProductFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <input type="file" id="importAddonFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <input type="file" id="importGiftFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <input type="file" id="importGiftFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 <button class="add-discount-btn" onclick="openProductImportOptionsModal()" style="width: 100%; margin-bottom: 12px;">
                     📦 匯入商品資料
                 </button>
@@ -6197,7 +6193,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (!file) return;
             
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     // === 階段 1: 讀取 & 驗證 ===
                     console.log('=== 階段 1: 讀取 Excel ===');
@@ -6611,8 +6607,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     console.log('- 已更新:', updateCount);
                     console.log('- 已新增:', addCount);
                     
-                    // 儲存並重新載入
-                    saveDataToLocalStorage();
+                    // 儲存到 Firebase 並等待完成後再刷新 UI
+                    try {
+                        await saveDataToFirestore();
+                    } catch (saveErr) {
+                        console.error('Firebase 儲存失敗:', saveErr);
+                        alert('⚠️ 匯入資料已處理，但儲存到 Firebase 時發生錯誤，請重試。');
+                        return;
+                    }
                     
                     alert('✅ 匯入完成！\n\n' +
                           `已更新: ${updateCount} 個商品\n` +
@@ -7317,7 +7319,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return;
                 }
                 
-                const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1', '規格2', '規格3', '價格', '庫存', '規格貨號']];
+                const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號']];
                 
                 brandProducts.forEach(product => {
                     const rows = productToRows(product);
