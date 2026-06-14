@@ -9061,14 +9061,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         if (!categories.subCategories[brand][mainCat].includes(subCat)) {
                             categories.subCategories[brand][mainCat].push(subCat);
                         }
-                        productData[brand][mainCat][subCat].forEach(oldProduct => {
+                        productData[brand][mainCat][subCat].forEach((oldProduct, idx) => {
+                            // 有 id 保留，沒有 id 才產生新的 UUID，並同步寫回 productData
+                            if (oldProduct.id === undefined) {
+                                oldProduct.id = generateProductId();
+                                productData[brand][mainCat][subCat][idx] = oldProduct;
+                            }
                             products.push({
                                 brand,
                                 mainCategory: mainCat,
                                 subCategory: subCat,
-                                ...oldProduct,
-                                // 有 id 保留，沒有 id 才產生新的 UUID
-                                id: oldProduct.id !== undefined ? oldProduct.id : generateProductId()
+                                ...oldProduct
                             });
                         });
                     });
