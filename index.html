@@ -3827,7 +3827,6 @@ async function saveDataToFirestore() {
         // 儲存設定 (settings 集合)
         batch.set(db.collection('settings').doc('system'), {
             productData: encodeProductDataKeys(productData),
-            products,
             categories: encodeCategories(categories),
             brandFullNames,
             brandOrder,
@@ -3864,8 +3863,8 @@ async function loadDataFromFirestore() {
         const doc = await db.collection('settings').doc('system').get();
         if (doc.exists) {
             const data = doc.data();
-            products = data.products || [];
             productData = decodeProductDataKeys(data.productData || {});
+            // products 從 productData 重建，不從 Firebase 直接讀（避免不同步）
             categories = decodeCategories(data.categories) || { brands: [], mainCategories: {}, subCategories: {} };
             nextProductId = data.nextProductId || 1;
             // 載入品牌順序，若無則用 productData 的 key 順序
@@ -4280,10 +4279,8 @@ async function initApp() {
         // 資料遷移：將舊的 cashier 欄位名稱統一改為 salesPerson
         await migrateCashierFields();
         
-        // 只有完全沒有 Firebase 資料時（初次使用）才執行遷移
-        if (!hasData) {
-            migrateOldDataToNew();
-        }
+        // 每次載入後都從 productData 重建 products 陣列
+        migrateOldDataToNew();
         
 
         
