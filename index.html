@@ -9897,7 +9897,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 依 ID 編輯商品
         function editProductById(productId) {
-            const product = products.find(p => p.id == productId);
+            const product = products.find(p => String(p.id) === String(productId));
             if (!product) return;
             
             currentEditingProduct = product;
@@ -10024,8 +10024,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 依 ID 刪除商品
         function deleteProductById(productId) {
-            const product = products.find(p => p.id == productId);
-            if (!product) return;
+            // 同時比對字串與數字型態，避免 Firebase 載入後 id 型別不一致
+            const product = products.find(p => String(p.id) === String(productId));
+            if (!product) {
+                console.error('找不到商品 id:', productId, '，現有 ids:', products.map(p => p.id));
+                return;
+            }
             
             if (!confirm(`確定要刪除商品「${product.name}」嗎？`)) {
                 return;
@@ -10040,14 +10044,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 productData[brand][mainCat] && 
                 productData[brand][mainCat][subCat]) {
                 
-                const index = productData[brand][mainCat][subCat].findIndex(p => p.id == productId);
+                const index = productData[brand][mainCat][subCat].findIndex(p => String(p.id) === String(productId));
                 if (index !== -1) {
                     productData[brand][mainCat][subCat].splice(index, 1);
                 }
             }
             
             // 從 products 陣列中移除
-            const productIndex = products.findIndex(p => p.id == productId);
+            const productIndex = products.findIndex(p => String(p.id) === String(productId));
             if (productIndex !== -1) {
                 products.splice(productIndex, 1);
             }
