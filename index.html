@@ -4321,7 +4321,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 新資料結構：平面式商品陣列
         let products = [];  // 所有商品的陣列
-        let nextProductId = 1;  // 商品ID計數器
+        let nextProductId = 1;  // 商品ID計數器（保留以兼容舊資料，新商品改用 UUID）
+        
+        // 產生唯一商品 ID（UUID v4）
+        function generateProductId() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            // fallback
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
         
         // 品牌對照表（簡稱 → 全稱）
         let brandFullNames = {};
@@ -6664,8 +6676,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             productData[brand][mainCategory][subCategory] = [];
                         }
                         
-                        // 分配 ID
-                        product.id = nextProductId++;
+                        // 分配 ID（UUID，避免重複）
+                        product.id = generateProductId();
                         
                         productData[brand][mainCategory][subCategory].push(product);
                         addCount++;
@@ -9003,11 +9015,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         }
                         productData[brand][mainCat][subCat].forEach(oldProduct => {
                             products.push({
-                                id: idCounter++,
                                 brand,
                                 mainCategory: mainCat,
                                 subCategory: subCat,
-                                ...oldProduct
+                                ...oldProduct,
+                                // 有 id 保留，沒有 id 才產生新的 UUID
+                                id: oldProduct.id !== undefined ? oldProduct.id : generateProductId()
                             });
                         });
                     });
@@ -10057,8 +10070,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 依 ID 刪除商品
         function deleteProductById(productId) {
-            console.log('deleteProductById 收到 id:', productId, typeof productId);
-            console.log('目前 products ids:', products.map(p => `${p.name}: id=${p.id} (${typeof p.id})`));
             // 同時比對字串與數字型態，避免 Firebase 載入後 id 型別不一致
             const product = products.find(p => String(p.id) === String(productId));
             if (!product) {
@@ -10579,8 +10590,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 currentEditingProduct = null;
                 currentEditingProductPath = null;
             } else {
-                // 新增模式：給予新ID並加入陣列
-                product.id = nextProductId++;
+                // 新增模式：給予新ID並加入陣列（UUID，避免重複）
+                product.id = generateProductId();
                 products.push(product);
                 
                 // 也加入 productData
