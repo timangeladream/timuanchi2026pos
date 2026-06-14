@@ -3024,6 +3024,10 @@
             </div>
             <div class="modal-body">
                 <p style="color: #666; margin-bottom: 20px; font-size: 14px;">請選擇要匯入的資料類型：</p>
+                <input type="file" id="importProductFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
+                <input type="file" id="importAddonFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
+                <input type="file" id="importGiftFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
+                <input type="file" id="importGiftFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 <button class="add-discount-btn" onclick="openProductImportOptionsModal()" style="width: 100%; margin-bottom: 12px;">
                     📦 匯入商品資料
                 </button>
@@ -3740,37 +3744,38 @@ function clearLoginError() {
 // Firebase CRUD 函數 — 取代 localStorage
 // ============================================================
 
-// 清理 productData：空字串 key → '__none__'（Firestore 不允許空字串作為 field key）
-function sanitizeProductData(data) {
+// Firestore 不允許空字串作為 field key，存入前用  EMPTY  替代，載入後還原
+function encodeProductDataKeys(data) {
+    const EMPTY = ' EMPTY ';
     const result = {};
-    Object.keys(data).forEach(brand => {
+    for (const brand of Object.keys(data)) {
         result[brand] = {};
-        Object.keys(data[brand]).forEach(mainCat => {
-            const mainKey = mainCat === '' ? '__none__' : mainCat;
+        for (const main of Object.keys(data[brand])) {
+            const mainKey = main === '' ? EMPTY : main;
             result[brand][mainKey] = {};
-            Object.keys(data[brand][mainCat]).forEach(subCat => {
-                const subKey = subCat === '' ? '__none__' : subCat;
-                result[brand][mainKey][subKey] = data[brand][mainCat][subCat];
-            });
-        });
-    });
+            for (const sub of Object.keys(data[brand][main])) {
+                const subKey = sub === '' ? EMPTY : sub;
+                result[brand][mainKey][subKey] = data[brand][main][sub];
+            }
+        }
+    }
     return result;
 }
 
-// 還原 sanitize：'__none__' → 空字串
-function desanitizeProductData(data) {
+function decodeProductDataKeys(data) {
+    const EMPTY = ' EMPTY ';
     const result = {};
-    Object.keys(data).forEach(brand => {
+    for (const brand of Object.keys(data)) {
         result[brand] = {};
-        Object.keys(data[brand]).forEach(mainKey => {
-            const mainCat = mainKey === '__none__' ? '' : mainKey;
-            result[brand][mainCat] = {};
-            Object.keys(data[brand][mainKey]).forEach(subKey => {
-                const subCat = subKey === '__none__' ? '' : subKey;
-                result[brand][mainCat][subCat] = data[brand][mainKey][subKey];
-            });
-        });
-    });
+        for (const mainKey of Object.keys(data[brand])) {
+            const main = mainKey === EMPTY ? '' : mainKey;
+            result[brand][main] = {};
+            for (const subKey of Object.keys(data[brand][mainKey])) {
+                const sub = subKey === EMPTY ? '' : subKey;
+                result[brand][main][sub] = data[brand][mainKey][subKey];
+            }
+        }
+    }
     return result;
 }
 
@@ -3782,7 +3787,7 @@ async function saveDataToFirestore() {
         
         // 儲存設定 (settings 集合)
         batch.set(db.collection('settings').doc('system'), {
-            productData: sanitizeProductData(productData),
+            productData: encodeProductDataKeys(productData),
             products,
             categories,
             brandFullNames,
@@ -3821,7 +3826,7 @@ async function loadDataFromFirestore() {
         if (doc.exists) {
             const data = doc.data();
             products = data.products || [];
-            productData = desanitizeProductData(data.productData || {});
+            productData = decodeProductDataKeys(data.productData || {});
             categories = data.categories || { brands: [], mainCategories: {}, subCategories: {} };
             nextProductId = data.nextProductId || 1;
             // 載入品牌順序，若無則用 productData 的 key 順序
@@ -6227,7 +6232,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (!file) return;
             
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = function(e) {
                 try {
                     // === 階段 1: 讀取 & 驗證 ===
                     console.log('=== 階段 1: 讀取 Excel ===');
@@ -6641,14 +6646,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     console.log('- 已更新:', updateCount);
                     console.log('- 已新增:', addCount);
                     
-                    // 儲存到 Firebase 並等待完成後再刷新 UI
-                    try {
-                        await saveDataToFirestore();
-                    } catch (saveErr) {
-                        console.error('Firebase 儲存失敗:', saveErr);
-                        alert('⚠️ 匯入資料已處理，但儲存到 Firebase 時發生錯誤，請重試。');
-                        return;
-                    }
+                    // 儲存並重新載入
+                    saveDataToLocalStorage();
                     
                     alert('✅ 匯入完成！\n\n' +
                           `已更新: ${updateCount} 個商品\n` +
@@ -6662,7 +6661,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     loadAddonItems();
                     loadSaleLocationOptions();
                     closeImportModal();
-                    e.target.value = ''; // 重置 input，允許重複選同一檔案
                     
                 } catch (error) {
                     console.error('讀取錯誤:', error);
@@ -6671,6 +6669,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             };
             
             reader.readAsArrayBuffer(file);
+            e.target.value = '';
         });
         
         // 加購項目匯入
@@ -6931,7 +6930,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     saveDataToLocalStorage();
                     loadAddonItems();
                     closeImportModal();
-                    e.target.value = ''; // 重置 input，允許重複選同一檔案
                     
                     alert(`✅ 匯入完成！\n\n已更新: ${updateCount}\n已新增: ${addCount}`);
                     
@@ -6942,6 +6940,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             };
             
             reader.readAsArrayBuffer(file);
+            e.target.value = '';
         });
         
         
@@ -7079,7 +7078,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     saveDataToLocalStorage();
                     loadGiftButtons();
                     closeImportModal();
-                    e.target.value = ''; // 重置 input，允許重複選同一檔案
                     alert(`✅ 完成！\n\n更新: ${toUpdate.length}\n新增: ${toAdd.length}`);
                     
                 } catch (error) {
@@ -7088,6 +7086,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
             };
             reader.readAsArrayBuffer(file);
+            e.target.value = '';
         });
         
         // 加入或更新贈品規則的輔助函數
@@ -7353,7 +7352,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return;
                 }
                 
-                const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號']];
+                const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1', '規格2', '規格3', '價格', '庫存', '規格貨號']];
                 
                 brandProducts.forEach(product => {
                     const rows = productToRows(product);
