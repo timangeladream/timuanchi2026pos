@@ -6312,7 +6312,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (!file) return;
             
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     // === 階段 1: 讀取 & 驗證 ===
                     console.log('=== 階段 1: 讀取 Excel ===');
