@@ -4248,6 +4248,35 @@ async function initApp() {
         
 
         
+        // 修復 products 陣列中重複的 id
+        {
+            const seenIds = new Set();
+            let maxId = Math.max(0, ...products.map(p => Number(p.id) || 0));
+            let duplicateFixed = false;
+            products.forEach(p => {
+                const key = String(p.id);
+                if (seenIds.has(key)) {
+                    p.id = ++maxId;
+                    // 同步更新 productData
+                    if (productData[p.brand] &&
+                        productData[p.brand][p.mainCategory] &&
+                        productData[p.brand][p.mainCategory][p.subCategory]) {
+                        const arr = productData[p.brand][p.mainCategory][p.subCategory];
+                        const idx = arr.findIndex(x => x.name === p.name && String(x.id) !== String(p.id));
+                        if (idx !== -1) arr[idx].id = p.id;
+                    }
+                    duplicateFixed = true;
+                    console.log('修復重複 id，商品:', p.name, '新 id:', p.id);
+                }
+                seenIds.add(String(p.id));
+            });
+            if (duplicateFixed) {
+                nextProductId = maxId + 1;
+                saveDataToFirestore();
+                console.log('✅ 重複 id 已修復並儲存');
+            }
+        }
+        
         // 為沒有 ID 的折扣補上 ID
         let needsSave = false;
         discountButtons.forEach((discount, index) => {
@@ -8932,8 +8961,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         
         // 遷移舊資料到新格式
         function migrateOldDataToNew() {
+            // 從現有 products 最大 id +1 開始，避免重複
+            const existingMaxId = products.length > 0
+                ? Math.max(...products.map(p => Number(p.id) || 0))
+                : 0;
             products = [];
-            let idCounter = 1;
+            let idCounter = existingMaxId + 1;
             
             // 重建categories
             // 線上版修正：不重置 categories，保留從 Firebase 載入的分類資料
