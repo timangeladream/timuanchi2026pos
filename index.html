@@ -6726,13 +6726,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     console.log('- 已更新:', updateCount);
                     console.log('- 已新增:', addCount);
                     
-                    // 儲存並重新載入
-                    saveDataToLocalStorage();
-                    
-                    alert('✅ 匯入完成！\n\n' +
-                          `已更新: ${updateCount} 個商品\n` +
-                          `已新增: ${addCount} 個商品\n\n` +
-                          '頁面即將重新載入...');
+                    // 等 Firebase 寫入完成後再更新畫面
+                    try {
+                        await saveDataToFirestore();
+                    } catch (saveErr) {
+                        console.error('Firebase 儲存失敗:', saveErr);
+                        alert('⚠️ 儲存失敗，請重試。');
+                        return;
+                    }
                     
                     // 重建 products 陣列（同步 productData 變更）
                     migrateOldDataToNew();
@@ -6745,6 +6746,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     loadSaleLocationOptions();
                     loadProducts();
                     closeImportModal();
+                    
+                    alert('✅ 匯入完成！\n\n' +
+                          `已更新: ${updateCount} 個商品\n` +
+                          `已新增: ${addCount} 個商品`);
                     
                 } catch (error) {
                     console.error('讀取錯誤:', error);
