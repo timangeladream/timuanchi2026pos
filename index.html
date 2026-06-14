@@ -10104,7 +10104,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             showNotification('✅ 商品已刪除');
             saveDataToLocalStorage();
+            console.log('刪除後 products 數量:', products.length);
             filterProductList(); // 重新載入列表
+            console.log('filterProductList 執行完畢');
         }
 
         // 打開新增商品彈窗
