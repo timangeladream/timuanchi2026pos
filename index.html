@@ -10024,6 +10024,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 依 ID 刪除商品
         function deleteProductById(productId) {
+            console.log('deleteProductById 收到 id:', productId, typeof productId);
+            console.log('目前 products ids:', products.map(p => `${p.name}: id=${p.id} (${typeof p.id})`));
             // 同時比對字串與數字型態，避免 Firebase 載入後 id 型別不一致
             const product = products.find(p => String(p.id) === String(productId));
             if (!product) {
