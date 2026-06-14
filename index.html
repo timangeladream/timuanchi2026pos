@@ -10142,14 +10142,26 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const mainCat = product.mainCategory;
             const subCat = product.subCategory;
             
-            if (productData[brand] && 
-                productData[brand][mainCat] && 
-                productData[brand][mainCat][subCat]) {
-                
-                const index = productData[brand][mainCat][subCat].findIndex(p => String(p.id) === String(productId));
-                if (index !== -1) {
-                    productData[brand][mainCat][subCat].splice(index, 1);
-                }
+            console.log('刪除: brand=', brand, 'mainCat=', mainCat, 'subCat=', subCat);
+            console.log('productData[brand] keys=', productData[brand] ? Object.keys(productData[brand]) : 'undefined');
+            
+            // 直接搜尋所有路徑，不依賴 mainCategory/subCategory 是否正確
+            let deleted = false;
+            if (productData[brand]) {
+                Object.keys(productData[brand]).forEach(mKey => {
+                    Object.keys(productData[brand][mKey]).forEach(sKey => {
+                        const arr = productData[brand][mKey][sKey];
+                        const index = arr.findIndex(p => String(p.id) === String(productId));
+                        if (index !== -1) {
+                            arr.splice(index, 1);
+                            deleted = true;
+                            console.log('從 productData 刪除成功:', brand, mKey, sKey);
+                        }
+                    });
+                });
+            }
+            if (!deleted) {
+                console.error('productData 裡找不到商品 id:', productId);
             }
             
             // 從 products 陣列中移除
