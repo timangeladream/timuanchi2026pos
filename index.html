@@ -3744,7 +3744,46 @@ function clearLoginError() {
 // Firebase CRUD 函數 — 取代 localStorage
 // ============================================================
 
-// Firestore 不允許空字串作為 field key，存入前用  EMPTY  替代，載入後還原
+// Firestore 不允許空字串作為 field key
+// categories.subCategories 結構：{ brand: { mainCat: [subCats] } }，mainCat 可能是空字串
+function encodeCategories(cats) {
+    if (!cats) return cats;
+    const EMPTY = ' EMPTY ';
+    const result = { ...cats };
+    if (cats.mainCategories) {
+        result.mainCategories = { ...cats.mainCategories };
+    }
+    if (cats.subCategories) {
+        result.subCategories = {};
+        for (const brand of Object.keys(cats.subCategories)) {
+            result.subCategories[brand] = {};
+            for (const mainKey of Object.keys(cats.subCategories[brand])) {
+                const encodedKey = mainKey === '' ? EMPTY : mainKey;
+                result.subCategories[brand][encodedKey] = cats.subCategories[brand][mainKey];
+            }
+        }
+    }
+    return result;
+}
+
+function decodeCategories(cats) {
+    if (!cats) return cats;
+    const EMPTY = ' EMPTY ';
+    const result = { ...cats };
+    if (cats.subCategories) {
+        result.subCategories = {};
+        for (const brand of Object.keys(cats.subCategories)) {
+            result.subCategories[brand] = {};
+            for (const encodedKey of Object.keys(cats.subCategories[brand])) {
+                const mainKey = encodedKey === EMPTY ? '' : encodedKey;
+                result.subCategories[brand][mainKey] = cats.subCategories[brand][encodedKey];
+            }
+        }
+    }
+    return result;
+}
+
+// productData encode/decode
 function encodeProductDataKeys(data) {
     const EMPTY = ' EMPTY ';
     const result = {};
@@ -3789,7 +3828,7 @@ async function saveDataToFirestore() {
         batch.set(db.collection('settings').doc('system'), {
             productData: encodeProductDataKeys(productData),
             products,
-            categories,
+            categories: encodeCategories(categories),
             brandFullNames,
             brandOrder,
             nextProductId,
@@ -3827,7 +3866,7 @@ async function loadDataFromFirestore() {
             const data = doc.data();
             products = data.products || [];
             productData = decodeProductDataKeys(data.productData || {});
-            categories = data.categories || { brands: [], mainCategories: {}, subCategories: {} };
+            categories = decodeCategories(data.categories) || { brands: [], mainCategories: {}, subCategories: {} };
             nextProductId = data.nextProductId || 1;
             // 載入品牌順序，若無則用 productData 的 key 順序
             brandOrder = data.brandOrder || Object.keys(data.productData || {});
