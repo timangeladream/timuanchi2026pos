@@ -6734,12 +6734,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                           `已新增: ${addCount} 個商品\n\n` +
                           '頁面即將重新載入...');
                     
+                    // 重建 products 陣列（同步 productData 變更）
+                    migrateOldDataToNew();
+                    
                     // 重新初始化畫面
                     renderBrandTabs();
                     loadDiscountButtons();
                     loadGiftButtons();
                     loadAddonItems();
                     loadSaleLocationOptions();
+                    loadProducts();
                     closeImportModal();
                     
                 } catch (error) {
