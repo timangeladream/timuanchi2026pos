@@ -3818,8 +3818,26 @@ function decodeProductDataKeys(data) {
     return result;
 }
 
-// 儲存所有資料到 Firestore
-async function saveDataToFirestore() {
+// 儲存鎖，避免多個非同步儲存競爭導致舊資料覆蓋新資料
+let _saveTimer = null;
+
+// 儲存所有資料到 Firestore（防抖：100ms 內多次呼叫只執行最後一次）
+function saveDataToFirestore() {
+    return new Promise((resolve, reject) => {
+        if (_saveTimer) clearTimeout(_saveTimer);
+        _saveTimer = setTimeout(async () => {
+            _saveTimer = null;
+            try {
+                await _doSaveDataToFirestore();
+                resolve();
+            } catch (e) {
+                reject(e);
+            }
+        }, 100);
+    });
+}
+
+async function _doSaveDataToFirestore() {
     if (!db || !currentUser) return;
     try {
         const batch = db.batch();
