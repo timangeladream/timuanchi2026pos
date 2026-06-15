@@ -4887,7 +4887,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 顯示訂單列表
             container.innerHTML = currentPageData.map(sale => {
                 const actualIndex = salesHistory.indexOf(sale);
-                const displayTime = sale.timestampDisplay ? sale.timestampDisplay.replace(/上午|下午/g, '').replace(/(\d+):(\d+):(\d+)/, (m, h, min, s) => { const isPM = sale.timestampDisplay.includes('下午'); let hour = parseInt(h); if (isPM && hour !== 12) hour += 12; if (!isPM && hour === 12) hour = 0; return String(hour).padStart(2,'0') + ':' + min + ':' + s; }) : (sale.timestamp ? new Date(sale.timestamp).toLocaleString('zh-TW', {hour12: false}) : '');
+                const displayTime = sale.timestampDisplay
+                    ? sale.timestampDisplay  // 已經是 24 小時制，直接顯示
+                    : (sale.timestamp ? new Date(sale.timestamp).toLocaleString('zh-TW', {hour12: false}) : '');
                 return `
                     <div class="sales-record-item">
                         <div class="sales-record-header">
