@@ -11780,7 +11780,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 加入 salesHistory 本地陣列（供本次 session 使用）
             salesHistory.push({
                 ...saleRecord,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                // 確保 salesPersonName 欄位一致（getOrderInfo 回傳的是 salesPerson）
+                salesPersonName: saleRecord.salesPersonName || saleRecord.salesPerson || currentUserName || ''
             });
             
             // 非同步儲存到 Firebase
