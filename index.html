@@ -13023,6 +13023,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             saveDataToLocalStorage();
             loadProducts();
             loadAddonItems(); // 更新加購項目庫存顯示
+            loadGiftButtons(); // 更新贈品庫存顯示
 
             // 同步更新顧客資料（扣除取消的訂單）
             if (sale.memberPhone || sale.memberEmail || sale.memberAccount) {
