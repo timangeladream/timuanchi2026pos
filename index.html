@@ -10164,6 +10164,23 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 console.error('productData 裡找不到商品 id:', productId);
             }
             
+            // 清理 productData 裡的空陣列和空的父層（categories 不動）
+            if (productData[brand]) {
+                Object.keys(productData[brand]).forEach(mKey => {
+                    Object.keys(productData[brand][mKey]).forEach(sKey => {
+                        if (productData[brand][mKey][sKey].length === 0) {
+                            delete productData[brand][mKey][sKey];
+                        }
+                    });
+                    if (Object.keys(productData[brand][mKey]).length === 0) {
+                        delete productData[brand][mKey];
+                    }
+                });
+                if (Object.keys(productData[brand]).length === 0) {
+                    delete productData[brand];
+                }
+            }
+            
             // 從 products 陣列中移除
             const productIndex = products.findIndex(p => String(p.id) === String(productId));
             if (productIndex !== -1) {
