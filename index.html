@@ -10142,9 +10142,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const mainCat = product.mainCategory;
             const subCat = product.subCategory;
             
-            console.log('刪除: brand=', brand, 'mainCat=', mainCat, 'subCat=', subCat);
-            console.log('productData[brand] keys=', productData[brand] ? Object.keys(productData[brand]) : 'undefined');
-            
             // 直接搜尋所有路徑，不依賴 mainCategory/subCategory 是否正確
             let deleted = false;
             if (productData[brand]) {
@@ -10164,22 +10161,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 console.error('productData 裡找不到商品 id:', productId);
             }
             
-            // 清理 productData 裡的空陣列和空的父層（categories 不動）
-            if (productData[brand]) {
-                Object.keys(productData[brand]).forEach(mKey => {
-                    Object.keys(productData[brand][mKey]).forEach(sKey => {
-                        if (productData[brand][mKey][sKey].length === 0) {
-                            delete productData[brand][mKey][sKey];
-                        }
-                    });
-                    if (Object.keys(productData[brand][mKey]).length === 0) {
-                        delete productData[brand][mKey];
-                    }
-                });
-                if (Object.keys(productData[brand]).length === 0) {
-                    delete productData[brand];
-                }
-            }
+            // productData 結構保留（品牌、大分類、小分類都不刪），只是商品從陣列中移除
             
             // 從 products 陣列中移除
             const productIndex = products.findIndex(p => String(p.id) === String(productId));
