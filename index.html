@@ -8074,12 +8074,28 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
+            // 清理 productData
             delete productData[brandKey];
-            brandOrder = brandOrder.filter(b => b !== brandKey); // 從排序中移除
+            // 清理 brandOrder
+            brandOrder = brandOrder.filter(b => b !== brandKey);
+            // 清理 categories
+            if (categories.brands) {
+                categories.brands = categories.brands.filter(b => b !== brandKey);
+            }
+            if (categories.mainCategories) {
+                delete categories.mainCategories[brandKey];
+            }
+            if (categories.subCategories) {
+                delete categories.subCategories[brandKey];
+            }
+            // 清理 products 陣列中該品牌的商品
+            products = products.filter(p => p.brand !== brandKey);
+            
             saveDataToLocalStorage();
             loadBrandManageList();
             renderBrandTabs();
-            initProductFilters(); // 重新初始化篩選器
+            initProductFilters();
+            loadProducts();
             showNotification('✅ 品牌已刪除');
         }
 
