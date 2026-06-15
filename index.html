@@ -6493,12 +6493,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 variantNames.push(variantName);
                             }
                             
-                            // 使用規格名稱作為 key
+                            // 使用規格名稱作為 key，並記錄順序
                             variantDimensions.forEach((dim, index) => {
                                 const options = [...new Set(rows.map(r => r[dim]).filter(v => v))];
                                 const variantName = variantNames[index];
                                 product.variants[variantName] = options;
                             });
+                            // 記錄規格名稱順序，確保 comboKey 順序一致
+                            product.variantKeyOrder = variantNames;
                             
                             // 處理每個規格組合
                             rows.forEach(row => {
