@@ -3059,8 +3059,13 @@
                     📋 下載商品資料空白檔(副檔名為.xlsx)
                 </button>
                 
-                <button class="add-discount-btn" onclick="document.getElementById('importProductFile').click()" style="width: 100%; background: var(--primary-color); font-size: 12px;">
-                    📁 匯入商品資料(副檔名為.xlsx)
+                <button class="add-discount-btn" onclick="document.getElementById('importProductFile').click()" style="width: 100%; margin-bottom: 12px; background: var(--primary-color); font-size: 12px;">
+                    📦 完整匯入(新增/更新全部欄位)
+                </button>
+                
+                <input type="file" id="importProductPriceStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
+                <button class="add-discount-btn" onclick="document.getElementById('importProductPriceStockFile').click()" style="width: 100%; background: #e67e22; font-size: 12px;">
+                    💰 只更新價格和庫存
                 </button>
             </div>
         </div>
@@ -6785,6 +6790,108 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
             };
             
+            reader.readAsArrayBuffer(file);
+            e.target.value = '';
+        });
+
+        // 只更新價格和庫存匯入
+        document.getElementById('importProductPriceStockFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+                    if (rows.length === 0) {
+                        alert('❌ 檔案內沒有資料');
+                        return;
+                    }
+
+                    let updateCount = 0;
+                    let notFoundCount = 0;
+
+                    rows.forEach(row => {
+                        const sku = String(row['主貨號'] || '').trim();
+                        const variantSku = String(row['規格貨號'] || '').trim();
+                        if (!sku) return;
+
+                        // 用主貨號找商品
+                        const product = products.find(p => p.sku === sku);
+                        if (!product) {
+                            notFoundCount++;
+                            return;
+                        }
+
+                        if (product.variants && Object.keys(product.variants).length > 0) {
+                            // 多規格商品：用規格貨號比對
+                            if (variantSku) {
+                                // 找到對應的規格貨號 key
+                                const variantKey = Object.entries(product.variantSkus || {})
+                                    .find(([k, v]) => v === variantSku)?.[0];
+                                if (variantKey) {
+                                    const price = parseFloat(row['價格']);
+                                    const stock = parseInt(row['庫存']);
+                                    if (!isNaN(price) && price >= 0) {
+                                        if (!product.variantPrices) product.variantPrices = {};
+                                        product.variantPrices[variantKey] = price;
+                                    }
+                                    if (!isNaN(stock) && stock >= 0) {
+                                        if (!product.variantStock) product.variantStock = {};
+                                        product.variantStock[variantKey] = stock;
+                                    }
+                                    updateCount++;
+                                }
+                            }
+                        } else {
+                            // 單規格商品
+                            const price = parseFloat(row['價格']);
+                            const stock = parseInt(row['庫存']);
+                            if (!isNaN(price) && price >= 0) product.price = price;
+                            if (!isNaN(stock) && stock >= 0) product.stock = stock;
+                            updateCount++;
+                        }
+
+                        // 同步更新 productData
+                        const { brand, mainCategory, subCategory } = product;
+                        if (productData[brand]?.[mainCategory]?.[subCategory]) {
+                            const idx = productData[brand][mainCategory][subCategory]
+                                .findIndex(p => p.id === product.id);
+                            if (idx !== -1) {
+                                productData[brand][mainCategory][subCategory][idx] = product;
+                            }
+                        }
+                    });
+
+                    // 儲存到 Firebase
+                    try {
+                        await saveDataToFirestore();
+                    } catch (saveErr) {
+                        alert('⚠️ 儲存失敗，請重試。');
+                        return;
+                    }
+
+                    loadProducts();
+                    closeProductImportOptionsModal();
+                    e.target.value = '';
+
+                    let msg = `✅ 價格/庫存更新完成！
+
+已更新: ${updateCount} 筆`;
+                    if (notFoundCount > 0) msg += `
+找不到對應貨號: ${notFoundCount} 筆`;
+                    alert(msg);
+
+                } catch (error) {
+                    console.error('匯入錯誤:', error);
+                    alert('❌ 檔案讀取失敗！');
+                }
+            };
             reader.readAsArrayBuffer(file);
             e.target.value = '';
         });
