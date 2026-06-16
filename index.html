@@ -7414,14 +7414,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 匯出商品資料
         function exportProducts(brandSelection = 'all') {
             // Debug: 顯示商品數量和品牌資訊
-            console.log('=== 匯出商品 Debug ===');
-            console.log('brandSelection:', brandSelection);
-            console.log('products 總商品數:', products.length);
-            console.log('products 品牌分佈:', [...new Set(products.map(p => p.brand))]);
-            // 計算 productData 裡的商品總數
-            let pdCount = 0;
-            Object.keys(productData).forEach(b => Object.keys(productData[b]).forEach(m => Object.keys(productData[b][m]).forEach(s => { pdCount += productData[b][m][s].length; })));
-            console.log('productData 總商品數:', pdCount);
+
             
             // 檢查是否有商品
             if (products.length === 0) {
