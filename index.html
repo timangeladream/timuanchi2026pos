@@ -7416,8 +7416,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // Debug: 顯示商品數量和品牌資訊
             console.log('=== 匯出商品 Debug ===');
             console.log('brandSelection:', brandSelection);
-            console.log('總商品數:', products.length);
-            console.log('商品範例:', products.slice(0, 2));
+            console.log('products 總商品數:', products.length);
+            console.log('products 品牌分佈:', [...new Set(products.map(p => p.brand))]);
+            // 計算 productData 裡的商品總數
+            let pdCount = 0;
+            Object.keys(productData).forEach(b => Object.keys(productData[b]).forEach(m => Object.keys(productData[b][m]).forEach(s => { pdCount += productData[b][m][s].length; })));
+            console.log('productData 總商品數:', pdCount);
             
             // 檢查是否有商品
             if (products.length === 0) {
@@ -7538,8 +7542,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             if (brandSelection === 'all') {
                 // 匯出全部品牌 - 分成多個工作表
-                // 動態取得所有品牌（從 productData 抓取，按照品牌管理中的順序）
-                const allBrands = Object.keys(productData);
+                // 從 products 直接取得所有品牌（依 brandOrder 排序，有則依序，無則補上）
+                const brandsInProducts = [...new Set(products.map(p => p.brand))];
+                const allBrands = [
+                    ...brandOrder.filter(b => brandsInProducts.includes(b)),
+                    ...brandsInProducts.filter(b => !brandOrder.includes(b))
+                ];
                 
                 allBrands.forEach(brand => {
                     const brandProducts = products.filter(p => p.brand === brand);
