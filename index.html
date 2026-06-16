@@ -6745,6 +6745,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         
                         // 分配 ID（UUID，避免重複）
                         product.id = generateProductId();
+                        product.createdAt = Date.now();
                         
                         productData[brand][mainCategory][subCategory].push(product);
                         addCount++;
@@ -8579,6 +8580,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 );
             }
             
+            // 依新增時間降序排列（新的在上面）
+            filteredProducts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            
             // 計算分頁
             const totalProducts = filteredProducts.length;
             const totalPages = Math.ceil(totalProducts / mainProductItemsPerPage);
@@ -9646,7 +9650,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 brandName: product.brand,
                 mainCat: product.mainCategory,
                 subCat: product.subCategory
-            }));
+            })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
             
             // 計算分頁
             const totalProducts = allProducts.length;
@@ -10698,6 +10702,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             } else {
                 // 新增模式：給予新ID並加入陣列（UUID，避免重複）
                 product.id = generateProductId();
+                product.createdAt = Date.now();
                 products.push(product);
                 
                 // 也加入 productData
