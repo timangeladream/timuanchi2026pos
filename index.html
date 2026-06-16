@@ -2569,7 +2569,10 @@
             
             <div class="order-info-divider" style="display:flex;justify-content:space-between;align-items:center;">
                 <span>👤 顧客資訊</span>
-                <button type="button" onclick="openCustomerSearchModal()" style="padding:4px 10px;font-size:12px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500;">🔍 查詢顧客</button>
+                <div style="display:flex;gap:6px;">
+                    <button type="button" onclick="openCustomerSearchModal()" style="padding:4px 10px;font-size:12px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500;">🔍 查詢顧客</button>
+                    <button type="button" onclick="clearCustomerInfo()" style="padding:4px 10px;font-size:12px;background:#95a5a6;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500;">✕ 清空</button>
+                </div>
             </div>
             
             <div class="order-info-grid">
@@ -9097,6 +9100,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 memberEmail: document.getElementById('memberEmail').value,
                 orderNote: document.getElementById('orderNote').value
             };
+        }
+
+        // 清空顧客資訊欄位
+        function clearCustomerInfo() {
+            document.getElementById('memberAccount').value = '';
+            document.getElementById('memberName').value = '';
+            document.getElementById('memberPhone').value = '';
+            document.getElementById('memberEmail').value = '';
+            showNotification('✅ 顧客資訊已清空');
         }
 
         // 清空訂單資訊
