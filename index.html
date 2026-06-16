@@ -2578,7 +2578,7 @@
                     <input type="text" id="memberAccount" placeholder="會員ID或帳號" />
                 </div>
                 <div class="order-info-field">
-                    <label>會員名稱</label>
+                    <label>顧客姓名</label>
                     <input type="text" id="memberName" placeholder="請輸入姓名" />
                 </div>
                 <div class="order-info-field">
@@ -12101,7 +12101,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <span class="receipt-info-value">${orderInfo.memberAccount || ''}</span>
                         </div>
                         <div class="receipt-info-row">
-                            <span class="receipt-info-label">會員名稱：</span>
+                            <span class="receipt-info-label">顧客姓名：</span>
                             <span class="receipt-info-value">${orderInfo.memberName || ''}</span>
                         </div>
                         <div class="receipt-info-row">
@@ -14196,7 +14196,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             <div style="border-top:2px solid var(--border-color);padding-top:20px;">
                 <h4 style="margin-bottom:16px;color:var(--primary-color);">➕ 新增帳號</h4>
                 <div class="form-group">
-                    <label>姓名 *</label>
+                    <label>顧客姓名 *</label>
                     <input type="text" id="newUserName" placeholder="例如：小安" />
                 </div>
                 <div class="form-group">
@@ -14273,7 +14273,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <div id="newCustomerForm" style="display:none;border:2px solid var(--primary-color);border-radius:10px;padding:16px;margin-bottom:16px;background:#f0f7ff;">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                         <div class="form-group" style="margin-bottom:0;">
-                            <label style="font-size:12px;">姓名</label>
+                            <label style="font-size:12px;">顧客姓名</label>
                             <input type="text" id="newCustomerName" placeholder="顧客姓名" />
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
@@ -14317,7 +14317,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         <div class="modal-body">
             <input type="hidden" id="editCustomerId">
             <div class="form-group">
-                <label style="font-size:12px;">姓名</label>
+                <label style="font-size:12px;">顧客姓名</label>
                 <input type="text" id="editCustomerName" placeholder="顧客姓名" />
             </div>
             <div class="form-group">
