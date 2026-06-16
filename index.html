@@ -11164,7 +11164,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         function addToOrder(product) {
-// 如果有規格，需要比對規格是否相同
+            // 如果有規格，需要比對規格是否相同
             let existingItem = null;
             if (product.selectedVariants) {
                 existingItem = orderItems.find(item => 
@@ -11172,7 +11172,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     !item.isDiscount &&
                     JSON.stringify(normalizeVariants(item.selectedVariants, product)) === JSON.stringify(normalizeVariants(product.selectedVariants, product))
                 );
-
             } else {
                 existingItem = orderItems.find(item => 
                     item.name === product.name && 
@@ -11181,12 +11180,30 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 );
             }
             
+            // 計算目前訂單中此商品的數量
+            const currentQty = existingItem ? existingItem.quantity : 0;
+            
+            // 取得可用庫存
+            let availableStock;
+            if (product.selectedVariants && product.variantStock) {
+                // 多規格：用 comboKey 取對應規格庫存
+                const comboKey = Object.values(product.selectedVariants).join(',');
+                availableStock = product.variantStock[comboKey];
+            } else {
+                // 單規格
+                availableStock = product.stock;
+            }
+            
+            // 庫存檢查（undefined 或 null 表示不管控庫存）
+            if (availableStock !== undefined && availableStock !== null && currentQty >= availableStock) {
+                showNotification(`⚠️ 庫存不足！${product.name} 庫存僅剩 ${availableStock} 件`);
+                return;
+            }
+            
             if (existingItem) {
                 existingItem.quantity++;
-
             } else {
                 orderItems.push({ ...product, quantity: 1, isDiscount: false });
-
             }
             updateOrder();
         }
