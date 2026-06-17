@@ -2972,7 +2972,10 @@
                     <div class="stat-icon">🎁</div>
                     <div class="stat-info">
                         <div class="stat-label">商品銷量</div>
-                        <div class="stat-value" id="statItems">0 件</div>
+                        <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;">
+                            <div class="stat-value" id="statItems">0 件</div>
+                            <div id="statItemsDetail" style="font-size:11px;color:var(--text-light);"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -4658,9 +4661,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const totalRevenue = filteredSales.reduce((sum, sale) => sum + (sale.total || 0), 0);
             const totalOrders = filteredSales.length;
             const avgValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
-            const totalItems = filteredSales.reduce((sum, sale) => {
-                return sum + sale.items.reduce((itemSum, item) => itemSum + item.quantity, 0);
-            }, 0);
+            let totalItems = 0, totalProducts = 0, totalAddons = 0, totalGifts = 0;
+            filteredSales.forEach(sale => {
+                sale.items.forEach(item => {
+                    const qty = item.quantity || 0;
+                    totalItems += qty;
+                    if (item.isGift) totalGifts += qty;
+                    else if (item.isAddon || item.type === 'addon') totalAddons += qty;
+                    else if (!item.isDiscount) totalProducts += qty;
+                });
+            });
 
             // 計算已成立和已取消（filteredSalesForList 包含已取消）
             const completedOrders = filteredSalesForList.filter(s => s.status !== 'cancelled').length;
@@ -4671,6 +4681,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('statOrdersDetail').textContent = `（已成立：${completedOrders} 筆｜已取消：${cancelledOrders} 筆）`;
             document.getElementById('statAvg').textContent = `NT$ ${avgValue.toLocaleString()}`;
             document.getElementById('statItems').textContent = `${totalItems} 件`;
+            document.getElementById('statItemsDetail').textContent = `（商品：${totalProducts} 件｜加購：${totalAddons} 件｜贈品：${totalGifts} 件）`;
         }
 
         function updateTopProducts() {
