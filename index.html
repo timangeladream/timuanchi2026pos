@@ -7778,12 +7778,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return;
                 }
 
-                const ws_data = [['顧客姓名', '電話', 'Email', '官網會員帳號', '消費次數', '累計消費金額', '最後消費日期']];
+                const ws_data = [['顧客姓名', '電話', 'Email', '官網會員帳號', '消費次數', '累計消費金額', '最後消費日期', '加入時間']];
 
                 snap.forEach(doc => {
                     const c = doc.data();
-                    const lastVisit = c.lastVisit
-                        ? (c.lastVisit.toDate ? c.lastVisit.toDate().toLocaleDateString('zh-TW') : new Date(c.lastVisit).toLocaleDateString('zh-TW'))
+                    const toDateStr = (field) => field
+                        ? (field.toDate ? field.toDate().toLocaleDateString('zh-TW') : new Date(field).toLocaleDateString('zh-TW'))
                         : '';
                     ws_data.push([
                         c.name || '',
@@ -7792,7 +7792,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         c.account || '',
                         c.totalOrders || 0,
                         c.totalSpent || 0,
-                        lastVisit
+                        toDateStr(c.lastVisit),
+                        toDateStr(c.createdAt || c.firstVisit)
                     ]);
                 });
 
@@ -7805,7 +7806,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     {wch: 15}, // 官網會員帳號
                     {wch: 10}, // 消費次數
                     {wch: 15}, // 累計消費金額
-                    {wch: 15}  // 最後消費日期
+                    {wch: 15}, // 最後消費日期
+                    {wch: 15}  // 加入時間
                 ];
                 XLSX.utils.book_append_sheet(wb, ws, '顧客資料');
                 const timestamp = new Date().toLocaleDateString('zh-TW').replace(/\//g, '');
@@ -13783,6 +13785,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         totalSpent: saleTotal,
                         firstVisit: now,
                         lastVisit: now,
+                        createdAt: now,
                         createdBy: currentUser.uid
                     });
                 }
@@ -13862,11 +13865,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">載入中...</div>';
             
             try {
-                let query = db.collection('customers').orderBy('lastVisit', 'desc').limit(100);
+                let query = db.collection('customers').limit(100);
                 const snapshot = await query.get();
                 
                 let customers = [];
                 snapshot.forEach(doc => customers.push({ id: doc.id, ...doc.data() }));
+                // 前端排序：依加入時間降序（新的在上面），沒有 createdAt 的排在最後
+                customers.sort((a, b) => {
+                    const aTime = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+                    const bTime = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+                    return bTime - aTime;
+                });
                 
                 // 前端搜尋
                 if (searchQuery) {
@@ -13976,6 +13985,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     totalSpent: 0,
                     firstVisit: now,
                     lastVisit: now,
+                    createdAt: now,
                     createdBy: currentUser.uid
                 });
 
