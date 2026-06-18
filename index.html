@@ -14104,7 +14104,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         function toggleRestockExpand(productId) {
             restockExpandedId = restockExpandedId === productId ? null : productId;
-            filterRestockProducts();
+            const q = document.getElementById('restockSearch').value.trim().toLowerCase();
+            const list = q ? products.filter(p =>
+                (p.name || '').toLowerCase().includes(q) ||
+                (p.sku || '').toLowerCase().includes(q)
+            ) : products;
+            renderRestockProductList(list);
         }
 
         function openRestockConfirm(productId, variantKey, currentStock) {
