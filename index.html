@@ -2453,24 +2453,42 @@
                 <button class="modal-close" onclick="closeRestockModal()">×</button>
             </div>
             <div class="modal-body">
-                <!-- 搜尋商品 -->
                 <div style="margin-bottom:12px;">
                     <input type="text" id="restockSearch" placeholder="搜尋商品名稱或貨號..." 
                         style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;"
                         oninput="filterRestockProducts()">
                 </div>
-                <!-- 商品列表 -->
-                <div id="restockProductList" style="max-height:350px;overflow-y:auto;margin-bottom:16px;"></div>
-                <!-- 補貨清單 -->
-                <div id="restockQueue" style="display:none;">
-                    <h4 style="margin:0 0 8px;color:var(--primary-color);">待補貨清單</h4>
-                    <div id="restockQueueList"></div>
-                    <div style="margin-top:12px;">
-                        <label style="font-size:13px;font-weight:600;">備註</label>
-                        <input type="text" id="restockNote" placeholder="例如：到貨補貨、盤點調整..." 
-                            style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;margin-top:4px;box-sizing:border-box;">
-                    </div>
-                    <button onclick="confirmRestock()" class="add-discount-btn" style="width:100%;margin-top:12px;background:var(--primary-color);">
+                <div id="restockProductList" style="max-height:480px;overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 補貨確認彈窗 -->
+    <div id="restockConfirmModal" class="modal" style="z-index:10001;">
+        <div class="modal-content" style="max-width:380px;">
+            <div class="modal-header">
+                <h3>📦 補貨</h3>
+                <button class="modal-close" onclick="closeRestockConfirmModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="restockConfirmInfo" style="margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:8px;font-size:13px;"></div>
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">補貨數量</label>
+                    <input type="number" id="restockConfirmQty" min="1" value="1"
+                        style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:15px;text-align:center;box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">備註</label>
+                    <input type="text" id="restockConfirmNote" placeholder="例如：到貨補貨、盤點調整..."
+                        style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;box-sizing:border-box;">
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button onclick="closeRestockConfirmModal()" 
+                        style="flex:1;padding:10px;border:1px solid #ddd;background:white;border-radius:8px;cursor:pointer;font-size:14px;">
+                        取消
+                    </button>
+                    <button onclick="executeRestock()"
+                        style="flex:2;padding:10px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">
                         ✅ 確認補貨
                     </button>
                 </div>
@@ -13987,14 +14005,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // ===== 補貨管理 =====
 
-        let restockItems = []; // 待補貨清單
+        let currentRestockProduct = null; // 目前選中的補貨商品
+        let currentRestockVariantKey = '';
+        let currentRestockStock = 0;
+        let restockExpandedId = null; // 目前展開的商品 id
 
         function openRestockModal() {
-            restockItems = [];
+            restockExpandedId = null;
             document.getElementById('restockSearch').value = '';
-            document.getElementById('restockNote').value = '';
             renderRestockProductList(products);
-            renderRestockQueue();
             document.getElementById('restockModal').classList.add('show');
         }
 
@@ -14008,6 +14027,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 (p.name || '').toLowerCase().includes(q) ||
                 (p.sku || '').toLowerCase().includes(q)
             ) : products;
+            restockExpandedId = null;
             renderRestockProductList(filtered);
         }
 
@@ -14017,126 +14037,136 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 el.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">找不到商品</div>';
                 return;
             }
-            el.innerHTML = list.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).map(p => {
+            const sorted = list.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            el.innerHTML = sorted.map(p => {
                 const hasVariants = p.variants && Object.keys(p.variants).length > 0;
+                const isExpanded = restockExpandedId === p.id;
+
+                // 計算總庫存
+                let totalStock = 0;
                 if (hasVariants) {
-                    // 多規格：每個規格一行
-                    const keys = p.variantKeyOrder
-                        ? p.variantKeyOrder.reduce((arr, k) => {
-                            const opts = p.variants[k] || [];
-                            if (arr.length === 0) return opts.map(o => [o]);
-                            return arr.flatMap(a => opts.map(o => [...a, o]));
-                        }, []).map(combo => combo.join(','))
-                        : Object.keys(p.variantStock || {});
-                    return keys.map(key => {
-                        const stock = (p.variantStock || {})[key] || 0;
-                        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid #f0f0f0;">
-                            <div>
-                                <div style="font-weight:600;font-size:13px;">${p.name}</div>
-                                <div style="font-size:11px;color:#999;">${key} ｜ 現有庫存：${stock}</div>
-                            </div>
-                            <button onclick="addToRestockQueue('${p.id}','${key.replace(/'/g,"\'")}',${stock})" 
-                                style="padding:4px 10px;font-size:12px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;">
-                                + 補貨
-                            </button>
-                        </div>`;
-                    }).join('');
+                    totalStock = Object.values(p.variantStock || {}).reduce((s, v) => s + (v || 0), 0);
                 } else {
-                    const stock = p.stock || 0;
-                    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid #f0f0f0;">
+                    totalStock = p.stock || 0;
+                }
+
+                // 展開的規格列表
+                let detailHTML = '';
+                if (isExpanded) {
+                    if (hasVariants) {
+                        const keys = p.variantKeyOrder
+                            ? p.variantKeyOrder.reduce((arr, k) => {
+                                const opts = p.variants[k] || [];
+                                if (arr.length === 0) return opts.map(o => [o]);
+                                return arr.flatMap(a => opts.map(o => [...a, o]));
+                            }, []).map(combo => combo.join(','))
+                            : Object.keys(p.variantStock || {});
+                        detailHTML = `<div style="background:#f8f9fa;border-top:1px solid #eee;">` +
+                            keys.map(key => {
+                                const stock = (p.variantStock || {})[key] || 0;
+                                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid #eee;">
+                                    <div>
+                                        <div style="font-size:13px;font-weight:500;">${key}</div>
+                                        <div style="font-size:11px;color:#999;">現有庫存：${stock}</div>
+                                    </div>
+                                    <button onclick="openRestockConfirm('${p.id}','${key.replace(/'/g,"\'")}',${stock})"
+                                        style="padding:5px 12px;font-size:12px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;">
+                                        + 補貨
+                                    </button>
+                                </div>`;
+                            }).join('') + `</div>`;
+                    } else {
+                        detailHTML = `<div style="background:#f8f9fa;border-top:1px solid #eee;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;">
+                                <div style="font-size:12px;color:#999;">現有庫存：${totalStock}</div>
+                                <button onclick="openRestockConfirm('${p.id}','',${totalStock})"
+                                    style="padding:5px 12px;font-size:12px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;">
+                                    + 補貨
+                                </button>
+                            </div>
+                        </div>`;
+                    }
+                }
+
+                return `<div style="border-bottom:1px solid #eee;">
+                    <div onclick="toggleRestockExpand('${p.id}')" 
+                        style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer;${isExpanded ? 'background:#f0f4ff;' : ''}">
                         <div>
                             <div style="font-weight:600;font-size:13px;">${p.name}</div>
-                            <div style="font-size:11px;color:#999;">${p.sku || ''} ｜ 現有庫存：${stock}</div>
+                            <div style="font-size:11px;color:#999;margin-top:2px;">${p.sku || ''} ｜ ${p.brand || ''} ｜ 總庫存：${totalStock}</div>
                         </div>
-                        <button onclick="addToRestockQueue('${p.id}','',${stock})"
-                            style="padding:4px 10px;font-size:12px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;">
-                            + 補貨
-                        </button>
-                    </div>`;
-                }
+                        <span style="font-size:16px;color:#999;">${isExpanded ? '▲' : '▶'}</span>
+                    </div>
+                    ${detailHTML}
+                </div>`;
             }).join('');
         }
 
-        function addToRestockQueue(productId, variantKey, currentStock) {
-            const existing = restockItems.find(r => r.productId === productId && r.variantKey === variantKey);
-            if (existing) {
-                showNotification('⚠️ 已在待補貨清單中');
+        function toggleRestockExpand(productId) {
+            restockExpandedId = restockExpandedId === productId ? null : productId;
+            filterRestockProducts();
+        }
+
+        function openRestockConfirm(productId, variantKey, currentStock) {
+            currentRestockProduct = products.find(p => String(p.id) === String(productId));
+            if (!currentRestockProduct) return;
+            currentRestockVariantKey = variantKey;
+            currentRestockStock = currentStock;
+
+            const infoEl = document.getElementById('restockConfirmInfo');
+            infoEl.innerHTML = `
+                <div style="font-weight:600;font-size:14px;margin-bottom:4px;">${currentRestockProduct.name}</div>
+                ${variantKey ? `<div style="font-size:12px;color:#666;margin-bottom:4px;">規格：${variantKey}</div>` : ''}
+                <div style="font-size:12px;color:#999;">目前庫存：<strong style="color:var(--primary-color);">${currentStock}</strong></div>
+            `;
+            document.getElementById('restockConfirmQty').value = 1;
+            document.getElementById('restockConfirmNote').value = '';
+            document.getElementById('restockConfirmModal').classList.add('show');
+        }
+
+        function closeRestockConfirmModal() {
+            document.getElementById('restockConfirmModal').classList.remove('show');
+        }
+
+        async function executeRestock() {
+            const qty = parseInt(document.getElementById('restockConfirmQty').value) || 0;
+            const note = document.getElementById('restockConfirmNote').value.trim() || '補貨';
+            if (qty <= 0) {
+                showNotification('⚠️ 補貨數量必須大於 0');
                 return;
             }
-            const product = products.find(p => String(p.id) === String(productId));
+            const product = currentRestockProduct;
             if (!product) return;
-            restockItems.push({ productId, variantKey, currentStock, qty: 1, productName: product.name, sku: product.sku || '' });
-            renderRestockQueue();
-        }
 
-        function renderRestockQueue() {
-            const queueEl = document.getElementById('restockQueue');
-            const listEl = document.getElementById('restockQueueList');
-            if (restockItems.length === 0) {
-                queueEl.style.display = 'none';
-                return;
-            }
-            queueEl.style.display = 'block';
-            listEl.innerHTML = restockItems.map((r, idx) => `
-                <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f8f9fa;border-radius:6px;margin-bottom:6px;">
-                    <div style="flex:1;">
-                        <div style="font-size:13px;font-weight:600;">${r.productName}</div>
-                        <div style="font-size:11px;color:#999;">${r.variantKey ? r.variantKey + ' ｜ ' : ''}現有：${r.currentStock}</div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <span style="font-size:13px;">補貨數量：</span>
-                        <input type="number" min="1" value="${r.qty}" 
-                            style="width:70px;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:13px;text-align:center;"
-                            onchange="restockItems[${idx}].qty = Math.max(1, parseInt(this.value) || 1)">
-                    </div>
-                    <button onclick="restockItems.splice(${idx},1); renderRestockQueue();"
-                        style="padding:4px 8px;background:#e74c3c;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;">✕</button>
-                </div>
-            `).join('');
-        }
-
-        async function confirmRestock() {
-            if (restockItems.length === 0) return;
-            const note = document.getElementById('restockNote').value.trim() || '補貨';
-            if (!confirm(`確定補貨 ${restockItems.length} 筆？`)) return;
-
-            for (const r of restockItems) {
-                const product = products.find(p => String(p.id) === String(r.productId));
-                if (!product) continue;
-                const qty = parseInt(r.qty) || 0;
-                if (qty <= 0) continue;
-
-                if (r.variantKey) {
-                    const before = (product.variantStock || {})[r.variantKey] || 0;
-                    if (!product.variantStock) product.variantStock = {};
-                    product.variantStock[r.variantKey] += qty;
-                    const after = product.variantStock[r.variantKey];
-                    // 同步 productData
-                    const { brand, mainCategory, subCategory } = product;
-                    if (productData[brand]?.[mainCategory]?.[subCategory]) {
-                        const idx = productData[brand][mainCategory][subCategory].findIndex(p => String(p.id) === String(product.id));
-                        if (idx !== -1) productData[brand][mainCategory][subCategory][idx] = product;
-                    }
-                    await logStockMovement(product, r.variantKey, '補貨', qty, before, after, note);
-                } else {
-                    const before = product.stock || 0;
-                    product.stock += qty;
-                    const after = product.stock;
-                    // 同步 productData
-                    const { brand, mainCategory, subCategory } = product;
-                    if (productData[brand]?.[mainCategory]?.[subCategory]) {
-                        const idx = productData[brand][mainCategory][subCategory].findIndex(p => String(p.id) === String(product.id));
-                        if (idx !== -1) productData[brand][mainCategory][subCategory][idx] = product;
-                    }
-                    await logStockMovement(product, '', '補貨', qty, before, after, note);
+            if (currentRestockVariantKey) {
+                const before = (product.variantStock || {})[currentRestockVariantKey] || 0;
+                if (!product.variantStock) product.variantStock = {};
+                product.variantStock[currentRestockVariantKey] += qty;
+                const after = product.variantStock[currentRestockVariantKey];
+                const { brand, mainCategory, subCategory } = product;
+                if (productData[brand]?.[mainCategory]?.[subCategory]) {
+                    const idx = productData[brand][mainCategory][subCategory].findIndex(p => String(p.id) === String(product.id));
+                    if (idx !== -1) productData[brand][mainCategory][subCategory][idx] = product;
                 }
+                await logStockMovement(product, currentRestockVariantKey, '補貨', qty, before, after, note);
+            } else {
+                const before = product.stock || 0;
+                product.stock = (product.stock || 0) + qty;
+                const after = product.stock;
+                const { brand, mainCategory, subCategory } = product;
+                if (productData[brand]?.[mainCategory]?.[subCategory]) {
+                    const idx = productData[brand][mainCategory][subCategory].findIndex(p => String(p.id) === String(product.id));
+                    if (idx !== -1) productData[brand][mainCategory][subCategory][idx] = product;
+                }
+                await logStockMovement(product, '', '補貨', qty, before, after, note);
             }
 
             await saveDataToFirestore();
             loadProducts();
-            closeRestockModal();
-            showNotification(`✅ 補貨完成！共 ${restockItems.length} 筆`);
-            restockItems = [];
+            closeRestockConfirmModal();
+            // 重新渲染列表以更新庫存顯示
+            filterRestockProducts();
+            showNotification(`✅ 補貨完成！${product.name}${currentRestockVariantKey ? ' ' + currentRestockVariantKey : ''} +${qty}`);
         }
 
         // ===== 庫存異動記錄總覽 =====
