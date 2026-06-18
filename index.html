@@ -2412,6 +2412,10 @@
                 <span class="menu-icon-text">👤</span>
                 <span>顧客管理</span>
             </button>
+            <button class="menu-item admin-only" onclick="openProductManager(); toggleMenu();">
+                <span class="menu-icon-text">📦</span>
+                <span>商品管理</span>
+            </button>
             <button class="menu-item admin-only" onclick="openBrandManager(); toggleMenu();">
                 <span class="menu-icon-text">🏷️</span>
                 <span>品牌管理</span>
@@ -2632,8 +2636,7 @@
                         <button onclick="jumpToMainProductPage()" style="height: 18px; padding: 1px 6px; font-size: 9px; background: var(--primary-color); color: white; border: none; border-radius: 3px; cursor: pointer;">GO</button>
                     </div>
                 </div>
-                <button class="file-btn" onclick="openProductListManager()">📝 編輯</button>
-                <button class="file-btn" onclick="openAddProductModal()">➕ 新增</button>
+
             </div>
         </div>
         <div class="products-scroll">
@@ -3650,8 +3653,11 @@
     <div id="productListModal" class="modal">
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
-                <h3>📦 商品編輯</h3>
-                <button class="modal-close" onclick="closeProductListManager()">×</button>
+                <h3>📦 商品管理</h3>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button onclick="openAddProductModal()" style="padding:6px 14px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">➕ 新增商品</button>
+                    <button class="modal-close" onclick="closeProductListManager()">×</button>
+                </div>
             </div>
             <div class="modal-body">
                 <!-- 篩選區域 -->
@@ -9910,11 +9916,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         
         // 打開商品列表管理
         function openProductListManager() {
-            // 初始化篩選選項
             initProductFilters();
-            
             document.getElementById('productListModal').classList.add('show');
-            filterProductList(); // 直接載入全部商品
+            filterProductList();
+        }
+
+        function openProductManager() {
+            openProductListManager();
         }
 
         // 初始化篩選選項
