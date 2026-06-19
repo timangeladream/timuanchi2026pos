@@ -12133,7 +12133,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                     targetItem.variantStock[variantKey] = 0;
                                 }
                                 const afterStock = targetItem.variantStock[variantKey];
-                                logStockMovement(targetItem, variantKey, '銷售', -item.quantity, beforeStock, afterStock, `訂單 ${saleRecord.orderNumber || ''}`);
+                                logStockMovement(targetItem, variantKey, '銷售', -item.quantity, beforeStock, afterStock, `訂單 ${orderInfo.orderNumber || ''}`);
                             }
                         }
                     } else {
@@ -12145,7 +12145,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             if (targetItem.stock < 0) {
                                 targetItem.stock = 0;
                             }
-                            logStockMovement(targetItem, '', '銷售', -item.quantity, beforeStock, targetItem.stock, `訂單 ${saleRecord.orderNumber || ''}`);
+                            logStockMovement(targetItem, '', '銷售', -item.quantity, beforeStock, targetItem.stock, `訂單 ${orderInfo.orderNumber || ''}`);
                             
                             // 同時更新 productData
                             if (!item.isAddon && targetItem.brand && targetItem.mainCategory !== undefined) {
