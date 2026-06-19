@@ -12098,11 +12098,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     // 贈品的庫存記錄在 giftRules 中
                     const giftRule = giftRules.find(rule => rule.id === item.giftRuleId);
                     if (giftRule && giftRule.giftStock !== undefined) {
+                        const beforeGiftStock = giftRule.giftStock;
                         giftRule.giftStock -= item.quantity;
                         // 確保庫存不會是負數
                         if (giftRule.giftStock < 0) {
                             giftRule.giftStock = 0;
                         }
+                        logStockMovement(
+                            { id: giftRule.id, name: giftRule.giftName || giftRule.name, sku: giftRule.giftSku || '', brand: '' },
+                            '', '銷售', -item.quantity, beforeGiftStock, giftRule.giftStock, `訂單 ${orderInfo.orderNumber || ''}（贈品）`
+                        );
                     }
                     return;
                 }
@@ -13357,7 +13362,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (item.isGift) {
                     const giftRule = giftRules.find(rule => rule.id === item.giftRuleId);
                     if (giftRule && giftRule.giftStock !== undefined) {
+                        const beforeGiftStock = giftRule.giftStock;
                         giftRule.giftStock += item.quantity;
+                        logStockMovement(
+                            { id: giftRule.id, name: giftRule.giftName || giftRule.name, sku: giftRule.giftSku || '', brand: '' },
+                            '', '退貨', item.quantity, beforeGiftStock, giftRule.giftStock, `取消訂單 ${sale.orderNumber || ''}（贈品）`
+                        );
                     }
                     return;
                 }
