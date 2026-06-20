@@ -14095,7 +14095,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 (p[nameField] || '').toLowerCase().includes(q) ||
                 (p[skuField] || '').toLowerCase().includes(q)
             ) : source;
-            restockExpandedId = null;
             renderRestockProductList(filtered);
         }
 
