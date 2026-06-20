@@ -5430,6 +5430,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         </div>
                         <div style="display: flex; gap: 8px;">
                             <button class="file-btn" onclick="editGift(${index})">編輯</button>
+                            <button class="file-btn" onclick="openProductStockLog('${gift.id}', '${(gift.giftName || gift.name).replace(/'/g, "\'")}')" style="background:#8e44ad;">📋</button>
                             <button class="delete-discount-btn" onclick="deleteGift(${index})">刪除</button>
                         </div>
                     </div>
@@ -13356,6 +13357,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         </div>
                         <div style="display: flex; gap: 8px;">
                             <button class="file-btn" onclick="editAddon(${index})">編輯</button>
+                            <button class="file-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\'")}')" style="background:#8e44ad;">📋</button>
                             <button class="remove-btn" onclick="removeAddon(${index})">刪除</button>
                         </div>
                     </div>
