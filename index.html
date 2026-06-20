@@ -2534,6 +2534,7 @@
                         <option value="銷售">銷售</option>
                         <option value="退貨">退貨</option>
                         <option value="匯入調整">匯入調整</option>
+                        <option value="手動調整">手動調整</option>
                     </select>
                     <input type="date" id="smFilterDateStart" onchange="filterStockMovements()"
                         style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
@@ -14395,7 +14396,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 el.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">沒有符合條件的記錄</div>';
                 return;
             }
-            const typeColor = { '初始庫存': '#3498db', '補貨': '#27ae60', '銷售': '#e74c3c', '退貨': '#f39c12', '匯入調整': '#8e44ad' };
+            const typeColor = { '初始庫存': '#3498db', '補貨': '#27ae60', '銷售': '#e74c3c', '退貨': '#f39c12', '匯入調整': '#8e44ad', '手動調整': '#7f8c8d' };
             el.innerHTML = filteredMovements.map(m => {
                 const date = m.createdAt?.toDate ? m.createdAt.toDate() : new Date(m.createdAt);
                 const dateStr = date.toLocaleString('zh-TW', { hour12: false });
@@ -14445,7 +14446,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return;
                 }
 
-                const typeColor = { '初始庫存': '#3498db', '補貨': '#27ae60', '銷售': '#e74c3c', '退貨': '#f39c12', '匯入調整': '#8e44ad' };
+                const typeColor = { '初始庫存': '#3498db', '補貨': '#27ae60', '銷售': '#e74c3c', '退貨': '#f39c12', '匯入調整': '#8e44ad', '手動調整': '#7f8c8d' };
                 document.getElementById('productStockLogList').innerHTML = snap.docs.map(doc => {
                     const m = doc.data();
                     const date = m.createdAt?.toDate ? m.createdAt.toDate() : new Date(m.createdAt);
