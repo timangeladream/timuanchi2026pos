@@ -2589,6 +2589,12 @@
                     <input type="date" id="smFilterDateEnd" onchange="filterStockMovements()"
                         style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
                 </div>
+                <div style="margin-bottom:10px;">
+                    <label style="font-size:13px;color:#666;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                        <input type="checkbox" id="smFilterDeletedOnly" onchange="filterStockMovements()">
+                        只顯示已刪除商品的記錄
+                    </label>
+                </div>
                 <div id="stockMovementList" style="max-height:450px;overflow-y:auto;"></div>
                 <div style="margin-top:12px;text-align:right;">
                     <button onclick="exportStockMovements()" class="add-discount-btn" style="background:#8e44ad;">
@@ -14480,6 +14486,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('smFilterType').value = '';
             document.getElementById('smFilterDateStart').value = '';
             document.getElementById('smFilterDateEnd').value = '';
+            document.getElementById('smFilterDeletedOnly').checked = false;
             try {
                 const snap = await db.collection('stockMovements').orderBy('createdAt', 'desc').limit(500).get();
                 allStockMovements = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -14499,6 +14506,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const type = document.getElementById('smFilterType').value;
             const dateStart = document.getElementById('smFilterDateStart').value;
             const dateEnd = document.getElementById('smFilterDateEnd').value;
+            const deletedOnly = document.getElementById('smFilterDeletedOnly').checked;
 
             filteredMovements = allStockMovements.filter(m => {
                 if (q && !(m.productName || '').toLowerCase().includes(q) && !(m.productSku || '').toLowerCase().includes(q)) return false;
@@ -14508,9 +14516,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     if (dateStart && mDate < new Date(dateStart)) return false;
                     if (dateEnd && mDate > new Date(dateEnd + 'T23:59:59')) return false;
                 }
+                if (deletedOnly && !isItemDeleted(m.productId)) return false;
                 return true;
             });
             renderStockMovements();
+        }
+
+        // 檢查商品/加購品/贈品是否已被刪除（不在任何現有資料裡）
+        function isItemDeleted(itemId) {
+            const idStr = String(itemId);
+            const inProducts = products.some(p => String(p.id) === idStr);
+            const inAddons = addOnItems.some(a => String(a.id) === idStr);
+            const inGifts = giftRules.some(g => String(g.id) === idStr);
+            return !inProducts && !inAddons && !inGifts;
         }
 
         function renderStockMovements() {
@@ -14525,10 +14543,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 const dateStr = date.toLocaleString('zh-TW', { hour12: false });
                 const changeStr = m.change >= 0 ? `+${m.change}` : `${m.change}`;
                 const changeColor = m.change >= 0 ? '#27ae60' : '#e74c3c';
-                return `<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;">
+                const deleted = isItemDeleted(m.productId);
+                return `<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;${deleted ? 'opacity:0.7;' : ''}">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                         <div style="flex:1;">
-                            <div style="font-weight:600;font-size:13px;">${m.productName || ''}</div>
+                            <div style="font-weight:600;font-size:13px;">${m.productName || ''}${deleted ? '<span class="status-badge-inactive" style="background:#c0392b;">已刪除</span>' : ''}</div>
                             <div style="font-size:11px;color:#999;margin-top:2px;">
                                 ${m.variantKey ? m.variantKey + ' ｜ ' : ''}${m.productSku ? m.productSku + ' ｜ ' : ''}${dateStr}
                             </div>
