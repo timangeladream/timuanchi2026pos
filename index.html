@@ -5986,6 +5986,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
             
             const gift = giftRules[currentEditingGiftIndex];
+            const beforeGiftStock = gift.giftStock; // 記錄異動前庫存（可能是 undefined）
+            
             gift.name = name;
             gift.conditionType = conditionType;
             gift.conditionValue = conditionValue;
@@ -6002,6 +6004,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 gift.giftStock = parseInt(giftStock);
             } else {
                 delete gift.giftStock;
+            }
+            
+            // 比對庫存變化，記錄手動調整
+            const beforeStockNum = beforeGiftStock || 0;
+            const afterStockNum = gift.giftStock || 0;
+            if (beforeStockNum !== afterStockNum) {
+                logStockMovement(
+                    { id: gift.id, name: gift.giftName, sku: gift.giftSku || '', brand: '' },
+                    '', '手動調整', afterStockNum - beforeStockNum, beforeStockNum, afterStockNum, '贈品編輯手動調整庫存'
+                );
             }
             
             showNotification('✅ 贈品更新成功！');
@@ -11071,6 +11083,29 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 // 編輯模式：更新商品的id和資料
                 product.id = currentEditingProductPath.productId || currentEditingProduct.id;
                 
+                // 比對庫存變化，記錄手動調整
+                const oldProductSnapshot = currentEditingProduct;
+                if (oldProductSnapshot) {
+                    if (product.variants && Object.keys(product.variants).length > 0) {
+                        const newStock = product.variantStock || {};
+                        const oldStock = oldProductSnapshot.variantStock || {};
+                        const allKeys = new Set([...Object.keys(newStock), ...Object.keys(oldStock)]);
+                        allKeys.forEach(key => {
+                            const before = oldStock[key] || 0;
+                            const after = newStock[key] || 0;
+                            if (before !== after) {
+                                logStockMovement(product, key, '手動調整', after - before, before, after, '商品編輯手動調整庫存');
+                            }
+                        });
+                    } else {
+                        const before = oldProductSnapshot.stock || 0;
+                        const after = product.stock || 0;
+                        if (before !== after) {
+                            logStockMovement(product, '', '手動調整', after - before, before, after, '商品編輯手動調整庫存');
+                        }
+                    }
+                }
+                
                 // 更新 products 陣列
                 const index = products.findIndex(p => p.id === product.id);
                 if (index !== -1) {
@@ -13229,7 +13264,29 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 判斷是新增還是編輯
             if (currentEditingAddonIndex !== null) {
                 // 編輯模式：保留原有 ID，更新資料
-                addonData.id = addOnItems[currentEditingAddonIndex].id;
+                const oldAddon = addOnItems[currentEditingAddonIndex];
+                addonData.id = oldAddon.id;
+                
+                // 比對庫存變化，記錄手動調整
+                if (addonData.variants && Object.keys(addonData.variants).length > 0) {
+                    const newStock = addonData.variantStock || {};
+                    const oldStock = oldAddon.variantStock || {};
+                    const allKeys = new Set([...Object.keys(newStock), ...Object.keys(oldStock)]);
+                    allKeys.forEach(key => {
+                        const before = oldStock[key] || 0;
+                        const after = newStock[key] || 0;
+                        if (before !== after) {
+                            logStockMovement(addonData, key, '手動調整', after - before, before, after, '加購品編輯手動調整庫存');
+                        }
+                    });
+                } else {
+                    const before = oldAddon.stock || 0;
+                    const after = addonData.stock || 0;
+                    if (before !== after) {
+                        logStockMovement(addonData, '', '手動調整', after - before, before, after, '加購品編輯手動調整庫存');
+                    }
+                }
+                
                 addOnItems[currentEditingAddonIndex] = addonData;
                 showNotification('✅ 加購項目已更新');
             } else {
