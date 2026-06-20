@@ -2146,6 +2146,54 @@
             margin-bottom: 8px;
         }
 
+        /* 上架/下架切換開關 */
+        .status-toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .status-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .status-toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            border-radius: 24px;
+            transition: 0.2s;
+        }
+        .status-toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+        .status-toggle input:checked + .status-toggle-slider {
+            background-color: #27ae60;
+        }
+        .status-toggle input:checked + .status-toggle-slider:before {
+            transform: translateX(20px);
+        }
+        .status-badge-inactive {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: #999;
+            color: white;
+            margin-left: 6px;
+        }
+
         .product-edit-name {
             font-size: 12px;
             font-weight: 600;
@@ -5331,7 +5379,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 載入贈品按鈕
         function loadGiftButtons() {
             const container = document.getElementById('giftButtons');
-            if (giftRules.length === 0) {
+            // 過濾掉已下架的贈品
+            const activeGifts = giftRules.filter(g => g.status !== 'inactive');
+            if (activeGifts.length === 0) {
                 container.innerHTML = '';
                 return;
             }
@@ -5341,12 +5391,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 .filter(item => !item.isAddon)
                 .reduce((sum, item) => sum + (item.price * item.quantity), 0);
             
+            
             // 計算一般商品件數(排除加購品)
             const productCount = orderItems
                 .filter(item => !item.isAddon)
                 .reduce((sum, item) => sum + item.quantity, 0);
             
-            container.innerHTML = giftRules.map((gift, index) => {
+            container.innerHTML = activeGifts.map((gift, index) => {
                 let isEligible = false;
                 let statusText = '';
                 let buttonClass = 'discount-btn';
@@ -5422,16 +5473,23 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 const skuInfo = gift.giftSku ? `<br><span style="font-size: 11px; color: #999;">貨號: ${gift.giftSku}</span>` : '';
                 const stockInfo = gift.giftStock !== undefined ? `<br><span style="font-size: 11px; color: #999;">庫存: ${gift.giftStock}</span>` : '';
                 
+                const isActive = gift.status !== 'inactive';
                 return `
-                    <div class="discount-item-manage">
+                    <div class="discount-item-manage" style="${isActive ? '' : 'opacity:0.6;'}">
                         <div class="discount-item-info-manage">
-                            <div class="discount-item-name-manage">${gift.name}</div>
+                            <div class="discount-item-name-manage">${gift.name}${!isActive ? '<span class="status-badge-inactive">已下架</span>' : ''}</div>
                             <div class="discount-item-desc">${description}${skuInfo}${stockInfo}</div>
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="file-btn" onclick="editGift(${index})">編輯</button>
-                            <button class="file-btn" onclick="openProductStockLog('${gift.id}', '${(gift.giftName || gift.name).replace(/'/g, "\'")}')" style="background:#8e44ad;">📋</button>
-                            <button class="delete-discount-btn" onclick="deleteGift(${index})">刪除</button>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                            <label class="status-toggle" title="${isActive ? '上架中，點擊下架' : '已下架，點擊上架'}">
+                                <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleGiftStatus('${gift.id}')">
+                                <span class="status-toggle-slider"></span>
+                            </label>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="file-btn" onclick="editGift(${index})">編輯</button>
+                                <button class="file-btn" onclick="openProductStockLog('${gift.id}', '${(gift.giftName || gift.name).replace(/'/g, "\\'")}')" style="background:#8e44ad;">📋</button>
+                                <button class="delete-discount-btn" onclick="deleteGift(${index})">刪除</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -5945,6 +6003,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         let currentEditingGiftIndex = null;
 
         // 編輯贈品
+        // 切換贈品上架/下架狀態
+        async function toggleGiftStatus(giftId) {
+            const gift = giftRules.find(g => String(g.id) === String(giftId));
+            if (!gift) return;
+            
+            const wasActive = gift.status !== 'inactive';
+            gift.status = wasActive ? 'inactive' : 'active';
+            
+            await saveDataToFirestore();
+            loadGiftList();
+            loadGiftButtons();
+            showNotification(wasActive ? `📦 ${gift.name} 已下架` : `✅ ${gift.name} 已上架`);
+        }
+
         function editGift(index) {
             const gift = giftRules[index];
             currentEditingGiftIndex = index;
@@ -8975,6 +9047,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 );
             }
             
+            // 過濾掉已下架商品（銷售頁面不顯示）
+            filteredProducts = filteredProducts.filter(p => p.status !== 'inactive');
+            
             // 依新增時間降序排列（新的在上面）
             filteredProducts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
             
@@ -10102,12 +10177,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
                 
                 const stockColor = totalStock <= 0 ? '#d32f2f' : totalStock <= 5 ? '#f57c00' : '#388e3c';
+                const isActive = product.status !== 'inactive';
                 
                 return `
-                    <div class="product-edit-item">
+                    <div class="product-edit-item" style="${isActive ? '' : 'opacity:0.6;'}">
                         <div class="product-edit-header">
                             <div>
-                                <div class="product-edit-name">${product.name}</div>
+                                <div class="product-edit-name">${product.name}${!isActive ? '<span class="status-badge-inactive">已下架</span>' : ''}</div>
                                 <div class="product-edit-info">
                                     貨號: ${product.sku || '無'}
                                 </div>
@@ -10122,10 +10198,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 </div>
                                 ${variantInfo}
                             </div>
-                            <div class="product-edit-actions">
-                                <button class="edit-product-btn" onclick="editProductById('${product.id}')">編輯</button>
-                                <button class="edit-product-btn" onclick="openProductStockLog('${product.id}', '${product.name.replace(/'/g, "\\'")}')" style="background:#8e44ad;">📋</button>
-                                <button class="delete-product-btn" onclick="deleteProductById('${product.id}')">刪除</button>
+                            <div class="product-edit-actions" style="flex-direction:column;align-items:flex-end;gap:8px;">
+                                <label class="status-toggle" title="${isActive ? '上架中，點擊下架' : '已下架，點擊上架'}">
+                                    <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleProductStatus('${product.id}')">
+                                    <span class="status-toggle-slider"></span>
+                                </label>
+                                <div style="display:flex;gap:6px;">
+                                    <button class="edit-product-btn" onclick="editProductById('${product.id}')">編輯</button>
+                                    <button class="edit-product-btn" onclick="openProductStockLog('${product.id}', '${product.name.replace(/'/g, "\\'")}')" style="background:#8e44ad;">📋</button>
+                                    <button class="delete-product-btn" onclick="deleteProductById('${product.id}')">刪除</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -10144,12 +10226,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const prevBtn = document.getElementById('productPrevPageBtn');
             const nextBtn = document.getElementById('productNextPageBtn');
             const jumpInput = document.getElementById('productPageJumpInput');
-            
-            // 如果沒有資料，隱藏分頁
-            if (totalRecords === 0) {
-                paginationContainer.style.display = 'none';
-                return;
-            }
             
             // 有資料就顯示分頁（即使只有一頁）
             paginationContainer.style.display = 'flex';
@@ -10447,6 +10523,27 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         // 依 ID 編輯商品
+        // 切換商品上架/下架狀態
+        async function toggleProductStatus(productId) {
+            const product = products.find(p => String(p.id) === String(productId));
+            if (!product) return;
+            
+            const wasActive = product.status !== 'inactive';
+            product.status = wasActive ? 'inactive' : 'active';
+            
+            // 同步更新 productData
+            const { brand, mainCategory, subCategory } = product;
+            if (productData[brand] && productData[brand][mainCategory] && productData[brand][mainCategory][subCategory]) {
+                const idx = productData[brand][mainCategory][subCategory].findIndex(p => String(p.id) === String(productId));
+                if (idx !== -1) productData[brand][mainCategory][subCategory][idx] = product;
+            }
+            
+            await saveDataToFirestore();
+            filterProductList(); // 更新商品管理列表
+            loadProducts(); // 更新銷售頁面（下架商品會從列表消失）
+            showNotification(wasActive ? `📦 ${product.name} 已下架` : `✅ ${product.name} 已上架`);
+        }
+
         function editProductById(productId) {
             const product = products.find(p => String(p.id) === String(productId));
             if (!product) return;
@@ -12571,12 +12668,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function loadAddonItems() {
             const container = document.getElementById('addonGrid');
             
-            if (addOnItems.length === 0) {
+            // 過濾掉已下架的加購品
+            const activeAddons = addOnItems.filter(item => item.status !== 'inactive');
+            
+            if (activeAddons.length === 0) {
                 container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #999; font-size: 13px;">尚無加購項目，請點擊管理新增</div>';
                 return;
             }
             
-            container.innerHTML = addOnItems.map(item => {
+            container.innerHTML = activeAddons.map(item => {
                 // 判斷是否有規格
                 const hasVariants = item.variants && Object.keys(item.variants).length > 0;
                 const variantInfo = hasVariants ? '<div class="product-variants">有多規格</div>' : '';
@@ -12869,6 +12969,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         // 編輯加購項目
+        // 切換加購品上架/下架狀態
+        async function toggleAddonStatus(itemId) {
+            const item = addOnItems.find(a => String(a.id) === String(itemId));
+            if (!item) return;
+            
+            const wasActive = item.status !== 'inactive';
+            item.status = wasActive ? 'inactive' : 'active';
+            
+            await saveDataToFirestore();
+            loadAddonList();
+            loadAddonItems();
+            showNotification(wasActive ? `📦 ${item.name} 已下架` : `✅ ${item.name} 已上架`);
+        }
+
         function editAddon(index) {
             const addon = addOnItems[index];
             currentEditingAddonIndex = index;
@@ -13346,19 +13460,26 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 const stockColor = totalStock <= 0 ? '#d32f2f' : totalStock <= 5 ? '#f57c00' : '#388e3c';
                 
+                const isActive = item.status !== 'inactive';
                 return `
-                    <div class="discount-item-manage">
+                    <div class="discount-item-manage" style="${isActive ? '' : 'opacity:0.6;'}">
                         <div>
-                            <div style="font-weight: 600; margin-bottom: 4px;">${item.name}</div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">${item.name}${!isActive ? '<span class="status-badge-inactive">已下架</span>' : ''}</div>
                             ${item.sku ? `<div style="font-size: 12px; color: #999;">${item.sku}</div>` : ''}
                             <div style="font-size: 13px; color: #666; margin-top: 2px;">${priceDisplay}</div>
                             <div style="font-size: 12px; color: ${stockColor}; margin-top: 2px;">庫存: ${totalStock}</div>
                             ${hasVariants ? '<div style="font-size: 11px; color: #999; margin-top: 2px;">有多規格</div>' : ''}
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="file-btn" onclick="editAddon(${index})">編輯</button>
-                            <button class="file-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\'")}')" style="background:#8e44ad;">📋</button>
-                            <button class="remove-btn" onclick="removeAddon(${index})">刪除</button>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                            <label class="status-toggle" title="${isActive ? '上架中，點擊下架' : '已下架，點擊上架'}">
+                                <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleAddonStatus('${item.id}')">
+                                <span class="status-toggle-slider"></span>
+                            </label>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="file-btn" onclick="editAddon(${index})">編輯</button>
+                                <button class="file-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\\'")}')" style="background:#8e44ad;">📋</button>
+                                <button class="remove-btn" onclick="removeAddon(${index})">刪除</button>
+                            </div>
                         </div>
                     </div>
                 `;
