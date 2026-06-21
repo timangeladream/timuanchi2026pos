@@ -5610,6 +5610,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             showNotification('✅ 贈品新增成功！');
             saveDataToLocalStorage();
             loadGiftButtons();
+            loadGiftList(); // 同步更新贈品管理列表
             closeAddGiftModal();
             
             // 清空表單
@@ -12972,7 +12973,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             if (requiredVariants.length === selectedVariantKeys.length) {
                 // 所有規格都已選擇，生成組合key（使用 variantKeyOrder 確保順序一致）
-                const orderedKeys = (currentSelectedProduct.variantKeyOrder || []).filter(k => currentSelectedProduct.variants[k]);
+                const orderedKeys = (currentSelectedAddon.variantKeyOrder || []).filter(k => currentSelectedAddon.variants[k]);
                 requiredVariants.forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
                 const variantKey = orderedKeys.map(key => selectedVariants[key]).join(',');
                 const sku = currentSelectedAddon.variantSkus ? currentSelectedAddon.variantSkus[variantKey] : null;
@@ -13594,6 +13595,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 重新載入加購項目
             loadAddonItems();
+            loadAddonList(); // 同步更新加購項目管理列表
             
             // 關閉彈窗
             closeAddAddonModal();
