@@ -2796,7 +2796,10 @@
 
     <div class="order-section">
         <div class="order-header">
-            <div class="order-title">📋 訂單明細</div>
+            <div class="order-title">
+                📋 訂單明細
+                <span id="orderItemCountSummary" style="font-size:11px;color:#999;font-weight:400;margin-left:6px;"></span>
+            </div>
             <button class="clear-btn" onclick="clearOrder()">清空</button>
         </div>
         <div class="order-list" id="orderList">
@@ -11804,6 +11807,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const products = orderItems.filter(item => !item.isAddon && !item.isGift);
             const addons = orderItems.filter(item => item.isAddon);
             const gifts = orderItems.filter(item => item.isGift);
+            
+            // 更新標題旁的數量統計
+            const productCount = products.reduce((sum, item) => sum + item.quantity, 0);
+            const addonCount = addons.reduce((sum, item) => sum + item.quantity, 0);
+            const giftCount = gifts.reduce((sum, item) => sum + item.quantity, 0);
+            const summaryEl = document.getElementById('orderItemCountSummary');
+            if (summaryEl) {
+                if (productCount === 0 && addonCount === 0 && giftCount === 0) {
+                    summaryEl.textContent = '';
+                } else {
+                    summaryEl.textContent = `（商品${productCount}件｜加購品${addonCount}件｜贈品${giftCount}件）`;
+                }
+            }
+            
             const sortedItems = [...products, ...addons, ...gifts];
             const allItems = [...sortedItems, ...discounts];
             
