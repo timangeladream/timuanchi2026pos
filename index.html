@@ -2460,6 +2460,10 @@
                 <span class="menu-icon-text">👤</span>
                 <span>顧客管理</span>
             </button>
+            <button class="menu-item admin-only" onclick="openBrandManager(); toggleMenu();">
+                <span class="menu-icon-text">🏷️</span>
+                <span>品牌管理</span>
+            </button>
             <button class="menu-item admin-only" onclick="openProductManager(); toggleMenu();">
                 <span class="menu-icon-text">📦</span>
                 <span>商品管理</span>
@@ -2471,10 +2475,6 @@
             <button class="menu-item admin-only" onclick="openGiftManager(); toggleMenu();">
                 <span class="menu-icon-text">🎁</span>
                 <span>贈品項目管理</span>
-            </button>
-            <button class="menu-item admin-only" onclick="openBrandManager(); toggleMenu();">
-                <span class="menu-icon-text">🏷️</span>
-                <span>品牌管理</span>
             </button>
             <button class="menu-item admin-only" onclick="openRestockModal(); toggleMenu();">
                 <span class="menu-icon-text">📦</span>
@@ -3318,28 +3318,28 @@
     <div id="exportModal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
-                <h3>📤 匯出資料</h3>
+                <h3>匯出資料</h3>
                 <button class="modal-close" onclick="closeExportModal()">×</button>
             </div>
             <div class="modal-body">
                 <p style="color: #666; margin-bottom: 20px; font-size: 14px;">請選擇要匯出的資料類型：</p>
-                <button class="add-discount-btn" onclick="confirmExportProducts()" style="width: 100%; margin-bottom: 12px;">
-                    📦 匯出商品資料
+                <button class="add-discount-btn" onclick="confirmExportProducts()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                    匯出商品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmExportAddons()" style="width: 100%; margin-bottom: 12px; background: var(--highlight-color);">
-                    🎁 匯出加購項目
+                <button class="add-discount-btn" onclick="confirmExportAddons()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                    匯出加購項目資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmExportGifts()" style="width: 100%; margin-bottom: 12px; background: var(--success-color);">
-                    🎁 匯出贈品資料
+                <button class="add-discount-btn" onclick="confirmExportGifts()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                    匯出贈品項目資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmExportSales()" style="width: 100%; margin-bottom: 12px; background: var(--secondary-color);">
-                    📊 匯出銷售記錄
+                <button class="add-discount-btn" onclick="exportCustomers()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                    匯出顧客資料
                 </button>
-                <button class="add-discount-btn" onclick="exportCustomers()" style="width: 100%; margin-bottom: 12px; background: #8e44ad;">
-                    👤 匯出顧客資料
+                <button class="add-discount-btn" onclick="confirmExportSales()" style="width: 100%; margin-bottom: 12px; background: #195a84;">
+                    匯出銷售紀錄
                 </button>
-                <button class="add-discount-btn" onclick="exportStockMovementsFromMenu()" style="width: 100%; background: #16a085;">
-                    📋 匯出庫存異動記錄
+                <button class="add-discount-btn" onclick="exportStockMovementsFromMenu()" style="width: 100%; background: #195a84;">
+                    匯出庫存異動紀錄
                 </button>
             </div>
         </div>
