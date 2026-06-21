@@ -11695,7 +11695,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                         <div class="order-item-price">NT$ 0</div>
                                     </div>
                                     <div class="order-item-controls">
-                                        <span class="qty-display">x${item.quantity}</span>
+                                        <button class="qty-btn" onclick="updateQuantity(${originalIndex}, -1)">-</button>
+                                        <span class="qty-display">${item.quantity}</span>
+                                        <button class="qty-btn" onclick="updateQuantity(${originalIndex}, 1)">+</button>
                                         <button class="delete-btn" onclick="removeItem(${originalIndex})">×</button>
                                     </div>
                                 </div>
