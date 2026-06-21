@@ -5590,6 +5590,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             giftRules.push(newGift);
             
+            // 記錄初始庫存
+            if (newGift.giftStock > 0) {
+                logStockMovement(
+                    { id: newGift.id, name: newGift.giftName, sku: newGift.giftSku || '', brand: '' },
+                    '', '初始庫存', newGift.giftStock, 0, newGift.giftStock, '新增贈品規則'
+                );
+            }
+            
             showNotification('✅ 贈品新增成功！');
             saveDataToLocalStorage();
             loadGiftButtons();
@@ -6105,11 +6113,22 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         function deleteGift(index) {
             if (confirm('確定要刪除此贈品嗎？')) {
+                const gift = giftRules[index];
+                
+                // 記錄刪除前的庫存異動
+                if (gift && gift.giftStock > 0) {
+                    logStockMovement(
+                        { id: gift.id, name: gift.giftName || gift.name, sku: gift.giftSku || '', brand: '' },
+                        '', '清除', -gift.giftStock, gift.giftStock, 0, '刪除贈品規則'
+                    );
+                }
+                
                 giftRules.splice(index, 1);
                 showNotification('✅ 贈品已刪除！');
                 saveDataToLocalStorage();
-                loadGiftButtons();
                 loadGiftList();
+                // 強制立即重新渲染銷售頁贈品按鈕，避免畫面延遲
+                requestAnimationFrame(() => loadGiftButtons());
             }
         }
 
@@ -9660,12 +9679,25 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             });
             
             products = [];
-            productData = {};  // 改為空物件
-            categories = { brands: [], mainCategories: {}, subCategories: {} };  // brands 改為空陣列
             nextProductId = 1;
-            brandOrder = [];
+            
+            // 重建 productData 為空結構，但保留品牌/大分類/小分類框架（categories 不動）
+            const emptyProductData = {};
+            (categories.brands || []).forEach(brand => {
+                emptyProductData[brand] = {};
+                const mainCats = (categories.mainCategories && categories.mainCategories[brand]) || [];
+                mainCats.forEach(mainCat => {
+                    emptyProductData[brand][mainCat] = {};
+                    const subCats = (categories.subCategories && categories.subCategories[brand] && categories.subCategories[brand][mainCat]) || [];
+                    subCats.forEach(subCat => {
+                        emptyProductData[brand][mainCat][subCat] = [];
+                    });
+                });
+            });
+            productData = emptyProductData;
+            
             saveDataToLocalStorage();
-            showNotification('✅ 商品資料已清除');
+            showNotification('✅ 商品資料已清除（品牌與分類已保留）');
             renderBrandTabs();
             loadProducts(); // 同步更新銷售頁面商品列表
             closeClearDataModal();
@@ -13476,6 +13508,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 // 新增模式：生成新 ID
                 addonData.id = 'addon_' + Date.now();
                 addOnItems.push(addonData);
+                
+                // 記錄初始庫存
+                if (addonData.variants && Object.keys(addonData.variants).length > 0) {
+                    const stock = addonData.variantStock || {};
+                    Object.keys(stock).forEach(key => {
+                        const qty = stock[key] || 0;
+                        if (qty > 0) {
+                            logStockMovement(addonData, key, '初始庫存', qty, 0, qty, '新增加購項目');
+                        }
+                    });
+                } else if (addonData.stock > 0) {
+                    logStockMovement(addonData, '', '初始庫存', addonData.stock, 0, addonData.stock, '新增加購項目');
+                }
+                
                 showNotification('✅ 加購項目已新增');
             }
             
