@@ -9663,6 +9663,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function confirmClearProducts() {
             if (!confirm('⚠️ 確定要清除所有商品資料嗎？\n此操作無法復原！')) return;
             
+            // 權限檢查：非 admin 不可清除
+            if (db && currentUser && currentUserRole !== 'admin') {
+                showNotification('⚠️ 只有管理員可以清除此資料');
+                closeClearDataModal();
+                return;
+            }
+            
             // 先記錄每個商品（含多規格）的清除異動
             products.forEach(p => {
                 if (p.variants && Object.keys(p.variants).length > 0) {
@@ -9769,6 +9776,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function confirmClearAddons() {
             if (!confirm('⚠️ 確定要清除所有加購項目嗎？\n此操作無法復原！')) return;
             
+            // 權限檢查：非 admin 不可清除
+            if (db && currentUser && currentUserRole !== 'admin') {
+                showNotification('⚠️ 只有管理員可以清除此資料');
+                closeClearDataModal();
+                return;
+            }
+            
             // 先記錄每個加購品（含多規格）的清除異動
             addOnItems.forEach(item => {
                 if (item.variants && Object.keys(item.variants).length > 0) {
@@ -9799,6 +9813,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function confirmClearGifts() {
             if (!confirm('⚠️ 確定要清除所有贈品規則嗎？\n此操作無法復原！')) return;
             
+            // 權限檢查：非 admin 不可清除
+            if (db && currentUser && currentUserRole !== 'admin') {
+                showNotification('⚠️ 只有管理員可以清除此資料');
+                closeClearDataModal();
+                return;
+            }
+            
             // 先記錄每個贈品的清除異動
             giftRules.forEach(gift => {
                 const qty = gift.giftStock || 0;
@@ -9821,6 +9842,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 確認清除折扣設定
         function confirmClearDiscounts() {
             if (!confirm('⚠️ 確定要清除所有折扣設定嗎？\n此操作無法復原！')) return;
+            
+            // 權限檢查：非 admin 不可清除
+            if (db && currentUser && currentUserRole !== 'admin') {
+                showNotification('⚠️ 只有管理員可以清除此資料');
+                closeClearDataModal();
+                return;
+            }
             
             discountButtons = [];
             saveDataToLocalStorage();
