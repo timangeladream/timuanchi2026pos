@@ -2464,6 +2464,14 @@
                 <span class="menu-icon-text">📦</span>
                 <span>商品管理</span>
             </button>
+            <button class="menu-item admin-only" onclick="openAddonManager(); toggleMenu();">
+                <span class="menu-icon-text">🎁</span>
+                <span>加購項目管理</span>
+            </button>
+            <button class="menu-item admin-only" onclick="openGiftManager(); toggleMenu();">
+                <span class="menu-icon-text">🎁</span>
+                <span>贈品項目管理</span>
+            </button>
             <button class="menu-item admin-only" onclick="openBrandManager(); toggleMenu();">
                 <span class="menu-icon-text">🏷️</span>
                 <span>品牌管理</span>
@@ -2799,10 +2807,6 @@
     <div class="addon-section">
         <div class="order-header">
             <div class="addon-title">🎁 加購項目</div>
-            <div style="display: flex; gap: 8px;">
-                <button class="file-btn" onclick="openAddonManager()">📝 編輯</button>
-                <button class="file-btn" onclick="openAddAddonModal()">➕ 新增</button>
-            </div>
         </div>
         <div class="addon-grid" id="addonGrid"></div>
     </div>
@@ -2822,10 +2826,6 @@
     <div class="discount-section">
         <div class="order-header">
             <div class="discount-title">🎁 滿額贈品</div>
-            <div style="display: flex; gap: 8px;">
-                <button class="file-btn" onclick="openGiftManager()">✏️ 編輯</button>
-                <button class="file-btn" onclick="openAddGiftModal()">➕ 新增</button>
-            </div>
         </div>
         <div class="discount-grid" id="giftButtons"></div>
     </div>
