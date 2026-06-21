@@ -2583,6 +2583,7 @@
                         <option value="退貨">退貨</option>
                         <option value="匯入調整">匯入調整</option>
                         <option value="手動調整">手動調整</option>
+                        <option value="清除">清除</option>
                     </select>
                     <input type="date" id="smFilterDateStart" onchange="filterStockMovements()"
                         style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
@@ -9640,6 +9641,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function confirmClearProducts() {
             if (!confirm('⚠️ 確定要清除所有商品資料嗎？\n此操作無法復原！')) return;
             
+            // 先記錄每個商品（含多規格）的清除異動
+            products.forEach(p => {
+                if (p.variants && Object.keys(p.variants).length > 0) {
+                    const stock = p.variantStock || {};
+                    Object.keys(stock).forEach(key => {
+                        const qty = stock[key] || 0;
+                        if (qty > 0) {
+                            logStockMovement(p, key, '清除', -qty, qty, 0, '清除商品資料');
+                        }
+                    });
+                } else {
+                    const qty = p.stock || 0;
+                    if (qty > 0) {
+                        logStockMovement(p, '', '清除', -qty, qty, 0, '清除商品資料');
+                    }
+                }
+            });
+            
             products = [];
             productData = {};  // 改為空物件
             categories = { brands: [], mainCategories: {}, subCategories: {} };  // brands 改為空陣列
@@ -9689,6 +9708,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function confirmClearAddons() {
             if (!confirm('⚠️ 確定要清除所有加購項目嗎？\n此操作無法復原！')) return;
             
+            // 先記錄每個加購品（含多規格）的清除異動
+            addOnItems.forEach(item => {
+                if (item.variants && Object.keys(item.variants).length > 0) {
+                    const stock = item.variantStock || {};
+                    Object.keys(stock).forEach(key => {
+                        const qty = stock[key] || 0;
+                        if (qty > 0) {
+                            logStockMovement(item, key, '清除', -qty, qty, 0, '清除加購項目');
+                        }
+                    });
+                } else {
+                    const qty = item.stock || 0;
+                    if (qty > 0) {
+                        logStockMovement(item, '', '清除', -qty, qty, 0, '清除加購項目');
+                    }
+                }
+            });
+            
             addOnItems = [];
             saveDataToLocalStorage();
             showNotification('✅ 加購項目已清除');
@@ -9700,6 +9737,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 確認清除贈品規則
         function confirmClearGifts() {
             if (!confirm('⚠️ 確定要清除所有贈品規則嗎？\n此操作無法復原！')) return;
+            
+            // 先記錄每個贈品的清除異動
+            giftRules.forEach(gift => {
+                const qty = gift.giftStock || 0;
+                if (qty > 0) {
+                    logStockMovement(
+                        { id: gift.id, name: gift.giftName || gift.name, sku: gift.giftSku || '', brand: '' },
+                        '', '清除', -qty, qty, 0, '清除贈品規則'
+                    );
+                }
+            });
             
             giftRules = [];
             saveDataToLocalStorage();
@@ -14550,7 +14598,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 el.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">沒有符合條件的記錄</div>';
                 return;
             }
-            const typeColor = { '初始庫存': '#3498db', '補貨': '#27ae60', '銷售': '#e74c3c', '退貨': '#f39c12', '匯入調整': '#8e44ad', '手動調整': '#7f8c8d' };
+            const typeColor = { '初始庫存': '#3498db', '補貨': '#27ae60', '銷售': '#e74c3c', '退貨': '#f39c12', '匯入調整': '#8e44ad', '手動調整': '#7f8c8d', '清除': '#c0392b' };
             el.innerHTML = filteredMovements.map(m => {
                 const date = m.createdAt?.toDate ? m.createdAt.toDate() : new Date(m.createdAt);
                 const dateStr = date.toLocaleString('zh-TW', { hour12: false });
@@ -14601,7 +14649,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return;
                 }
 
-                const typeColor = { '初始庫存': '#3498db', '補貨': '#27ae60', '銷售': '#e74c3c', '退貨': '#f39c12', '匯入調整': '#8e44ad', '手動調整': '#7f8c8d' };
+                const typeColor = { '初始庫存': '#3498db', '補貨': '#27ae60', '銷售': '#e74c3c', '退貨': '#f39c12', '匯入調整': '#8e44ad', '手動調整': '#7f8c8d', '清除': '#c0392b' };
                 document.getElementById('productStockLogList').innerHTML = snap.docs.map(doc => {
                     const m = doc.data();
                     const date = m.createdAt?.toDate ? m.createdAt.toDate() : new Date(m.createdAt);
