@@ -9785,6 +9785,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             saveDataToLocalStorage();
             showNotification('✅ 贈品規則已清除');
             loadGiftList();  // 重新載入贈品管理畫面
+            loadGiftButtons(); // 同步更新銷售頁面的贈品按鈕
             closeClearDataModal();
         }
         
