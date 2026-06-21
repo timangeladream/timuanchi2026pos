@@ -3369,28 +3369,31 @@
     <div id="clearDataModal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
-                <h3>🗑️ 清除資料</h3>
+                <h3>清除資料</h3>
                 <button class="modal-close" onclick="closeClearDataModal()">×</button>
             </div>
             <div class="modal-body">
-                <p style="color: #d32f2f; margin-bottom: 20px; font-size: 14px; font-weight: 600;">⚠️ 此操作無法復原，請謹慎選擇！</p>
-                <button class="add-discount-btn" onclick="confirmClearProducts()" style="width: 100%; margin-bottom: 12px; background: #ff9800;">
-                    📦 清除商品資料
+                <p style="color: #d32f2f; margin-bottom: 20px; font-size: 14px; font-weight: 600;">此操作無法復原，請謹慎選擇！</p>
+                <button class="add-discount-btn" onclick="confirmClearProducts()" style="width: 100%; margin-bottom: 12px; background: #FFAA33;">
+                    清除所有商品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearSales()" style="width: 100%; margin-bottom: 12px; background: var(--danger-color);">
-                    📊 清除銷售記錄
+                <button class="add-discount-btn" onclick="confirmClearAddons()" style="width: 100%; margin-bottom: 12px; background: #FFAA33;">
+                    清除所有加購品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearAddons()" style="width: 100%; margin-bottom: 12px; background: #ffc107;">
-                    🛒 清除加購項目
+                <button class="add-discount-btn" onclick="confirmClearGifts()" style="width: 100%; margin-bottom: 12px; background: #FFAA33;">
+                    清除所有贈品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearGifts()" style="width: 100%; margin-bottom: 12px; background: #ffc107;">
-                    🎁 清除贈品規則
+                <button class="add-discount-btn" onclick="confirmClearDiscounts()" style="width: 100%; margin-bottom: 12px; background: #FFAA33;">
+                    清除所有折扣設定
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearDiscounts()" style="width: 100%; margin-bottom: 12px; background: #ffc107;">
-                    💰 清除折扣設定
+                <button class="add-discount-btn" onclick="confirmClearSales()" style="width: 100%; margin-bottom: 12px; background: #FF7744;">
+                    清除所有銷售紀錄
+                </button>
+                <button class="add-discount-btn" onclick="confirmClearStockMovements()" style="width: 100%; margin-bottom: 12px; background: #FF7744;">
+                    清除所有庫存異動紀錄
                 </button>
                 <button class="add-discount-btn" onclick="clearLocalStorage()" style="width: 100%; background: #d32f2f; color: white;">
-                    🗑️ 清除所有快取資料 (解決載入問題)
+                    清除所有快取資料 (解決載入問題)
                 </button>
             </div>
         </div>
@@ -9737,6 +9740,32 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
         
         // 確認清除加購項目
+        // 確認清除庫存異動紀錄
+        function confirmClearStockMovements() {
+            if (!confirm('⚠️ 確定要清除所有庫存異動紀錄嗎？\n此操作無法復原！')) return;
+            
+            // 權限檢查：非 admin 不可清除
+            if (db && currentUser && currentUserRole !== 'admin') {
+                showNotification('⚠️ 只有管理員可以清除庫存異動紀錄');
+                closeClearDataModal();
+                return;
+            }
+            
+            if (db && currentUser && currentUserRole === 'admin') {
+                db.collection('stockMovements').get().then(snapshot => {
+                    const batch = db.batch();
+                    snapshot.forEach(doc => batch.delete(doc.ref));
+                    return batch.commit();
+                }).then(() => {
+                    showNotification('✅ 庫存異動紀錄已清除');
+                }).catch(e => {
+                    console.error('清除庫存異動紀錄失敗:', e);
+                    showNotification('⚠️ 清除失敗，請重試');
+                });
+            }
+            closeClearDataModal();
+        }
+        
         function confirmClearAddons() {
             if (!confirm('⚠️ 確定要清除所有加購項目嗎？\n此操作無法復原！')) return;
             
