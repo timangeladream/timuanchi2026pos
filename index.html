@@ -8109,6 +8109,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 匯出顧客資料
         async function exportCustomers() {
+            if (!confirm('確定要匯出顧客資料嗎？')) return;
             try {
                 const snap = await db.collection('customers').orderBy('lastVisit', 'desc').get();
                 if (snap.empty) {
@@ -8171,14 +8172,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // Excel 匯出 - 銷售記錄
         function exportSales() {
-            if (filteredSales.length === 0) {
+            // 使用 filteredSalesForList（包含已取消訂單），而非 filteredSales（統計用，排除已取消）
+            if (filteredSalesForList.length === 0) {
                 alert('目前篩選條件下無銷售記錄可匯出');
                 return;
             }
 
-            const ws_data = [['訂單編號', '訂單日期', '結帳時間', '銷售地點', '銷售人員', '官網會員帳號', '會員姓名', '會員電話', '會員Email', '項目類型', '商品名稱', '貨號', '規格', '數量', '單價', '小計', '折扣名稱', '折扣類型', '折扣描述', '折扣比例', '折扣金額', '訂單總額', '訂單備註']];
+            const ws_data = [['訂單編號', '訂單日期', '結帳時間', '銷售地點', '銷售人員', '官網會員帳號', '會員姓名', '會員電話', '會員Email', '訂單狀態', '項目類型', '商品名稱', '貨號', '規格', '數量', '單價', '小計', '折扣名稱', '折扣類型', '折扣描述', '折扣比例', '折扣金額', '訂單總額', '訂單備註']];
             
-            filteredSales.forEach(sale => {
+            filteredSalesForList.forEach(sale => {
                 let isFirstRow = true;
                 
                 // 分類處理所有項目
@@ -8218,6 +8220,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         isFirstRow ? (sale.memberName || '') : '',
                         isFirstRow ? (sale.memberPhone || '') : '',
                         isFirstRow ? (sale.memberEmail || '') : '',
+                        isFirstRow ? (sale.status === 'cancelled' ? '已取消' : '已成立') : '',
                         '一般商品',
                         item.name,
                         item.sku || '',
@@ -8240,7 +8243,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 // 輸出加購項目
                 addons.forEach(addon => {
                     ws_data.push([
-                        '', '', '', '', '', '', '', '', '',
+                        '', '', '', '', '', '', '', '', '', '',
                         '加購項目',
                         addon.name,
                         addon.sku || '',
@@ -8255,7 +8258,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 // 輸出贈品
                 gifts.forEach(gift => {
                     ws_data.push([
-                        '', '', '', '', '', '', '', '', '',
+                        '', '', '', '', '', '', '', '', '', '',
                         '贈品',
                         gift.name,
                         gift.sku || '',
@@ -14792,6 +14795,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 從匯出選單直接匯出（不需要先開總覽彈窗）
         async function exportStockMovementsFromMenu() {
+            if (!confirm('確定要匯出庫存異動紀錄嗎？')) return;
             closeExportModal();
             showNotification('⏳ 正在載入庫存異動記錄...');
             try {
