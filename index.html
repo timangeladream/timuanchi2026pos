@@ -2918,8 +2918,11 @@
     <div id="giftModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>管理贈品</h3>
-                <button class="modal-close" onclick="closeGiftManager()">×</button>
+                <h3>贈品項目管理</h3>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button onclick="openAddGiftModal()" style="padding:6px 14px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">➕ 新增贈品</button>
+                    <button class="modal-close" onclick="closeGiftManager()">×</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="discount-list" id="giftList"></div>
@@ -3017,8 +3020,11 @@
     <div id="addonModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>加購項目編輯</h3>
-                <button class="modal-close" onclick="closeAddonManager()">×</button>
+                <h3>加購項目管理</h3>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button onclick="openAddAddonModal()" style="padding:6px 14px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">➕ 新增加購項目</button>
+                    <button class="modal-close" onclick="closeAddonManager()">×</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="discount-list" id="addonList"></div>
