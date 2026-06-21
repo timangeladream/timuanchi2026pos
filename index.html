@@ -9648,6 +9648,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             saveDataToLocalStorage();
             showNotification('✅ 商品資料已清除');
             renderBrandTabs();
+            loadProducts(); // 同步更新銷售頁面商品列表
             closeClearDataModal();
         }
         
@@ -9655,7 +9656,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function confirmClearSales() {
             if (!confirm('⚠️ 確定要清除所有銷售記錄嗎？\n此操作無法復原！')) return;
             
-            salesHistory = [];
+            // 權限檢查：非 admin 不可清除
+            if (db && currentUser && currentUserRole !== 'admin') {
+                showNotification('⚠️ 只有管理員可以清除銷售記錄');
+                closeClearDataModal();
+                return;
+            }
+            
             // 線上版：同步刪除 Firebase 中所有銷售記錄
             if (db && currentUser && currentUserRole === 'admin') {
                 db.collection('sales').get().then(snapshot => {
@@ -9663,15 +9670,18 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     snapshot.forEach(doc => batch.delete(doc.ref));
                     return batch.commit();
                 }).then(() => {
+                    salesHistory = []; // 刪除成功後才清空本地畫面
+                    filterByTime(currentTimeFilter);
                     showNotification('✅ 銷售記錄已清除');
                 }).catch(e => {
                     console.error('清除銷售記錄失敗:', e);
                     showNotification('⚠️ 清除失敗，請重試');
                 });
             } else {
+                salesHistory = [];
+                filterByTime(currentTimeFilter);
                 showNotification('✅ 銷售記錄已清除');
             }
-            filterByTime(currentTimeFilter);
             closeClearDataModal();
         }
         
@@ -9702,10 +9712,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function confirmClearDiscounts() {
             if (!confirm('⚠️ 確定要清除所有折扣設定嗎？\n此操作無法復原！')) return;
             
-            discountItems = [];
+            discountButtons = [];
             saveDataToLocalStorage();
             showNotification('✅ 折扣設定已清除');
             loadDiscountList();  // 重新載入折扣管理畫面
+            loadDiscountButtons(); // 重新載入銷售頁面的折扣按鈕
             closeClearDataModal();
         }
         
