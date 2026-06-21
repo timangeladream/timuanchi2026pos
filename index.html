@@ -2476,6 +2476,10 @@
                 <span class="menu-icon-text">🎁</span>
                 <span>贈品項目管理</span>
             </button>
+            <button class="menu-item admin-only" onclick="openDiscountManager(); toggleMenu();">
+                <span class="menu-icon-text">🎁</span>
+                <span>優惠折扣管理</span>
+            </button>
             <button class="menu-item admin-only" onclick="openRestockModal(); toggleMenu();">
                 <span class="menu-icon-text">📦</span>
                 <span>補貨管理</span>
@@ -2814,10 +2818,6 @@
     <div class="discount-section">
         <div class="order-header">
             <div class="discount-title">🎁 優惠折扣</div>
-            <div style="display: flex; gap: 8px;">
-                <button class="file-btn" onclick="openDiscountManager()">✏️ 編輯</button>
-                <button class="file-btn" onclick="openAddDiscountModal()">➕ 新增</button>
-            </div>
         </div>
         <div class="discount-grid" id="discountButtons"></div>
     </div>
@@ -2857,8 +2857,11 @@
     <div id="discountModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>編輯折扣</h3>
-                <button class="modal-close" onclick="closeDiscountManager()">×</button>
+                <h3>優惠折扣管理</h3>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button onclick="openAddDiscountModal()" style="padding:6px 14px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">➕ 新增折扣</button>
+                    <button class="modal-close" onclick="closeDiscountManager()">×</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="discount-list" id="discountList"></div>
@@ -5876,6 +5879,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             showNotification('✅ 折扣新增成功！');
             saveDataToLocalStorage();
             loadDiscountButtons();
+            loadDiscountList(); // 同步更新優惠折扣管理列表
             closeAddDiscountModal();
             
             // 清空表單
