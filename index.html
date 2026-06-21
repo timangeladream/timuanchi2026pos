@@ -11784,9 +11784,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         }
                     }
                 } else if (item.isGift) {
-                    // 贈品
-                    const targetGift = giftRules.find(g => g.id === item.id);
-                    maxStock = targetGift?.giftStock ?? 0;
+                    // 贈品：用 giftRuleId 查找（giftItem 沒有 id 欄位）
+                    const targetGift = giftRules.find(g => g.id === item.giftRuleId);
+                    maxStock = targetGift?.giftStock ?? Infinity;
                 } else {
                     // 一般商品
                     if (item.selectedVariants) {
