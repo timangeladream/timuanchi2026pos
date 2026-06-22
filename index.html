@@ -15146,28 +15146,41 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             const lastVisit = c.lastVisit?.toDate ? c.lastVisit.toDate().toLocaleDateString('zh-TW') : '';
             const firstVisit = c.firstVisit?.toDate ? c.firstVisit.toDate().toLocaleDateString('zh-TW') : '';
+            const createdAtRaw = c.createdAt || c.firstVisit;
+            const createdAt = createdAtRaw?.toDate ? createdAtRaw.toDate().toLocaleDateString('zh-TW') : '';
             
             document.getElementById('customerDetailContent').innerHTML = `
                 <div style="padding:16px;background:#f0f7ff;border-radius:12px;margin-bottom:20px;">
                     <div style="font-size:14px;font-weight:700;margin-bottom:8px;">${c.name || '未填姓名'}</div>
-                    ${c.phone ? `<div style="font-size:12px;color:#555;margin-bottom:4px;">${c.phone}</div>` : ''}
-                    ${c.email ? `<div style="font-size:12px;color:#555;margin-bottom:4px;">${c.email}</div>` : ''}
-                    ${c.account ? `<div style="font-size:12px;color:#555;margin-bottom:4px;">${c.account}</div>` : ''}
-                    <div style="display:flex;gap:16px;margin-top:12px;">
-                        <div style="text-align:center;">
+                    <div style="font-size:12px;color:#555;margin-bottom:4px;">
+                        ${c.phone ? `聯絡電話：${c.phone}` : ''}${c.phone && c.account ? '｜' : ''}${c.account ? `官網會員帳號：${c.account}` : ''}
+                    </div>
+                    ${c.email ? `<div style="font-size:12px;color:#555;">電子信箱：${c.email}</div>` : ''}
+                    
+                    <div style="border-top:1px solid rgba(255,255,255,0.6);margin:12px 0;"></div>
+                    
+                    <div style="font-size:12px;color:#666;line-height:1.7;">
+                        ${createdAt ? `<div>加入日期：${createdAt}</div>` : ''}
+                        ${firstVisit ? `<div>首次消費：${firstVisit}</div>` : ''}
+                        ${lastVisit ? `<div>最近消費：${lastVisit}</div>` : ''}
+                    </div>
+                    
+                    <div style="border-top:1px solid rgba(255,255,255,0.6);margin:12px 0;"></div>
+                    
+                    <div style="display:flex;gap:16px;">
+                        <div style="text-align:center;flex:1;">
                             <div style="font-size:18px;font-weight:700;color:var(--primary-color);">NT$ ${(c.totalSpent || 0).toLocaleString()}</div>
                             <div style="font-size:11px;color:#999;">累計消費</div>
                         </div>
-                        <div style="text-align:center;">
+                        <div style="text-align:center;flex:1;">
                             <div style="font-size:18px;font-weight:700;color:var(--primary-color);">${c.totalOrders || 0}</div>
                             <div style="font-size:11px;color:#999;">訂單數</div>
                         </div>
-                        <div style="text-align:center;">
+                        <div style="text-align:center;flex:1;">
                             <div style="font-size:18px;font-weight:700;color:var(--primary-color);">NT$ ${Math.round((c.totalSpent || 0) / (c.totalOrders || 1)).toLocaleString()}</div>
-                            <div style="font-size:11px;color:#999;">平均客單</div>
+                            <div style="font-size:11px;color:#999;">平均客單價</div>
                         </div>
                     </div>
-                    ${firstVisit ? `<div style="font-size:11px;color:#999;margin-top:8px;">首次消費：${firstVisit}　最近消費：${lastVisit}</div>` : ''}
                 </div>
                 <div style="font-weight:600;font-size:14px;margin-bottom:12px;">📋 消費記錄</div>
                 ${orders.length === 0 ? '<div style="color:#999;text-align:center;padding:16px;">暫無記錄</div>' : 
