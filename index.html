@@ -14968,6 +14968,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         function closeCustomerManager() {
             document.getElementById('customerManagerModal').classList.remove('show');
+            // 重置回列表頁，避免下次開啟時停留在詳情頁
+            document.getElementById('customerListView').style.display = 'block';
+            document.getElementById('customerDetailView').style.display = 'none';
         }
 
         let customerSearchTimeout = null;
