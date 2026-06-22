@@ -6062,7 +6062,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const gift = giftRules[index];
             currentEditingGiftIndex = index;
             
-            closeGiftManager();
             bringModalToFront('editGiftModal');
             document.getElementById('editGiftModal').classList.add('show');
             
@@ -10563,9 +10562,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             currentEditingProduct = product;
             currentEditingProductPath = { brand: brandKey, main: mainCat, sub: subCat, productId: product.id };
             
-            // 關閉商品列表
-            closeProductListManager();
-            
             // 先初始化品牌選單
             const brandSelect = document.getElementById('newProductBrand');
             const brands = Object.keys(productData);
@@ -10740,8 +10736,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 productId: product.id 
             };
             
-            // 關閉商品列表
-            closeProductListManager();
             
             // 先初始化品牌選單
             const brandSelect = document.getElementById('newProductBrand');
@@ -10751,6 +10745,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             brandSelect.innerHTML = options;
             
             // 打開編輯彈窗
+            bringModalToFront('addProductModal');
             document.getElementById('addProductModal').classList.add('show');
             document.getElementById('productModalTitle').textContent = '編輯商品';
             
@@ -13276,8 +13271,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
             }
             
-            // 關閉編輯彈窗，打開新增/編輯彈窗
-            closeAddonManager();
+            // 打開編輯彈窗（疊在加購項目管理列表上方）
             bringModalToFront('addAddonModal');
             document.getElementById('addAddonModal').classList.add('show');
         }
