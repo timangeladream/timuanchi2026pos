@@ -14362,6 +14362,39 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('customerQRModal').style.display = 'none';
         }
 
+        // 複製顧客顯示網址到剪貼簿
+        function copyCustomerQRUrl() {
+            const url = document.getElementById('customerQRUrl').textContent;
+            if (!url) return;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    showNotification('✅ 網址已複製');
+                }).catch(() => {
+                    fallbackCopyText(url);
+                });
+            } else {
+                fallbackCopyText(url);
+            }
+        }
+
+        // 備用複製方式（不支援 clipboard API 時）
+        function fallbackCopyText(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showNotification('✅ 網址已複製');
+            } catch (e) {
+                showNotification('⚠️ 複製失敗，請手動選取網址');
+            }
+            document.body.removeChild(textarea);
+        }
+
 
         // ===== 顧客資料管理 =====
 
@@ -15488,7 +15521,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         <h3 style="margin:0 0 8px;color:var(--primary-color);">👁️ 顧客顯示畫面</h3>
         <p style="font-size:13px;color:#666;margin:0 0 20px;">請顧客掃描以下 QR Code</p>
         <div id="customerQRCode" style="margin:0 auto 20px;"></div>
-        <p id="customerQRUrl" style="font-size:11px;color:#999;word-break:break-all;margin:0 0 20px;"></p>
+        <p id="customerQRUrl" style="font-size:11px;color:#999;word-break:break-all;margin:0 0 12px;"></p>
+        <button onclick="copyCustomerQRUrl()" style="width:100%;padding:12px;background:#28a745;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;">📋 複製網址</button>
         <button onclick="closeCustomerQR()" style="width:100%;padding:12px;background:var(--primary-color);color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;">關閉</button>
     </div>
 </div>
