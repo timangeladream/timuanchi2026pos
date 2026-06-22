@@ -4800,6 +4800,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // === 選單功能 ===
         
         // 切換側邊選單
+        // 動態彈窗層級管理：每次開啟彈窗時自動疊到最上層
+        let topModalZIndex = 10000;
+        function bringModalToFront(modalId) {
+            topModalZIndex += 1;
+            const el = document.getElementById(modalId);
+            if (el) el.style.zIndex = topModalZIndex;
+        }
+
         function toggleMenu() {
             const menu = document.getElementById('sideMenu');
             const overlay = document.getElementById('menuOverlay');
@@ -5472,6 +5480,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 臨時空函數(後續步驟實作)
         function openGiftManager() {
+            bringModalToFront('giftModal');
             document.getElementById('giftModal').classList.add('show');
             loadGiftList();
         }
@@ -5518,6 +5527,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }).join('');
         }
         function openAddGiftModal() {
+            bringModalToFront('addGiftModal');
             document.getElementById('addGiftModal').classList.add('show');
             updateAddGiftForm(); // 初始化表單
         }
@@ -6053,6 +6063,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             currentEditingGiftIndex = index;
             
             closeGiftManager();
+            bringModalToFront('editGiftModal');
             document.getElementById('editGiftModal').classList.add('show');
             
             // 先設定類型並更新表單
@@ -10191,6 +10202,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 打開商品列表管理
         function openProductListManager() {
             initProductFilters();
+            bringModalToFront('productListModal');
             document.getElementById('productListModal').classList.add('show');
             filterProductList();
         }
@@ -10562,6 +10574,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             brandSelect.innerHTML = options;
             
             // 打開編輯彈窗
+            bringModalToFront('addProductModal');
             document.getElementById('addProductModal').classList.add('show');
             document.getElementById('productModalTitle').textContent = '編輯商品';
             
@@ -10930,6 +10943,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('totalStockDisplay').style.display = 'none';
             
             // 顯示彈窗
+            bringModalToFront('addProductModal');
             document.getElementById('addProductModal').classList.add('show');
             
             // 監聽品牌變更
@@ -13115,6 +13129,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 打開加購項目管理
         function openAddonManager() {
             loadAddonList();
+            bringModalToFront('addonModal');
             document.getElementById('addonModal').classList.add('show');
         }
 
@@ -13146,6 +13161,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('addonSimpleStockSection').style.display = 'block';
             document.getElementById('addonTotalStockDisplay').style.display = 'none';
             
+            bringModalToFront('addAddonModal');
             document.getElementById('addAddonModal').classList.add('show');
         }
 
@@ -13262,6 +13278,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 關閉編輯彈窗，打開新增/編輯彈窗
             closeAddonManager();
+            bringModalToFront('addAddonModal');
             document.getElementById('addAddonModal').classList.add('show');
         }
 
@@ -14763,6 +14780,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 商品個別異動記錄
         async function openProductStockLog(productId, productName) {
             document.getElementById('productStockLogTitle').textContent = `📋 ${productName} 庫存異動記錄`;
+            bringModalToFront('productStockLogModal');
             document.getElementById('productStockLogModal').classList.add('show');
             document.getElementById('productStockLogList').innerHTML = '<div style="text-align:center;padding:20px;color:#999;">載入中...</div>';
             try {
