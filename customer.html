@@ -301,10 +301,15 @@
                 </div>`;
         };
 
+        const productCount = normalItems.reduce((sum, i) => sum + i.quantity, 0);
+        const addonCount = addonItems.reduce((sum, i) => sum + i.quantity, 0);
+        const giftCount = giftItems.reduce((sum, i) => sum + i.quantity, 0);
+        const countSummary = `<span style="font-size:12px;color:#999;font-weight:400;margin-left:6px;">（商品${productCount}件｜加購品${addonCount}件｜贈品${giftCount}件）</span>`;
+
         let html = '';
 
+        html += `<div class="section-title">📋 訂單明細${countSummary}</div>`;
         if (normalItems.length > 0) {
-            html += `<div class="section-title">📋 訂單明細</div>`;
             html += normalItems.map(renderItem).join('');
         }
 
