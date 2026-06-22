@@ -5700,6 +5700,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 打開折扣管理
         function openDiscountManager() {
+            bringModalToFront('discountModal');
             document.getElementById('discountModal').classList.add('show');
             loadDiscountList();
         }
@@ -5711,6 +5712,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 打開新增折扣彈窗
         function openAddDiscountModal() {
+            bringModalToFront('addDiscountModal');
             document.getElementById('addDiscountModal').classList.add('show');
             updateAddDiscountForm();
         }
@@ -6163,10 +6165,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const discount = discountButtons[index];
             currentEditingDiscountIndex = index;
             
-            // 關閉折扣列表 Modal
-            closeDiscountManager();
-            
-            // 打開編輯表單 Modal
+            // 打開編輯表單 Modal（疊在優惠折扣管理列表上方）
+            bringModalToFront('editDiscountModal');
             document.getElementById('editDiscountModal').classList.add('show');
             
             // 設定折扣類型
@@ -14909,6 +14909,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // ===== 顧客管理頁面 =====
 
         async function openCustomerManager() {
+            bringModalToFront('customerManagerModal');
             document.getElementById('customerManagerModal').classList.add('show');
             await loadCustomerList();
             // 背景自動計算（不打擾使用者）
@@ -15043,6 +15044,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('editCustomerEmail').value = c.email || '';
             document.getElementById('editCustomerAccount').value = c.account || '';
 
+            bringModalToFront('customerEditModal');
             document.getElementById('customerEditModal').classList.add('show');
         }
 
