@@ -15115,6 +15115,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
         }
 
+        let currentCustomerOrders = []; // 顧客詳情頁的消費記錄暫存
+
         async function openCustomerDetail(customerId) {
             const doc = await db.collection('customers').doc(customerId).get();
             if (!doc.exists) return;
@@ -15143,6 +15145,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 });
             });
             orders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            currentCustomerOrders = orders; // 暫存供點開明細彈窗使用
             
             const lastVisit = c.lastVisit?.toDate ? c.lastVisit.toDate().toLocaleDateString('zh-TW') : '';
             const firstVisit = c.firstVisit?.toDate ? c.firstVisit.toDate().toLocaleDateString('zh-TW') : '';
@@ -15157,7 +15160,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     </div>
                     ${c.email ? `<div style="font-size:12px;color:#555;">電子信箱：${c.email}</div>` : ''}
                     
-                    <div style="border-top:1px solid rgba(255,255,255,0.6);margin:12px 0;"></div>
+                    <div style="border-top:1px solid #ffffff;margin:12px 0;"></div>
                     
                     <div style="font-size:12px;color:#666;line-height:1.7;">
                         ${createdAt ? `<div>加入日期：${createdAt}</div>` : ''}
@@ -15165,7 +15168,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         ${lastVisit ? `<div>最近消費：${lastVisit}</div>` : ''}
                     </div>
                     
-                    <div style="border-top:1px solid rgba(255,255,255,0.6);margin:12px 0;"></div>
+                    <div style="border-top:1px solid #ffffff;margin:12px 0;"></div>
                     
                     <div style="display:flex;gap:16px;">
                         <div style="text-align:center;flex:1;">
@@ -15184,11 +15187,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 </div>
                 <div style="font-weight:600;font-size:14px;margin-bottom:12px;">📋 消費記錄</div>
                 ${orders.length === 0 ? '<div style="color:#999;text-align:center;padding:16px;">暫無記錄</div>' : 
-                    orders.map(o => `
-                        <div style="background:white;border:1px solid #e9ecef;border-radius:8px;padding:12px;margin-bottom:8px;">
+                    orders.map((o, idx) => `
+                        <div onclick="openCustomerOrderDetail(${idx})" style="background:white;border:1px solid #e9ecef;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
                                 <div>
-                                    <div style="font-size:12px;font-weight:600;">${o.orderNumber || ''}</div>
+                                    <div style="font-size:12px;font-weight:600;color:var(--primary-color);text-decoration:underline;">${o.orderNumber || ''}</div>
                                     <div style="font-size:11px;color:#888;">${o.timestampDisplay || ''} ${o.saleLocation ? '｜' + o.saleLocation : ''}</div>
                                 </div>
                                 <div style="text-align:right;">
@@ -15203,6 +15206,48 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             document.getElementById('customerListView').style.display = 'none';
             document.getElementById('customerDetailView').style.display = 'block';
+        }
+
+        // 開啟顧客消費記錄中某一筆訂單的明細
+        function openCustomerOrderDetail(idx) {
+            const o = currentCustomerOrders[idx];
+            if (!o) return;
+
+            const products = (o.items || []).filter(item => !item.isAddon && !item.isGift);
+            const addons = (o.items || []).filter(item => item.isAddon);
+            const gifts = (o.items || []).filter(item => item.isGift);
+            const sortedItems = [...products, ...addons, ...gifts];
+
+            const itemsHTML = sortedItems.map(item => {
+                const displayName = item.displayName || item.name;
+                const itemTotal = item.price * item.quantity;
+                let label = '';
+                if (item.isGift) label = '【贈品】';
+                else if (item.isAddon) label = '【加購】';
+                return `<div class="sales-record-item-row"><span>${label}${displayName} × ${item.quantity}</span><span>NT$ ${itemTotal}</span></div>`;
+            }).join('');
+
+            document.getElementById('customerOrderDetailContent').innerHTML = `
+                ${o.status === 'cancelled' ? `<div class="order-cancelled-notice">❌ 此訂單已取消${o.cancelledAtDisplay ? `<span style="font-size:11px;font-weight:400;margin-left:8px;opacity:0.8;">（${o.cancelledAtDisplay}）</span>` : ''}</div>` : ''}
+                <div class="sales-record-info" style="margin-bottom:8px;">
+                    ${o.orderNumber || ''}<br>
+                    ${o.timestampDisplay || ''} ${o.saleLocation ? '｜' + o.saleLocation : ''}
+                </div>
+                <div class="sales-record-items">
+                    ${itemsHTML}
+                    ${o.discountAmount > 0 ? `<div class="sales-record-item-row" style="color:#d32f2f;"><span>${o.discountName}</span><span>- NT$ ${o.discountAmount}</span></div>` : ''}
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);font-weight:700;">
+                    <span>訂單總額</span>
+                    <span style="color:var(--primary-color);">NT$ ${(o.total || 0).toLocaleString()}</span>
+                </div>
+            `;
+            bringModalToFront('customerOrderDetailModal');
+            document.getElementById('customerOrderDetailModal').classList.add('show');
+        }
+
+        function closeCustomerOrderDetail() {
+            document.getElementById('customerOrderDetailModal').classList.remove('show');
         }
 
         function backToCustomerList() {
@@ -15508,6 +15553,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
 
 <!-- 編輯顧客 Modal -->
+<!-- 顧客消費記錄 - 訂單明細彈窗 -->
+<div id="customerOrderDetailModal" class="modal">
+    <div class="modal-content" style="max-width:450px;">
+        <div class="modal-header">
+            <h3>訂單明細</h3>
+            <button class="modal-close" onclick="closeCustomerOrderDetail()">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="customerOrderDetailContent"></div>
+        </div>
+    </div>
+</div>
+
 <div id="customerEditModal" class="modal">
     <div class="modal-content" style="max-width:400px;">
         <div class="modal-header">
