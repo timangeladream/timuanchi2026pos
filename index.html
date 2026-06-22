@@ -4643,6 +4643,9 @@ async function initApp() {
         loadAddonItems();
         loadSaleLocationOptions();
         
+        // 重新整理頁面後 orderItems 會重置為空，同步清空顧客顯示畫面避免殘留舊訂單
+        syncActiveOrder();
+        
     } catch (e) {
         console.error('initApp 失敗:', e);
         showNotification('⚠️ 資料載入失敗，請重新整理頁面');
