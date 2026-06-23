@@ -280,9 +280,12 @@
         const discountAmount = discounts.reduce((sum, d) => sum + (d.amount || 0), 0);
 
         const renderItem = (item) => {
-            const variantText = item.selectedVariants 
-                ? Object.values(item.selectedVariants).join(' / ') 
-                : '';
+            let variantText = '';
+            if (item.selectedVariants) {
+                const keys = (item.variantKeyOrder || Object.keys(item.selectedVariants))
+                    .filter(k => item.selectedVariants[k]);
+                variantText = keys.map(k => `${k}: ${item.selectedVariants[k]}`).join(' | ');
+            }
             const tag = item.isAddon 
                 ? '<span class="item-tag tag-addon">加購</span>' 
                 : item.isGift 
