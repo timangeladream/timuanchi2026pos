@@ -11823,6 +11823,25 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 更新標題旁的數量統計
             const productCount = products.reduce((sum, item) => sum + item.quantity, 0);
+            
+            // 自動重新計算已套用的「件數型」折扣（任選N件折X元/X折），
+            // 讓訂單件數變化時折扣次數與金額即時跟著更新，不需要重新點擊按鈕
+            discounts.forEach(d => {
+                if (d.type === 'buyN' || d.type === 'buyNFixed') {
+                    const times = Math.floor(productCount / d.count);
+                    d.amount = times * d.discount;
+                    d.description = `${d.type === 'buyN' ? '買' : '任選'}${d.count}件折${d.discount}元 (已套用${times}次)`;
+                } else if (d.type === 'buyNPercent') {
+                    d.description = `任選${d.count}件享${(d.rate * 100).toFixed(0)}折`;
+                }
+            });
+            // 件數不足時自動移除該折扣
+            discounts = discounts.filter(d => {
+                if (d.type === 'buyN' || d.type === 'buyNFixed' || d.type === 'buyNPercent') {
+                    return productCount >= d.count;
+                }
+                return true;
+            });
             const addonCount = addons.reduce((sum, item) => sum + item.quantity, 0);
             const giftCount = gifts.reduce((sum, item) => sum + item.quantity, 0);
             const summaryEl = document.getElementById('orderItemCountSummary');
@@ -12103,12 +12122,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 百分比折扣
         function applyPercentDiscount(discountId, name, rate) {
-            // 檢查是否已有折扣(互斥)
-            if (discounts.length > 0) {
-                alert('已有折扣套用,一次只能使用一個折扣!');
-                return;
-            }
-            
             // 檢查訂單中至少有1件商品（排除加購和贈品）
             const productCount = orderItems.filter(item => !item.isAddon && !item.isGift).length;
             if (productCount === 0) {
@@ -12116,11 +12129,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
-            const existing = discounts.find(d => d.discountId === discountId);
-            if (existing) {
-                alert('此折扣已套用！');
-                return;
-            }
+            // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
+            discounts = discounts.filter(d => d.discountId === discountId);
             discounts.push({ 
                 discountId,
                 name, 
@@ -12135,12 +12145,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 固定金額折扣
         function applyFixedDiscount(discountId, name, amount) {
-            // 檢查是否已有折扣(互斥)
-            if (discounts.length > 0) {
-                alert('已有折扣套用,一次只能使用一個折扣!');
-                return;
-            }
-            
             // 檢查訂單中至少有1件商品（排除加購和贈品）
             const productCount = orderItems.filter(item => !item.isAddon && !item.isGift).length;
             if (productCount === 0) {
@@ -12148,11 +12152,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
-            const existing = discounts.find(d => d.discountId === discountId);
-            if (existing) {
-                alert('此折扣已套用！');
-                return;
-            }
+            // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
+            discounts = discounts.filter(d => d.discountId === discountId);
             discounts.push({ 
                 discountId,
                 name, 
@@ -12167,12 +12168,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 任選N件折扣
         function applyBuyNDiscount(discountId, name, count, discount) {
-            // 檢查是否已有折扣(互斥)
-            if (discounts.length > 0) {
-                alert('已有折扣套用,一次只能使用一個折扣!');
-                return;
-            }
-            
             // 只計算一般商品數量，排除加購項目和贈品
             const totalItems = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
@@ -12183,11 +12178,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            const existing = discounts.find(d => d.discountId === discountId);
-            if (existing) {
-                alert('此折扣已套用！');
-                return;
-            }
+            // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
+            discounts = discounts.filter(d => d.discountId === discountId);
 
             // 計算可套用幾次
             const times = Math.floor(totalItems / count);
@@ -12209,12 +12201,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 滿額百分比折扣
         function applyMinAmountPercentDiscount(discountId, name, minAmount, rate) {
-            // 檢查是否已有折扣(互斥)
-            if (discounts.length > 0) {
-                alert('已有折扣套用,一次只能使用一個折扣!');
-                return;
-            }
-            
             // 只計算一般商品金額,排除加購品和贈品
             const subtotal = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
@@ -12225,11 +12211,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            const existing = discounts.find(d => d.discountId === discountId);
-            if (existing) {
-                alert('此折扣已套用！');
-                return;
-            }
+            // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
+            discounts = discounts.filter(d => d.discountId === discountId);
             
             discounts.push({ 
                 discountId,
@@ -12246,12 +12229,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 滿額固定金額折扣
         function applyMinAmountFixedDiscount(discountId, name, minAmount, amount) {
-            // 檢查是否已有折扣(互斥)
-            if (discounts.length > 0) {
-                alert('已有折扣套用,一次只能使用一個折扣!');
-                return;
-            }
-            
             // 只計算一般商品金額,排除加購品和贈品
             const subtotal = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
@@ -12262,11 +12239,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            const existing = discounts.find(d => d.discountId === discountId);
-            if (existing) {
-                alert('此折扣已套用！');
-                return;
-            }
+            // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
+            discounts = discounts.filter(d => d.discountId === discountId);
             
             discounts.push({ 
                 discountId,
@@ -12283,12 +12257,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 任選N件百分比折扣
         function applyBuyNPercentDiscount(discountId, name, count, rate) {
-            // 檢查是否已有折扣(互斥)
-            if (discounts.length > 0) {
-                alert('已有折扣套用,一次只能使用一個折扣!');
-                return;
-            }
-            
             const totalItems = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
@@ -12298,11 +12266,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            const existing = discounts.find(d => d.discountId === discountId);
-            if (existing) {
-                alert('此折扣已套用！');
-                return;
-            }
+            // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
+            discounts = discounts.filter(d => d.discountId === discountId);
             
             discounts.push({ 
                 discountId,
@@ -12319,12 +12284,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 任選N件固定金額折扣
         function applyBuyNFixedDiscount(discountId, name, count, discount) {
-            // 檢查是否已有折扣(互斥)
-            if (discounts.length > 0) {
-                alert('已有折扣套用,一次只能使用一個折扣!');
-                return;
-            }
-            
             const totalItems = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
@@ -12334,11 +12293,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            const existing = discounts.find(d => d.discountId === discountId);
-            if (existing) {
-                alert('此折扣已套用！');
-                return;
-            }
+            // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
+            discounts = discounts.filter(d => d.discountId === discountId);
 
             const times = Math.floor(totalItems / count);
             const actualDiscount = times * discount;
