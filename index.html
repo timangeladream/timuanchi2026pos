@@ -14296,16 +14296,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     const orderData = {
                         salesPersonId: currentUser.uid,
                         salesPersonName: currentUserName,
-                        items: orderItems.map(item => ({
-                            name: item.name,
-                            price: item.price,
-                            quantity: item.quantity,
-                            isAddon: item.isAddon || false,
-                            isGift: item.isGift || false,
-                            selectedVariants: item.selectedVariants || null,
-                            variantKeyOrder: item.variantKeyOrder || (item.selectedVariants ? Object.keys(item.selectedVariants) : null),
-                            brand: item.brand || ''
-                        })),
+                        items: orderItems.map(item => {
+                            console.log('syncActiveOrder item:', item.name, 'variantKeyOrder=', item.variantKeyOrder, 'selectedVariants=', item.selectedVariants);
+                            return {
+                                name: item.name,
+                                price: item.price,
+                                quantity: item.quantity,
+                                isAddon: item.isAddon || false,
+                                isGift: item.isGift || false,
+                                selectedVariants: item.selectedVariants || null,
+                                variantKeyOrder: item.variantKeyOrder || (item.selectedVariants ? Object.keys(item.selectedVariants) : null),
+                                brand: item.brand || ''
+                            };
+                        }),
                         discounts: discounts.map(d => ({
                             name: d.name,
                             amount: d.amount || 0
