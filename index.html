@@ -11821,6 +11821,44 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             updateOrder();
         }
 
+        // 找出「任選N件折X元」規則的最佳組合（動態規劃，無界背包問題）
+        // 給定商品總件數，從候選規則中找出讓總折扣金額最大化的組合（件數不重複扣除）
+        // 回傳格式：[{ rule, times }, ...]
+        function findBestDiscountCombo(totalCount, rules) {
+            if (totalCount <= 0 || rules.length === 0) return [];
+            
+            // dp[i] = 用 i 件商品能達到的最大折扣金額
+            const dp = new Array(totalCount + 1).fill(0);
+            // choice[i] = 達到 dp[i] 時最後使用的規則（用於回溯組合）
+            const choice = new Array(totalCount + 1).fill(null);
+            
+            for (let i = 1; i <= totalCount; i++) {
+                rules.forEach(rule => {
+                    if (rule.count <= i) {
+                        const candidate = dp[i - rule.count] + rule.discount;
+                        if (candidate > dp[i]) {
+                            dp[i] = candidate;
+                            choice[i] = rule;
+                        }
+                    }
+                });
+            }
+            
+            // 回溯找出實際用了哪些規則、各用幾次
+            const usageCount = {}; // ruleId -> 使用次數
+            let remaining = totalCount;
+            while (remaining > 0 && choice[remaining]) {
+                const rule = choice[remaining];
+                usageCount[rule.id] = (usageCount[rule.id] || 0) + 1;
+                remaining -= rule.count;
+            }
+            
+            return Object.keys(usageCount).map(ruleId => ({
+                rule: rules.find(r => r.id === ruleId),
+                times: usageCount[ruleId]
+            }));
+        }
+
         function updateOrder() {
             const container = document.getElementById('orderList');
             // 分類：商品在前，加購項目，贈品，最後折扣
@@ -11831,18 +11869,40 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 更新標題旁的數量統計
             const productCount = products.reduce((sum, item) => sum + item.quantity, 0);
             
-            // 自動重新計算已套用的「件數型」折扣（任選N件折X元/X折），
-            // 讓訂單件數變化時折扣次數與金額即時跟著更新，不需要重新點擊按鈕
-            discounts.forEach(d => {
-                if (d.type === 'buyN' || d.type === 'buyNFixed') {
-                    const times = Math.floor(productCount / d.count);
-                    d.amount = times * d.discount;
-                    d.description = `${d.type === 'buyN' ? '買' : '任選'}${d.count}件折${d.discount}元 (已套用${times}次)`;
-                } else if (d.type === 'buyNPercent') {
-                    d.description = `任選${d.count}件享${(d.rate * 100).toFixed(0)}折`;
-                }
-            });
-            // 件數不足時自動移除該折扣
+            // 自動重新計算已套用的折扣
+            const hasFixedCountDiscount = discounts.some(d => d.type === 'buyN' || d.type === 'buyNFixed');
+            if (hasFixedCountDiscount) {
+                // 已啟用「任選N件折X元」優惠：用最佳組合演算法重新分配件數，
+                // 自動找出能讓總折扣最大化的規則組合（件數不重複扣除）
+                // 候選規則 = 所有「任選N件折X元」類型的規則（不限已套用過的），
+                // 讓系統能自動發現更划算的組合（例如新增商品後可同時用上另一個門檻較低的規則）
+                const candidateRules = discountButtons.filter(btn =>
+                    btn.type === 'buyN' || btn.type === 'buyNFixed'
+                );
+                const bestCombo = findBestDiscountCombo(productCount, candidateRules);
+                
+                // 移除舊的件數型折扣，換成最佳組合算出的結果
+                discounts = discounts.filter(d => d.type !== 'buyN' && d.type !== 'buyNFixed');
+                bestCombo.forEach(({ rule, times }) => {
+                    discounts.push({
+                        discountId: rule.id,
+                        name: rule.name,
+                        type: rule.type,
+                        count: rule.count,
+                        discount: rule.discount,
+                        amount: times * rule.discount,
+                        description: `${rule.name} (已套用${times}次)`
+                    });
+                });
+            } else {
+                // 其他類型折扣（全單折/滿額折）：維持原本的描述更新邏輯
+                discounts.forEach(d => {
+                    if (d.type === 'buyNPercent') {
+                        d.description = `任選${d.count}件享${(d.rate * 100).toFixed(0)}折`;
+                    }
+                });
+            }
+            // 件數/金額不足時自動移除折扣
             discounts = discounts.filter(d => {
                 if (d.type === 'buyN' || d.type === 'buyNFixed' || d.type === 'buyNPercent') {
                     return productCount >= d.count;
