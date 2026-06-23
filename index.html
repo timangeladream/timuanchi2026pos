@@ -2460,6 +2460,10 @@
                 <span class="menu-icon-text">👤</span>
                 <span>顧客管理</span>
             </button>
+            <button class="menu-item admin-only" onclick="openLocationManager(); toggleMenu();">
+                <span class="menu-icon-text">📍</span>
+                <span>銷售地點管理</span>
+            </button>
             <button class="menu-item admin-only" onclick="openBrandManager(); toggleMenu();">
                 <span class="menu-icon-text">🏷️</span>
                 <span>品牌管理</span>
@@ -2746,10 +2750,7 @@
                     <input type="text" id="orderDate" readonly />
                 </div>
                 <div class="order-info-field">
-                    <label style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>銷售地點 *</span>
-                        <button type="button" onclick="openLocationManager()" style="padding: 2px 8px; font-size: 11px; background: var(--secondary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">⚙️ 管理</button>
-                    </label>
+                    <label>銷售地點 *</label>
                     <select id="saleLocation">
                         <option value="">請選擇</option>
                     </select>
@@ -9360,6 +9361,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         
         // 打開銷售地點管理
         function openLocationManager() {
+            bringModalToFront('locationModal');
             document.getElementById('locationModal').classList.add('show');
             loadLocationList();
         }
