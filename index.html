@@ -14306,6 +14306,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             isGift: item.isGift || false,
                             selectedVariants: item.selectedVariants || null,
                             variantKeyOrder: item.variantKeyOrder || (item.selectedVariants ? Object.keys(item.selectedVariants) : null),
+                            sku: item.sku || '',
                             brand: item.brand || ''
                         })),
                         discounts: discounts.map(d => ({

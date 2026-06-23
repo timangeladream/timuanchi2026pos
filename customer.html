@@ -96,6 +96,11 @@
             font-size: 12px;
             color: #888;
         }
+        .item-sku {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 2px;
+        }
         .item-tag {
             display: inline-block;
             font-size: 10px;
@@ -296,6 +301,7 @@
                     <div class="item-left">
                         <div class="item-name">${tag}${item.name}</div>
                         ${variantText ? `<div class="item-variant">${variantText}</div>` : ''}
+                        ${item.sku ? `<div class="item-sku">貨號: ${item.sku}</div>` : ''}
                     </div>
                     <div class="item-right">
                         ${item.isGift ? '<div class="item-price" style="color:#e74c3c;">贈品</div>' : `<div class="item-price">NT$ ${(item.price * item.quantity).toLocaleString()}</div>`}
