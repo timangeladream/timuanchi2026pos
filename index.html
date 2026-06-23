@@ -1176,6 +1176,11 @@
             background: #ccc !important;
             transform: none !important;
         }
+        .discount-btn-applied {
+            background: var(--success-color) !important;
+            border: 2px solid #fff !important;
+            box-shadow: 0 0 0 2px var(--success-color) !important;
+        }
         .discount-btn-eligible {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
         }
@@ -5354,6 +5359,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 let isEligible = true;
                 let statusText = '';
                 let btnClass = 'discount-btn';
+                const isApplied = discounts.some(d => d.discountId === btn.id);
                 
                 // 判斷條件是否滿足
                 if (btn.type === 'percent' || btn.type === 'fixed') {
@@ -5378,15 +5384,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     }
                 }
                 
-                // 已套用其他折扣則全部停用
-                if (hasDiscount) {
-                    isEligible = false;
-                    statusText = '';
+                // 已套用此折扣時標示「已套用」，但仍可點擊（重算用）；不會被其他折扣鎖住
+                if (isApplied) {
+                    statusText = ' ✓已套用';
                 }
                 
                 // 設定按鈕樣式
                 if (!isEligible) {
                     btnClass = 'discount-btn discount-btn-disabled';
+                } else if (isApplied) {
+                    btnClass = 'discount-btn discount-btn-applied';
                 }
                 
                 // 設定 onclick
