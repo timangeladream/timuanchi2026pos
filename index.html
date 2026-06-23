@@ -12129,6 +12129,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 百分比折扣
         function applyPercentDiscount(discountId, name, rate) {
+            // 已套用同一折扣，不重複套用
+            if (discounts.some(d => d.discountId === discountId)) return;
+            
             // 檢查訂單中至少有1件商品（排除加購和贈品）
             const productCount = orderItems.filter(item => !item.isAddon && !item.isGift).length;
             if (productCount === 0) {
@@ -12152,6 +12155,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 固定金額折扣
         function applyFixedDiscount(discountId, name, amount) {
+            // 已套用同一折扣，不重複套用
+            if (discounts.some(d => d.discountId === discountId)) return;
+            
             // 檢查訂單中至少有1件商品（排除加購和贈品）
             const productCount = orderItems.filter(item => !item.isAddon && !item.isGift).length;
             if (productCount === 0) {
@@ -12175,6 +12181,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 任選N件折扣
         function applyBuyNDiscount(discountId, name, count, discount) {
+            // 已套用同一折扣，不重複套用
+            if (discounts.some(d => d.discountId === discountId)) return;
+            
             // 只計算一般商品數量，排除加購項目和贈品
             const totalItems = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
@@ -12208,6 +12217,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 滿額百分比折扣
         function applyMinAmountPercentDiscount(discountId, name, minAmount, rate) {
+            // 已套用同一折扣，不重複套用
+            if (discounts.some(d => d.discountId === discountId)) return;
+            
             // 只計算一般商品金額,排除加購品和贈品
             const subtotal = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
@@ -12236,6 +12248,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 滿額固定金額折扣
         function applyMinAmountFixedDiscount(discountId, name, minAmount, amount) {
+            // 已套用同一折扣，不重複套用
+            if (discounts.some(d => d.discountId === discountId)) return;
+            
             // 只計算一般商品金額,排除加購品和贈品
             const subtotal = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
@@ -12264,6 +12279,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 任選N件百分比折扣
         function applyBuyNPercentDiscount(discountId, name, count, rate) {
+            // 已套用同一折扣，不重複套用
+            if (discounts.some(d => d.discountId === discountId)) return;
+            
             const totalItems = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
@@ -12291,6 +12309,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 任選N件固定金額折扣
         function applyBuyNFixedDiscount(discountId, name, count, discount) {
+            // 已套用同一折扣，不重複套用
+            if (discounts.some(d => d.discountId === discountId)) return;
+            
             const totalItems = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
