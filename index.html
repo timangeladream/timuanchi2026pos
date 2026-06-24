@@ -2873,6 +2873,15 @@
                 </div>
             </div>
             <div class="modal-body">
+                <div style="background:#f8f9fa;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+                    <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+                        <input type="checkbox" id="autoOptimizeDiscountToggle" onchange="toggleAutoOptimizeDiscount()" style="margin-top:2px;width:16px;height:16px;cursor:pointer;">
+                        <span>
+                            <div style="font-size:13px;font-weight:600;color:var(--text-color);">自動套用最優折扣組合</div>
+                            <div style="font-size:11px;color:#999;margin-top:2px;">開啟後，「任選N件折X元」規則會依商品件數自動找出最划算的組合並套用（可混用多個規則）。關閉時則維持手動選擇單一折扣。</div>
+                        </span>
+                    </label>
+                </div>
                 <div class="discount-list" id="discountList"></div>
             </div>
         </div>
@@ -4800,7 +4809,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             showAddress: true,
             showWebsite: true,
             showSocial: true,
-            footerText: '感謝您的購買！\n歡迎再次光臨'
+            footerText: '感謝您的購買！\n歡迎再次光臨',
+            autoOptimizeDiscount: false  // 是否自動套用最優折扣組合（任選N件折X元規則）
         };
 
         // 加購項目清單
@@ -5714,6 +5724,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             bringModalToFront('discountModal');
             document.getElementById('discountModal').classList.add('show');
             loadDiscountList();
+            document.getElementById('autoOptimizeDiscountToggle').checked = !!systemSettings.autoOptimizeDiscount;
+        }
+
+        // 切換「自動套用最優折扣組合」設定
+        function toggleAutoOptimizeDiscount() {
+            const checked = document.getElementById('autoOptimizeDiscountToggle').checked;
+            systemSettings.autoOptimizeDiscount = checked;
+            saveDataToLocalStorage();
+            showNotification(checked ? '✅ 已開啟自動套用最優折扣組合' : '✅ 已關閉自動套用最優折扣組合');
+            updateOrder(); // 立即套用設定變更
         }
 
         // 關閉折扣管理
@@ -11871,8 +11891,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 自動重新計算已套用的折扣
             const hasFixedCountDiscount = discounts.some(d => d.type === 'buyN' || d.type === 'buyNFixed');
-            if (hasFixedCountDiscount) {
-                // 已啟用「任選N件折X元」優惠：用最佳組合演算法重新分配件數，
+            if (hasFixedCountDiscount && systemSettings.autoOptimizeDiscount) {
+                // 已開啟「自動套用最優折扣組合」：用最佳組合演算法重新分配件數，
                 // 自動找出能讓總折扣最大化的規則組合（件數不重複扣除）
                 // 候選規則 = 所有「任選N件折X元」類型的規則（不限已套用過的），
                 // 讓系統能自動發現更划算的組合（例如新增商品後可同時用上另一個門檻較低的規則）
@@ -11894,6 +11914,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         description: `${rule.name} (已套用${times}次)`,
                         isDiscount: true
                     });
+                });
+            } else if (hasFixedCountDiscount) {
+                // 自動模式關閉：維持手動選擇，僅重新計算「目前已套用規則」的套用次數，
+                // 不會主動切換或混搭其他規則
+                discounts.forEach(d => {
+                    if (d.type === 'buyN' || d.type === 'buyNFixed') {
+                        const times = Math.floor(productCount / d.count);
+                        d.amount = times * d.discount;
+                        d.description = `${d.name} (已套用${times}次)`;
+                    }
                 });
             } else {
                 // 其他類型折扣（全單折/滿額折）：維持原本的描述更新邏輯
