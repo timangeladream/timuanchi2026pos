@@ -11916,13 +11916,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     });
                 });
             } else if (hasFixedCountDiscount) {
-                // 自動模式關閉：維持手動選擇，僅重新計算「目前已套用規則」的套用次數，
-                // 不會主動切換或混搭其他規則
+                // 自動模式關閉：維持手動選擇的折扣組合，但依套用順序重新分配剩餘件數，
+                // 確保多個件數型折扣並存時不會重複扣除同一批商品
+                let remainingCount = productCount;
                 discounts.forEach(d => {
                     if (d.type === 'buyN' || d.type === 'buyNFixed') {
-                        const times = Math.floor(productCount / d.count);
+                        const times = Math.floor(remainingCount / d.count);
                         d.amount = times * d.discount;
+                        d.times = times;
                         d.description = `${d.name} (已套用${times}次)`;
+                        remainingCount -= times * d.count;
                     }
                 });
             } else {
@@ -11934,8 +11937,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 });
             }
             // 件數/金額不足時自動移除折扣
+            // buyN/buyNFixed：依實際計算出的套用次數(times)判斷，避免疊加情境下誤判
+            // buyNPercent：維持原本以總件數判斷（這類型折扣目前不支援疊加）
             discounts = discounts.filter(d => {
-                if (d.type === 'buyN' || d.type === 'buyNFixed' || d.type === 'buyNPercent') {
+                if (d.type === 'buyN' || d.type === 'buyNFixed') {
+                    return (d.times || 0) > 0;
+                }
+                if (d.type === 'buyNPercent') {
                     return productCount >= d.count;
                 }
                 return true;
@@ -12280,16 +12288,22 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
             
-            if (totalItems < count) {
-                alert(`需購買至少 ${count} 件商品才能使用此優惠！`);
+            // 件數型折扣可手動疊加套用：計算其他已套用件數型折扣已扣除多少件
+            const usedByOthers = discounts
+                .filter(d => (d.type === 'buyN' || d.type === 'buyNFixed') && d.discountId !== discountId)
+                .reduce((sum, d) => sum + d.count * (d.times || 0), 0);
+            const remaining = totalItems - usedByOthers;
+            
+            if (remaining < count) {
+                alert(`剩餘可用件數不足，需要 ${count} 件才能套用此優惠（其他折扣已使用 ${usedByOthers} 件）！`);
                 return;
             }
 
-            // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
-            discounts = discounts.filter(d => d.discountId === discountId);
+            // 非件數型折扣（全單折/滿額折）仍維持互斥；件數型折扣可與其他件數型折扣並存
+            discounts = discounts.filter(d => d.type === 'buyN' || d.type === 'buyNFixed' || d.discountId === discountId);
 
-            // 計算可套用幾次
-            const times = Math.floor(totalItems / count);
+            // 計算可套用幾次（用剩餘件數計算）
+            const times = Math.floor(remaining / count);
             const actualDiscount = times * discount;
 
             discounts.push({ 
@@ -12299,7 +12313,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 type: 'buyN',
                 count,
                 discount,
-                description: `買${count}件折${discount}元 (已套用${times}次)`,
+                times,
+                description: `${name} (已套用${times}次)`,
                 isDiscount: true 
             });
             showNotification(`✅ 已套用折扣：${name}`);
@@ -12407,15 +12422,21 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
             
-            if (totalItems < count) {
-                alert(`需購買至少 ${count} 件商品才能使用此優惠！`);
+            // 件數型折扣可手動疊加套用：計算其他已套用件數型折扣已扣除多少件
+            const usedByOthers = discounts
+                .filter(d => (d.type === 'buyN' || d.type === 'buyNFixed') && d.discountId !== discountId)
+                .reduce((sum, d) => sum + d.count * (d.times || 0), 0);
+            const remaining = totalItems - usedByOthers;
+            
+            if (remaining < count) {
+                alert(`剩餘可用件數不足，需要 ${count} 件才能套用此優惠（其他折扣已使用 ${usedByOthers} 件）！`);
                 return;
             }
 
-            // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
-            discounts = discounts.filter(d => d.discountId === discountId);
+            // 非件數型折扣（全單折/滿額折）仍維持互斥；件數型折扣可與其他件數型折扣並存
+            discounts = discounts.filter(d => d.type === 'buyN' || d.type === 'buyNFixed' || d.discountId === discountId);
 
-            const times = Math.floor(totalItems / count);
+            const times = Math.floor(remaining / count);
             const actualDiscount = times * discount;
 
             discounts.push({ 
@@ -12425,7 +12446,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 type: 'buyNFixed',
                 count,
                 discount,
-                description: `任選${count}件折${discount}元 (已套用${times}次)`,
+                times,
+                description: `${name} (已套用${times}次)`,
                 isDiscount: true 
             });
             showNotification(`✅ 已套用折扣：${name}`);
