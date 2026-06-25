@@ -11983,13 +11983,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             }
                         }
                         
+                        const timesLabel = (item.times && item.times > 1) ? `<span class="qty-display">×${item.times}</span>` : '';
                         return `
                             <div class="order-item discount-item">
                                 <div class="order-item-info">
                                     <div class="order-item-name">🎁 ${displayName}</div>
-                                    <div class="order-item-price">${item.description}</div>
+                                    <div class="order-item-price">折抵 NT$ ${item.amount}</div>
                                 </div>
                                 <div class="order-item-controls">
+                                    ${timesLabel}
                                     <button class="delete-btn" onclick="removeDiscount(${index})">×</button>
                                 </div>
                             </div>
