@@ -6370,6 +6370,42 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
                 updatedDiscount.count = count;
                 updatedDiscount.discount = discount;
+            } else if (type === 'buyNFixed') {
+                const count = parseInt(document.getElementById('editBuyCount')?.value);
+                const discount = parseInt(document.getElementById('editDiscountAmount')?.value);
+                if (!count || count <= 0 || !discount || discount <= 0) {
+                    alert('請輸入有效的購買數量和折扣金額');
+                    return;
+                }
+                updatedDiscount.count = count;
+                updatedDiscount.discount = discount;
+            } else if (type === 'buyNPercent') {
+                const count = parseInt(document.getElementById('editBuyCount')?.value);
+                const value = parseFloat(document.getElementById('editDiscountValue')?.value);
+                if (!count || count <= 0 || !value || value <= 0 || value > 1) {
+                    alert('請輸入有效的購買數量和折扣率 (0.1 - 1.0)');
+                    return;
+                }
+                updatedDiscount.count = count;
+                updatedDiscount.value = value;
+            } else if (type === 'minAmountPercent') {
+                const minAmount = parseInt(document.getElementById('editMinAmount')?.value);
+                const value = parseFloat(document.getElementById('editDiscountValue')?.value);
+                if (!minAmount || minAmount <= 0 || !value || value <= 0 || value > 1) {
+                    alert('請輸入有效的最低消費金額和折扣率 (0.1 - 1.0)');
+                    return;
+                }
+                updatedDiscount.minAmount = minAmount;
+                updatedDiscount.value = value;
+            } else if (type === 'minAmountFixed') {
+                const minAmount = parseInt(document.getElementById('editMinAmount')?.value);
+                const value = parseInt(document.getElementById('editDiscountValue')?.value);
+                if (!minAmount || minAmount <= 0 || !value || value <= 0) {
+                    alert('請輸入有效的最低消費金額和折扣金額');
+                    return;
+                }
+                updatedDiscount.minAmount = minAmount;
+                updatedDiscount.value = value;
             }
 
             // 更新折扣
