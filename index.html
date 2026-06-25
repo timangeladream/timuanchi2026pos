@@ -12287,14 +12287,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
             
-            // 計算「其他」件數型折扣已扣除多少件（不含自己這個規則）
-            const usedByOthers = discounts
-                .filter(d => (d.type === 'buyN' || d.type === 'buyNFixed') && d.discountId !== discountId)
+            // 計算目前所有件數型折扣（含自己）已扣除多少件，確認再套用1次後是否仍有足夠件數
+            const existing = discounts.find(d => d.discountId === discountId);
+            const currentTimes = existing ? (existing.times || 0) : 0;
+            const usedTotal = discounts
+                .filter(d => d.type === 'buyN' || d.type === 'buyNFixed')
                 .reduce((sum, d) => sum + d.count * (d.times || 0), 0);
-            const remaining = totalItems - usedByOthers;
+            const neededTotal = usedTotal + count;
             
-            if (remaining < count) {
-                alert(`剩餘可用件數不足，需要 ${count} 件才能套用此優惠（其他折扣已使用 ${usedByOthers} 件）！`);
+            if (neededTotal > totalItems) {
+                const usedByOthers = usedTotal - currentTimes * count;
+                alert(`剩餘可用件數不足，需要 ${count} 件才能再套用一次此優惠（其他折扣已使用 ${usedByOthers} 件，此折扣已使用 ${currentTimes * count} 件）！`);
                 return;
             }
 
@@ -12302,8 +12305,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             discounts = discounts.filter(d => d.type === 'buyN' || d.type === 'buyNFixed' || d.discountId === discountId);
 
             // 每次點擊只累加 1 次套用，不自動算最大次數
-            const existing = discounts.find(d => d.discountId === discountId);
-            const times = existing ? (existing.times || 0) + 1 : 1;
+            const times = currentTimes + 1;
             const actualDiscount = times * discount;
 
             discounts = discounts.filter(d => d.discountId !== discountId);
@@ -12420,14 +12422,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
             
-            // 計算「其他」件數型折扣已扣除多少件（不含自己這個規則）
-            const usedByOthers = discounts
-                .filter(d => (d.type === 'buyN' || d.type === 'buyNFixed') && d.discountId !== discountId)
+            // 計算目前所有件數型折扣（含自己）已扣除多少件，確認再套用1次後是否仍有足夠件數
+            const existing = discounts.find(d => d.discountId === discountId);
+            const currentTimes = existing ? (existing.times || 0) : 0;
+            const usedTotal = discounts
+                .filter(d => d.type === 'buyN' || d.type === 'buyNFixed')
                 .reduce((sum, d) => sum + d.count * (d.times || 0), 0);
-            const remaining = totalItems - usedByOthers;
+            const neededTotal = usedTotal + count; // 再套用1次後總共需要用掉的件數
             
-            if (remaining < count) {
-                alert(`剩餘可用件數不足，需要 ${count} 件才能套用此優惠（其他折扣已使用 ${usedByOthers} 件）！`);
+            if (neededTotal > totalItems) {
+                const usedByOthers = usedTotal - currentTimes * count;
+                alert(`剩餘可用件數不足，需要 ${count} 件才能再套用一次此優惠（其他折扣已使用 ${usedByOthers} 件，此折扣已使用 ${currentTimes * count} 件）！`);
                 return;
             }
 
@@ -12435,8 +12440,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             discounts = discounts.filter(d => d.type === 'buyN' || d.type === 'buyNFixed' || d.discountId === discountId);
 
             // 每次點擊只累加 1 次套用，不自動算最大次數
-            const existing = discounts.find(d => d.discountId === discountId);
-            const times = existing ? (existing.times || 0) + 1 : 1;
+            const times = currentTimes + 1;
             const actualDiscount = times * discount;
 
             discounts = discounts.filter(d => d.discountId !== discountId);
