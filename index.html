@@ -11967,9 +11967,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     }
                 });
             } else {
-                // 其他類型折扣（全單折/滿額折）：維持原本的描述更新邏輯
+                // 百分比類折扣（全單折/滿額折/任選N件折）：訂單金額變動時重新計算實際折扣金額
+                const subtotalForPercentRecalc = products.reduce((sum, item) => sum + (item.price * item.quantity), 0);
                 discounts.forEach(d => {
-                    if (d.type === 'buyNPercent') {
+                    if (d.type === 'percent') {
+                        d.amount = Math.round(subtotalForPercentRecalc * (1 - d.rate));
+                    } else if (d.type === 'minAmountPercent') {
+                        d.amount = Math.round(subtotalForPercentRecalc * (1 - d.rate));
+                    } else if (d.type === 'buyNPercent') {
+                        d.amount = Math.round(subtotalForPercentRecalc * (1 - d.rate));
                         d.description = `任選${d.count}件享${(d.rate * 100).toFixed(0)}折`;
                     }
                 });
@@ -11977,12 +11983,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 件數/金額不足時自動移除折扣
             // buyN/buyNFixed：依實際計算出的套用次數(times)判斷，避免疊加情境下誤判
             // buyNPercent：維持原本以總件數判斷（這類型折扣目前不支援疊加）
+            // percent：訂單沒有商品時移除；minAmountPercent：金額低於門檻時移除
+            const subtotalForRemovalCheck = products.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             discounts = discounts.filter(d => {
                 if (d.type === 'buyN' || d.type === 'buyNFixed') {
                     return (d.times || 0) > 0;
                 }
                 if (d.type === 'buyNPercent') {
                     return productCount >= d.count;
+                }
+                if (d.type === 'percent') {
+                    return productCount > 0;
+                }
+                if (d.type === 'minAmountPercent' || d.type === 'minAmountFixed') {
+                    return subtotalForRemovalCheck >= d.minAmount;
                 }
                 return true;
             });
@@ -12278,12 +12292,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
+            // 計算實際折扣金額（全單商品金額 × (1-折扣率)）
+            const subtotalForPercent = orderItems
+                .filter(item => !item.isAddon && !item.isGift)
+                .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const amountForPercent = Math.round(subtotalForPercent * (1 - rate));
+            
             // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
             discounts = discounts.filter(d => d.discountId === discountId);
             discounts.push({ 
                 discountId,
                 name, 
                 rate, 
+                amount: amountForPercent,
                 type: 'percent',
                 description: `全單${(rate * 100).toFixed(0)}折`,
                 isDiscount: true 
@@ -12377,6 +12398,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
+            // 計算實際折扣金額
+            const amountForMinPercent = Math.round(subtotal * (1 - rate));
+            
             // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
             discounts = discounts.filter(d => d.discountId === discountId);
             
@@ -12385,6 +12409,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 name,
                 rate,
                 minAmount,
+                amount: amountForMinPercent,
                 type: 'minAmountPercent',
                 description: `滿${minAmount}元享${(rate * 100).toFixed(0)}折`,
                 isDiscount: true 
@@ -12438,6 +12463,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
+            // 計算實際折扣金額（用該規則涵蓋的商品金額計算，依目前訂單一般商品總金額計算）
+            const subtotalForBuyNPercent = orderItems
+                .filter(item => !item.isAddon && !item.isGift)
+                .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const amountForBuyNPercent = Math.round(subtotalForBuyNPercent * (1 - rate));
+            
             // 切換折扣：移除其他折扣（互斥），保留/覆蓋同一個折扣
             discounts = discounts.filter(d => d.discountId === discountId);
             
@@ -12446,6 +12477,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 name,
                 rate,
                 count,
+                amount: amountForBuyNPercent,
                 type: 'buyNPercent',
                 description: `任選${count}件享${(rate * 100).toFixed(0)}折`,
                 isDiscount: true 
@@ -12510,12 +12542,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 .reduce((sum, item) => sum + (item.price * item.quantity), 0);
             let discountTotal = 0;
             
+            // 所有折扣類型現在都有 amount 欄位（套用時已計算好），直接累加即可
             discounts.forEach(discount => {
-                if (discount.type === 'percent') {
-                    discountTotal += subtotal * (1 - discount.rate);
-                } else {
-                    discountTotal += discount.amount;
-                }
+                discountTotal += discount.amount || 0;
             });
             
             const total = Math.max(0, subtotal - discountTotal);
