@@ -134,8 +134,19 @@
             align-items: center;
             font-size: 14px;
         }
-        .discount-name { color: #856404; font-weight: 600; }
+        .discount-name { color: #856404; font-weight: 600; font-size: 14px; }
+        .discount-sub { color: #e74c3c; font-weight: 600; font-size: 13px; margin-top: 2px; }
         .discount-amount { color: #e74c3c; font-weight: 600; }
+        .discount-left { flex: 1; }
+        .discount-times {
+            background: #856404;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
 
         /* Summary */
         .summary {
@@ -334,11 +345,17 @@
 
         if (discounts.length > 0) {
             html += `<div class="section-title" style="margin-top:16px;">🎟️ 優惠折扣</div>`;
-            html += discounts.map(d => `
+            html += discounts.map(d => {
+                const timesLabel = (d.times && d.times > 1) ? `<span class="discount-times">×${d.times}</span>` : '';
+                return `
                 <div class="discount-item">
-                    <span class="discount-name">${d.name}</span>
-                    <span class="discount-amount">- NT$ ${(d.amount || 0).toLocaleString()}</span>
-                </div>`).join('');
+                    <div class="discount-left">
+                        <div class="discount-name">${d.name}</div>
+                        <div class="discount-sub">折抵 NT$ ${(d.amount || 0).toLocaleString()}</div>
+                    </div>
+                    ${timesLabel}
+                </div>`;
+            }).join('');
         }
 
         html += `

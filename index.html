@@ -14480,7 +14480,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         })),
                         discounts: discounts.map(d => ({
                             name: d.name,
-                            amount: d.amount || 0
+                            amount: d.amount || 0,
+                            times: d.times || 0
                         })),
                         subtotal: orderItems.reduce((sum, item) => {
                             if (!item.isGift) return sum + (item.price * item.quantity);
