@@ -2952,6 +2952,11 @@
                 </div>
             </div>
             <div class="modal-body">
+                <div style="margin-bottom:12px;">
+                    <input type="text" id="giftSearchInput" placeholder="搜尋贈品活動名稱或贈品名稱..."
+                        style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:14px;box-sizing:border-box;"
+                        oninput="filterGiftList()">
+                </div>
                 <div class="discount-list" id="giftList"></div>
             </div>
         </div>
@@ -3054,6 +3059,11 @@
                 </div>
             </div>
             <div class="modal-body">
+                <div style="margin-bottom:12px;">
+                    <input type="text" id="addonSearchInput" placeholder="搜尋加購項目名稱或貨號..."
+                        style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:14px;box-sizing:border-box;"
+                        oninput="filterAddonList()">
+                </div>
                 <div class="discount-list" id="addonList"></div>
             </div>
         </div>
@@ -5520,13 +5530,30 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function closeGiftManager() {
             document.getElementById('giftModal').classList.remove('show');
         }
+        function filterGiftList() {
+            loadGiftList();
+        }
+
         function loadGiftList() {
             const container = document.getElementById('giftList');
-            if (giftRules.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">尚無贈品設定</div>';
+            const searchInput = document.getElementById('giftSearchInput');
+            const searchText = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            let filteredGifts = giftRules;
+            if (searchText) {
+                filteredGifts = giftRules.filter(gift =>
+                    (gift.name && gift.name.toLowerCase().includes(searchText)) ||
+                    (gift.giftName && gift.giftName.toLowerCase().includes(searchText)) ||
+                    (gift.giftSku && gift.giftSku.toLowerCase().includes(searchText))
+                );
+            }
+
+            if (filteredGifts.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">${searchText ? '找不到符合的贈品' : '尚無贈品設定'}</div>`;
                 return;
             }
-            container.innerHTML = giftRules.map((gift, index) => {
+            container.innerHTML = filteredGifts.map((gift, index) => {
+                const originalIndex = giftRules.indexOf(gift);
                 let description = '';
                 if (gift.conditionType === 'minAmount') {
                     description = `滿 NT$ ${gift.conditionValue} 贈送 ${gift.giftName} x${gift.giftQty}`;
@@ -5550,9 +5577,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <span class="status-toggle-slider"></span>
                             </label>
                             <div style="display: flex; gap: 6px;">
-                                <button class="file-btn" onclick="editGift(${index})">編輯</button>
+                                <button class="file-btn" onclick="editGift(${originalIndex})">編輯</button>
                                 <button class="file-btn" onclick="openProductStockLog('${gift.id}', '${(gift.giftName || gift.name).replace(/'/g, "\\'")}')" style="background:#8e44ad;">📋</button>
-                                <button class="delete-discount-btn" onclick="deleteGift(${index})">刪除</button>
+                                <button class="delete-discount-btn" onclick="deleteGift(${originalIndex})">刪除</button>
                             </div>
                         </div>
                     </div>
@@ -13998,15 +14025,31 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         // 載入加購項目列表
+        function filterAddonList() {
+            loadAddonList();
+        }
+
         function loadAddonList() {
             const container = document.getElementById('addonList');
-            
-            if (addOnItems.length === 0) {
-                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">尚無加購項目</div>';
+            const searchInput = document.getElementById('addonSearchInput');
+            const searchText = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            let filteredAddons = addOnItems;
+            if (searchText) {
+                filteredAddons = addOnItems.filter(item =>
+                    (item.name && item.name.toLowerCase().includes(searchText)) ||
+                    (item.sku && item.sku.toLowerCase().includes(searchText)) ||
+                    (item.variantSkus && Object.values(item.variantSkus).some(s => s && s.toLowerCase().includes(searchText)))
+                );
+            }
+
+            if (filteredAddons.length === 0) {
+                container.innerHTML = `<div style="padding: 20px; text-align: center; color: #999;">${searchText ? '找不到符合的加購項目' : '尚無加購項目'}</div>`;
                 return;
             }
-            
-            container.innerHTML = addOnItems.map((item, index) => {
+
+            container.innerHTML = filteredAddons.map((item, index) => {
+                const originalIndex = addOnItems.indexOf(item);
                 // 判斷是否有規格
                 const hasVariants = item.variants && Object.keys(item.variants).length > 0;
                 
@@ -14051,9 +14094,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <span class="status-toggle-slider"></span>
                             </label>
                             <div style="display: flex; gap: 6px;">
-                                <button class="file-btn" onclick="editAddon(${index})">編輯</button>
+                                <button class="file-btn" onclick="editAddon(${originalIndex})">編輯</button>
                                 <button class="file-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\\'")}')" style="background:#8e44ad;">📋</button>
-                                <button class="remove-btn" onclick="removeAddon(${index})">刪除</button>
+                                <button class="remove-btn" onclick="removeAddon(${originalIndex})">刪除</button>
                             </div>
                         </div>
                     </div>
