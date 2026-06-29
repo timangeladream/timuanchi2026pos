@@ -8599,11 +8599,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         let searchQuery = '';
         let filteredProducts = [];
 
+        let searchCurrentPage = 1;
+
         function searchProducts(query) {
             searchQuery = query.trim().toLowerCase();
             const searchClear = document.getElementById('searchClear');
             const searchResultsCount = document.getElementById('searchResultsCount');
-            
+
             if (searchQuery) {
                 searchClear.classList.add('show');
                 filteredProducts = [];
@@ -8611,7 +8613,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     Object.keys(productData[brand]).forEach(mainCat => {
                         Object.keys(productData[brand][mainCat]).forEach(subCat => {
                             productData[brand][mainCat][subCat].forEach(product => {
-                                const variantSkuMatch = product.variantSkus && 
+                                if (product.status === 'inactive') return;
+                                const variantSkuMatch = product.variantSkus &&
                                     Object.values(product.variantSkus).some(s => s && s.toLowerCase().includes(searchQuery));
                                 if (product.name.toLowerCase().includes(searchQuery) ||
                                     (product.code && product.code.toLowerCase().includes(searchQuery)) ||
@@ -8624,6 +8627,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     });
                 });
                 searchResultsCount.textContent = `找到 ${filteredProducts.length} 件商品`;
+                searchCurrentPage = 1;
                 displaySearchResults();
             } else {
                 searchClear.classList.remove('show');
@@ -8641,59 +8645,55 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function displaySearchResults() {
             const container = document.querySelector('.products-grid');
             if (!container) return;
-            
+
             if (filteredProducts.length === 0) {
                 container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">找不到相關商品</div>';
+                updateMainProductPagination(0, 0);
                 return;
             }
-            
-            container.innerHTML = filteredProducts.map(product => {
+
+            const totalRecords = filteredProducts.length;
+            const totalPages = Math.ceil(totalRecords / mainProductItemsPerPage);
+            if (searchCurrentPage > totalPages) searchCurrentPage = totalPages;
+            if (searchCurrentPage < 1) searchCurrentPage = 1;
+            const startIndex = (searchCurrentPage - 1) * mainProductItemsPerPage;
+            const endIndex = Math.min(startIndex + mainProductItemsPerPage, totalRecords);
+            const pageData = filteredProducts.slice(startIndex, endIndex);
+
+            container.innerHTML = pageData.map(product => {
                 const variantInfo = product.variants ? '<div class="product-variants">有多規格</div>' : '';
                 const skuInfo = product.sku ? `<div class="product-sku">${product.sku}</div>` : '';
-                
-                // 計算價格範圍
+
                 let priceDisplay = '';
                 if (product.variantPrices && Object.keys(product.variantPrices).length > 0) {
                     const prices = Object.values(product.variantPrices);
                     const minPrice = Math.min(...prices);
                     const maxPrice = Math.max(...prices);
-                    if (minPrice !== maxPrice) {
-                        priceDisplay = `NT$ ${minPrice}-${maxPrice}`;
-                    } else {
-                        priceDisplay = `NT$ ${minPrice}`;
-                    }
+                    priceDisplay = minPrice !== maxPrice ? `NT$ ${minPrice}-${maxPrice}` : `NT$ ${minPrice}`;
                 } else if (product.price && product.price > 0) {
                     priceDisplay = `NT$ ${product.price}`;
                 } else {
                     priceDisplay = '請設定價格';
                 }
-                
-                // 計算庫存總和
+
                 let totalStock = 0;
                 if (product.variantStock) {
                     totalStock = Object.values(product.variantStock).reduce((sum, stock) => sum + stock, 0);
                 } else if (product.stock !== undefined) {
                     totalStock = product.stock;
                 }
-                
-                // 庫存顯示
+
                 let stockInfo = '';
                 if (totalStock !== undefined && totalStock !== null) {
-                    let stockColor = '#388e3c';
-                    if (totalStock <= 0) {
-                        stockColor = '#d32f2f';
-                    } else if (totalStock <= 5) {
-                        stockColor = '#f57c00';
-                    }
+                    let stockColor = totalStock <= 0 ? '#d32f2f' : totalStock <= 5 ? '#f57c00' : '#388e3c';
                     stockInfo = `<div class="product-stock" style="color: ${stockColor};">庫存: ${totalStock}</div>`;
                 }
-                
-                // 檢查是否售罄
+
                 const isSoldOut = totalStock <= 0;
                 const cardClass = isSoldOut ? 'product-card sold-out' : 'product-card';
                 const clickEvent = isSoldOut ? 'onclick="alert(\'此商品已售罄\')"' : `onclick='selectProduct(${JSON.stringify(product)})'`;
                 const soldOutLabel = isSoldOut ? '<div class="sold-out-label">售罄</div>' : '';
-                
+
                 return `
                     <div class="${cardClass}" ${clickEvent}>
                         <div class="product-name">${product.name}</div>
@@ -8701,11 +8701,71 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         <div class="product-price">${priceDisplay}</div>
                         ${stockInfo}
                         ${variantInfo}
-                        
                         ${soldOutLabel}
                     </div>
                 `;
             }).join('');
+
+            updateSearchPagination(totalPages, totalRecords);
+        }
+
+        function updateSearchPagination(totalPages, totalRecords) {
+            const paginationContainer = document.getElementById('mainProductPaginationContainer');
+            const pageNumbers = document.getElementById('mainProductPageNumbers');
+            const info = document.getElementById('mainProductPaginationInfo');
+            const prevBtn = document.getElementById('mainProductPrevPageBtn');
+            const nextBtn = document.getElementById('mainProductNextPageBtn');
+            const jumpInput = document.getElementById('mainProductPageJumpInput');
+
+            if (totalRecords === 0 || totalPages <= 1) { paginationContainer.style.display = 'none'; return; }
+            paginationContainer.style.display = 'flex';
+            prevBtn.disabled = searchCurrentPage === 1;
+            nextBtn.disabled = searchCurrentPage === totalPages;
+            prevBtn.onclick = function() { if (searchCurrentPage > 1) { searchCurrentPage--; displaySearchResults(); } };
+            nextBtn.onclick = function() { if (searchCurrentPage < totalPages) { searchCurrentPage++; displaySearchResults(); } };
+            jumpInput.max = totalPages;
+            jumpInput.value = '';
+            jumpInput.placeholder = `1-${totalPages}`;
+            jumpInput.onkeypress = function(e) { if (e.key === 'Enter') jumpToSearchPage(); };
+
+            const startNum = (searchCurrentPage - 1) * mainProductItemsPerPage + 1;
+            const endNum = Math.min(searchCurrentPage * mainProductItemsPerPage, totalRecords);
+            info.textContent = `(${startNum}-${endNum}/${totalRecords})`;
+
+            let html = '';
+            const maxVisible = 5;
+            let startPage = Math.max(1, searchCurrentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            if (endPage - startPage + 1 < maxVisible) startPage = Math.max(1, endPage - maxVisible + 1);
+
+            if (startPage > 1) {
+                html += `<div class="pagination-number" onclick="goToSearchPage(1)">1</div>`;
+                if (startPage > 2) html += `<span style="padding:0 2px;color:var(--text-light);font-size:9px;">...</span>`;
+            }
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<div class="pagination-number ${i === searchCurrentPage ? 'active' : ''}" onclick="goToSearchPage(${i})" style="width:16px;height:16px;font-size:9px;min-width:16px;">${i}</div>`;
+            }
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<span style="padding:0 2px;color:var(--text-light);font-size:9px;">...</span>`;
+                html += `<div class="pagination-number" onclick="goToSearchPage(${totalPages})" style="width:16px;height:16px;font-size:9px;min-width:16px;">${totalPages}</div>`;
+            }
+            pageNumbers.innerHTML = html;
+
+            const goBtn = jumpInput.nextElementSibling;
+            if (goBtn) goBtn.onclick = function() { jumpToSearchPage(); };
+        }
+
+        function goToSearchPage(page) {
+            searchCurrentPage = page;
+            displaySearchResults();
+        }
+
+        function jumpToSearchPage() {
+            const target = parseInt(document.getElementById('mainProductPageJumpInput').value);
+            if (!target || target < 1) { alert('請輸入有效的頁碼'); return; }
+            const totalPages = Math.ceil(filteredProducts.length / mainProductItemsPerPage);
+            if (target > totalPages) { alert(`頁碼超出範圍，目前共 ${totalPages} 頁`); return; }
+            goToSearchPage(target);
         }
 
         // ============================================
