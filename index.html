@@ -13296,7 +13296,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 加購項目庫存有規格的情況也用 variantKeyOrder 確保 key 正確
             // （上方 variantKey 生成已使用 variantKeyOrder，這裡不需額外處理）
             
-            // 儲存銷售記錄到 Firebase
+            // 儲存銷售記錄到 Firebase（含店家快照）
+            const shopSnapshot = JSON.parse(JSON.stringify(getActiveShop()));
             const saleRecord = {
                 ...orderInfo,
                 timestamp: firebase.firestore.Timestamp.now(),
@@ -13307,7 +13308,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 discountAmount: discountAmount,
                 subtotal: subtotal,
                 total: total,
-                status: 'completed'
+                status: 'completed',
+                shopInfo: shopSnapshot
             };
             
             // 加入 salesHistory 本地陣列（供本次 session 使用）
@@ -13428,9 +13430,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 });
             }
             
-            // 生成收據HTML
-            const receiptHTML = generateReceiptHTML(orderInfo, sortedItems, discountList, subtotal, discountAmount, totalAmount);
-            
+            // 生成收據HTML（使用訂單當時的店家資訊）
+            const receiptHTML = generateReceiptHTML(orderInfo, sortedItems, discountList, subtotal, discountAmount, totalAmount, sale.shopInfo);
+
             document.getElementById('printPreviewContent').innerHTML = receiptHTML;
             document.getElementById('printPreviewModal').classList.add('show');
         }
@@ -13442,12 +13444,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         // 生成收據HTML
-        function generateReceiptHTML(orderInfo, items, discountList, subtotal, discountAmount, total) {
+        function generateReceiptHTML(orderInfo, items, discountList, subtotal, discountAmount, total, shopOverride) {
             const now = new Date();
             const dateStr = orderInfo.orderDate || now.toLocaleString('zh-TW');
-            
-            // 組合店家資訊行（只顯示內容，不顯示欄位名稱）
-            const shop = getActiveShop();
+
+            // 優先使用訂單快照的店家資訊，否則用當前選中的
+            const shop = shopOverride || getActiveShop();
             let shopInfoLines = [];
             shopInfoLines.push(`${orderInfo.saleLocation || '未指定'}`);
 
