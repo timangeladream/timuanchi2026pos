@@ -3303,8 +3303,13 @@
                     📋 下載加購項目資料空白檔(副檔名為.xlsx)
                 </button>
                 
-                <button class="add-discount-btn" onclick="document.getElementById('importAddonFile').click()" style="width: 100%; background: var(--primary-color); font-size: 12px;">
-                    📁 匯入加購項目資料(副檔名為.xlsx)
+                <button class="add-discount-btn" onclick="document.getElementById('importAddonFile').click()" style="width: 100%; margin-bottom: 12px; background: var(--primary-color); font-size: 12px;">
+                    📦 完整匯入加購項目資料(新增/更新全部欄位)
+                </button>
+                
+                <input type="file" id="importAddonPriceStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
+                <button class="add-discount-btn" onclick="document.getElementById('importAddonPriceStockFile').click()" style="width: 100%; background: #e67e22; font-size: 12px;">
+                    💰 只更新價格和庫存
                 </button>
             </div>
         </div>
@@ -7594,6 +7599,107 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             e.target.value = '';
         });
         
+
+        // 只更新價格和庫存匯入（加購項目）
+        document.getElementById('importAddonPriceStockFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+                    if (rows.length === 0) {
+                        alert('❌ 檔案內沒有資料');
+                        return;
+                    }
+
+                    let updateCount = 0;
+                    let notFoundCount = 0;
+
+                    rows.forEach(row => {
+                        const sku = String(row['主貨號'] || '').trim();
+                        const variantSku = String(row['規格貨號'] || '').trim();
+                        if (!sku) return;
+
+                        // 用主貨號找加購項目
+                        const addon = addOnItems.find(a => a.sku === sku);
+                        if (!addon) {
+                            notFoundCount++;
+                            return;
+                        }
+
+                        if (addon.variants && Object.keys(addon.variants).length > 0) {
+                            // 多規格加購項目：用規格貨號比對
+                            if (variantSku) {
+                                const variantKey = Object.entries(addon.variantSkus || {})
+                                    .find(([k, v]) => v === variantSku)?.[0];
+                                if (variantKey) {
+                                    const price = parseFloat(row['價格']);
+                                    const stock = parseInt(row['庫存']);
+                                    if (!isNaN(price) && price >= 0) {
+                                        if (!addon.variantPrices) addon.variantPrices = {};
+                                        addon.variantPrices[variantKey] = price;
+                                    }
+                                    if (!isNaN(stock) && stock >= 0) {
+                                        const beforeStock = (addon.variantStock || {})[variantKey] || 0;
+                                        if (!addon.variantStock) addon.variantStock = {};
+                                        addon.variantStock[variantKey] = stock;
+                                        if (beforeStock !== stock) {
+                                            logStockMovement(addon, variantKey, '匯入調整', stock - beforeStock, beforeStock, stock, 'Excel 匯入更新庫存');
+                                        }
+                                    }
+                                    updateCount++;
+                                }
+                            }
+                        } else {
+                            // 單規格加購項目
+                            const price = parseFloat(row['價格']);
+                            const stock = parseInt(row['庫存']);
+                            if (!isNaN(price) && price >= 0) addon.price = price;
+                            if (!isNaN(stock) && stock >= 0) {
+                                const beforeStock = addon.stock || 0;
+                                addon.stock = stock;
+                                if (beforeStock !== stock) {
+                                    logStockMovement(addon, '', '匯入調整', stock - beforeStock, beforeStock, stock, 'Excel 匯入更新庫存');
+                                }
+                            }
+                            updateCount++;
+                        }
+                    });
+
+                    // 儲存到 Firebase
+                    try {
+                        await saveDataToFirestore();
+                    } catch (saveErr) {
+                        alert('⚠️ 儲存失敗，請重試。');
+                        return;
+                    }
+
+                    loadAddonItems();
+                    loadAddonList();
+                    closeAddonImportOptionsModal();
+                    e.target.value = '';
+
+                    let msg = `✅ 價格/庫存更新完成！\n\n已更新: ${updateCount} 筆`;
+                    if (notFoundCount > 0) msg += `\n找不到對應貨號: ${notFoundCount} 筆`;
+                    alert(msg);
+
+                } catch (error) {
+                    console.error('匯入錯誤:', error);
+                    alert('❌ 檔案讀取失敗！');
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+            e.target.value = '';
+        });
+
         
         // 加入或更新加購項目的輔助函數
         function addOrUpdateAddon(addon, importMode) {
