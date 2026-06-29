@@ -5485,12 +5485,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div class="sales-record-total">NT$ ${(sale.total || 0).toLocaleString()}</div>
-                                ${sale.status === 'cancelled' 
-                                    ? '<button class="cancelled-order-btn">已取消</button>' 
-                                    : `<button class="cancel-order-btn" onclick="cancelSalesOrder(${actualIndex})" title="取消訂單">取消</button>`
+                                ${sale.status === 'cancelled'
+                                    ? '<button class="cancelled-order-btn">已取消</button>'
+                                    : (currentUserRole === 'admin' ? `<button class="cancel-order-btn" onclick="cancelSalesOrder(${actualIndex})" title="取消訂單">取消</button>` : '')
                                 }
                                 <button class="view-receipt-btn" onclick="viewReceipt(${actualIndex})" title="查看單據">🖨️</button>
-                                <button class="delete-order-btn" onclick="deleteSalesRecord(${actualIndex})" title="刪除記錄">🗑️</button>
+                                ${currentUserRole === 'admin' ? `<button class="delete-order-btn" onclick="deleteSalesRecord(${actualIndex})" title="刪除記錄">🗑️</button>` : ''}
                             </div>
                         </div>
                         
@@ -14475,9 +14475,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 清除銷售記錄
         // 取消訂單(回加庫存)
         async function cancelSalesOrder(index) {
+            if (currentUserRole !== 'admin') { alert('僅管理員可取消訂單'); return; }
             const sale = salesHistory[index];
             const orderNumber = sale.orderNumber || '無編號';
-            
+
             if (sale.status === 'cancelled') {
                 alert('此訂單已經取消過了');
                 return;
@@ -14597,6 +14598,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 刪除訂單記錄(不影響庫存)
         function deleteSalesRecord(index) {
+            if (currentUserRole !== 'admin') { alert('僅管理員可刪除訂單'); return; }
             const sale = salesHistory[index];
             const orderNumber = sale.orderNumber || '無編號';
             const statusText = sale.status === 'cancelled' ? '(已取消)' : '';
