@@ -10552,9 +10552,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (filterSubCat && product.subCategory !== filterSubCat) return false;
                 
                 // 搜尋過濾
-                if (searchText && 
-                    !product.name.toLowerCase().includes(searchText) && 
-                    !(product.sku && product.sku.toLowerCase().includes(searchText))) {
+                if (searchText &&
+                    !product.name.toLowerCase().includes(searchText) &&
+                    !(product.sku && product.sku.toLowerCase().includes(searchText)) &&
+                    !(product.variantSkus && Object.values(product.variantSkus).some(s => s && s.toLowerCase().includes(searchText)))) {
                     return false;
                 }
                 
