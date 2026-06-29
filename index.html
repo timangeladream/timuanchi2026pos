@@ -2676,6 +2676,18 @@
     <div style="color:var(--primary-color);font-weight:600;">載入資料中...</div>
 </div>
 
+<!-- ===== 登入歡迎彈窗 ===== -->
+<div id="welcomeModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;justify-content:center;align-items:center;">
+    <div style="background:white;border-radius:16px;padding:32px 28px;max-width:400px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <div id="welcomeMessage" style="font-size:16px;color:#333;line-height:1.8;margin-bottom:24px;"></div>
+        <div id="welcomeShopList" style="display:none;margin-bottom:20px;text-align:left;"></div>
+        <div style="display:flex;gap:10px;justify-content:center;">
+            <button id="welcomeContinueBtn" onclick="closeWelcomeModal()" style="padding:12px 28px;background:var(--primary-color);color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;">✅ 繼續使用</button>
+            <button id="welcomeSwitchBtn" onclick="showWelcomeShopList()" style="padding:12px 28px;background:white;color:var(--primary-color);border:2px solid var(--primary-color);border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;">🔄 切換店家</button>
+        </div>
+    </div>
+</div>
+
 <!-- ===== MAIN APP ===== -->
 <div id="appScreen" style="display:none;">
 
@@ -4936,12 +4948,66 @@ async function initApp() {
         // 重新整理頁面後 orderItems 會重置為空，同步清空顧客顯示畫面避免殘留舊訂單
         syncActiveOrder();
         
+        // 顯示歡迎彈窗
+        showWelcomeModal();
+
     } catch (e) {
         console.error('initApp 失敗:', e);
         showNotification('⚠️ 資料載入失敗，請重新整理頁面');
     } finally {
         document.getElementById('appLoadingOverlay').style.display = 'none';
     }
+}
+
+function showWelcomeModal() {
+    const shop = getActiveShop();
+    const shopLabel = shop.label || shop.shopName || '未設定';
+    const userName = currentUserName || currentUser?.email || '';
+
+    const msgEl = document.getElementById('welcomeMessage');
+    msgEl.innerHTML = `嗨，${userName}，今天依舊要麻煩您了<br><br>提醒您目前使用的店家名稱為：<br><strong style="font-size:18px;color:var(--primary-color);">「${shopLabel}」</strong>`;
+
+    const shopKeys = Object.keys(systemSettings.shops || {});
+    const switchBtn = document.getElementById('welcomeSwitchBtn');
+    switchBtn.style.display = shopKeys.length > 1 ? '' : 'none';
+
+    document.getElementById('welcomeShopList').style.display = 'none';
+    document.getElementById('welcomeModal').style.display = 'flex';
+}
+
+function showWelcomeShopList() {
+    const container = document.getElementById('welcomeShopList');
+    const shops = systemSettings.shops || {};
+    const currentId = getActiveShopId();
+
+    container.innerHTML = Object.keys(shops).map(id => {
+        const s = shops[id];
+        const isActive = id === currentId;
+        return `<div onclick="selectWelcomeShop('${id}')" style="padding:12px 16px;margin-bottom:8px;border:2px solid ${isActive ? 'var(--primary-color)' : '#ddd'};border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:${isActive ? 'rgba(11,79,124,0.05)' : 'white'};">
+            <span style="font-weight:${isActive ? '600' : '400'};">${s.label || s.shopName || '未命名'}</span>
+            ${isActive ? '<span style="color:var(--primary-color);font-weight:600;">目前使用</span>' : ''}
+        </div>`;
+    }).join('');
+
+    container.style.display = 'block';
+    document.getElementById('welcomeContinueBtn').textContent = '✅ 確認';
+    document.getElementById('welcomeSwitchBtn').style.display = 'none';
+}
+
+async function selectWelcomeShop(shopId) {
+    await setActiveShopId(shopId);
+
+    const shop = getActiveShop();
+    const shopLabel = shop.label || shop.shopName || '未設定';
+    const userName = currentUserName || currentUser?.email || '';
+
+    document.getElementById('welcomeMessage').innerHTML = `嗨，${userName}，今天依舊要麻煩您了<br><br>提醒您目前使用的店家名稱為：<br><strong style="font-size:18px;color:var(--primary-color);">「${shopLabel}」</strong>`;
+
+    showWelcomeShopList();
+}
+
+function closeWelcomeModal() {
+    document.getElementById('welcomeModal').style.display = 'none';
 }
 
 // ============================================================
