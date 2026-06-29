@@ -10483,10 +10483,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            // 第二次確認（輸入文字確認）
-            const confirmation = prompt('請輸入「重置系統」四個字來確認此操作：');
-            if (confirmation !== '重置系統') {
+            // 第二次確認：輸入登入密碼驗證
+            const password = prompt('請輸入您的登入密碼來確認重置：');
+            if (!password) {
                 showNotification('❌ 取消重置');
+                return;
+            }
+
+            // 驗證密碼
+            try {
+                const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, password);
+                await currentUser.reauthenticateWithCredential(credential);
+            } catch (e) {
+                showNotification('❌ 密碼錯誤，重置已取消');
                 return;
             }
 
