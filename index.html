@@ -3764,6 +3764,17 @@
                 <button class="modal-close" onclick="closeSystemSettings()">×</button>
             </div>
             <div class="modal-body">
+                <!-- 店家切換 -->
+                <div class="settings-section">
+                    <h4 class="settings-section-title">🏪 店家切換</h4>
+                    <div id="shopSelectorTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+                    <div style="display:flex;gap:6px;">
+                        <button class="file-btn" onclick="addNewShop()">➕ 新增店家</button>
+                        <button class="file-btn" onclick="renameCurrentShop()">✏️ 重新命名</button>
+                        <button class="file-btn" onclick="deleteCurrentShop()" style="background:#dc3545;color:white;">🗑️ 刪除店家</button>
+                    </div>
+                </div>
+
                 <!-- 店家資訊 -->
                 <div class="settings-section">
                     <h4 class="settings-section-title">🏢 店家資訊</h4>
@@ -4448,12 +4459,8 @@ async function loadDataFromFirestore() {
             giftRules = data.giftRules || [];
             saleLocations = data.saleLocations || [];
             addOnItems = data.addOnItems || [];
-            systemSettings = data.systemSettings || {
-                shopName: '', taxId: '', phone: '', address: '', website: '',
-                socialLinks: [], showTaxId: true, showPhone: true,
-                showAddress: true, showWebsite: true, showSocial: true,
-                footerText: '感謝您的購買！\n歡迎再次光臨'
-            };
+            systemSettings = data.systemSettings || {};
+            migrateSystemSettings();
             systemConfig = data.systemConfig || { systemName: '', theme: 'blue' };
             console.log('✅ 資料已從 Firebase 載入');
             return true;
@@ -5063,20 +5070,59 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 系統設定
         let systemSettings = {
-            shopName: '',  // 改為空字串
-            taxId: '',
-            phone: '',
-            address: '',
-            website: '',
-            socialLinks: [], // { platform: 'instagram', value: '@timuanchi' }
-            showTaxId: true,
-            showPhone: true,
-            showAddress: true,
-            showWebsite: true,
-            showSocial: true,
-            footerText: '感謝您的購買！\n歡迎再次光臨',
-            autoOptimizeDiscount: false  // 是否自動套用最優折扣組合（任選N件折X元規則）
+            activeShopId: 'shop_default',
+            shops: {
+                shop_default: {
+                    label: '預設店家',
+                    shopName: '',
+                    taxId: '',
+                    phone: '',
+                    address: '',
+                    website: '',
+                    socialLinks: [],
+                    showTaxId: true,
+                    showPhone: true,
+                    showAddress: true,
+                    showWebsite: true,
+                    showSocial: true,
+                    footerText: '感謝您的購買！\n歡迎再次光臨'
+                }
+            },
+            autoOptimizeDiscount: false
         };
+
+        function getActiveShop() {
+            const id = systemSettings.activeShopId;
+            if (systemSettings.shops && systemSettings.shops[id]) return systemSettings.shops[id];
+            const keys = Object.keys(systemSettings.shops || {});
+            if (keys.length > 0) return systemSettings.shops[keys[0]];
+            return {};
+        }
+
+        function migrateSystemSettings() {
+            if (systemSettings.shops) return;
+            const old = { ...systemSettings };
+            const shopData = {
+                label: old.shopName || '預設店家',
+                shopName: old.shopName || '',
+                taxId: old.taxId || '',
+                phone: old.phone || '',
+                address: old.address || '',
+                website: old.website || '',
+                socialLinks: old.socialLinks || [],
+                showTaxId: old.showTaxId !== false,
+                showPhone: old.showPhone !== false,
+                showAddress: old.showAddress !== false,
+                showWebsite: old.showWebsite !== false,
+                showSocial: old.showSocial !== false,
+                footerText: old.footerText || '感謝您的購買！\n歡迎再次光臨'
+            };
+            systemSettings = {
+                activeShopId: 'shop_default',
+                shops: { shop_default: shopData },
+                autoOptimizeDiscount: old.autoOptimizeDiscount || false
+            };
+        }
 
         // 加購項目清單
         let addOnItems = [];
@@ -10163,20 +10209,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     giftRules = data.giftRules || [];
                     saleLocations = data.saleLocations || [];
                     addOnItems = data.addOnItems || [];
-                    systemSettings = data.systemSettings || {
-                        shopName: '',
-                        taxId: '',
-                        phone: '',
-                        address: '',
-                        website: '',
-                        socialLinks: [],
-                        showTaxId: true,
-                        showPhone: true,
-                        showAddress: true,
-                        showWebsite: true,
-                        showSocial: true,
-                        footerText: '感謝您的購買！\n歡迎再次光臨'
-                    };
+                    systemSettings = data.systemSettings || {};
+                    migrateSystemSettings();
                     systemConfig = data.systemConfig || {
                         systemName: '',
                         theme: 'blue'
@@ -13413,34 +13447,35 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const dateStr = orderInfo.orderDate || now.toLocaleString('zh-TW');
             
             // 組合店家資訊行（只顯示內容，不顯示欄位名稱）
+            const shop = getActiveShop();
             let shopInfoLines = [];
             shopInfoLines.push(`${orderInfo.saleLocation || '未指定'}`);
-            
-            if (systemSettings.showTaxId && systemSettings.taxId) {
-                shopInfoLines.push(`${systemSettings.taxId}`);
+
+            if (shop.showTaxId && shop.taxId) {
+                shopInfoLines.push(`${shop.taxId}`);
             }
-            if (systemSettings.showPhone && systemSettings.phone) {
-                shopInfoLines.push(`${systemSettings.phone}`);
+            if (shop.showPhone && shop.phone) {
+                shopInfoLines.push(`${shop.phone}`);
             }
-            if (systemSettings.showAddress && systemSettings.address) {
-                shopInfoLines.push(`${systemSettings.address}`);
+            if (shop.showAddress && shop.address) {
+                shopInfoLines.push(`${shop.address}`);
             }
-            if (systemSettings.showWebsite && systemSettings.website) {
-                shopInfoLines.push(`${systemSettings.website}`);
+            if (shop.showWebsite && shop.website) {
+                shopInfoLines.push(`${shop.website}`);
             }
-            
+
             // 加入社群連結（只顯示內容）
-            if (systemSettings.showSocial && systemSettings.socialLinks && systemSettings.socialLinks.length > 0) {
-                systemSettings.socialLinks.forEach(link => {
+            if (shop.showSocial && shop.socialLinks && shop.socialLinks.length > 0) {
+                shop.socialLinks.forEach(link => {
                     shopInfoLines.push(`${link.value}`);
                 });
             }
-            
+
             const shopInfoHTML = shopInfoLines.join('<br>');
-            
+
             return `
                 <div class="receipt-header">
-                    <div class="receipt-title">${systemSettings.shopName || 'TimuAnchi 銷售系統'}</div>
+                    <div class="receipt-title">${shop.shopName || 'TimuAnchi 銷售系統'}</div>
                     <div class="receipt-shop-info">
                         ${shopInfoHTML}
                     </div>
@@ -13565,7 +13600,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 </div>
 
                 <div class="receipt-footer">
-                    ${systemSettings.footerText.replace(/\n/g, '<br>')}
+                    ${(getActiveShop().footerText || '').replace(/\n/g, '<br>')}
                 </div>
             `;
         }
@@ -14688,39 +14723,117 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         
         // 打開系統設定
         function openSystemSettings() {
-            // 載入當前設定到表單
-            document.getElementById('setting_shopName').value = systemSettings.shopName || '';  // 改為空字串
-            document.getElementById('setting_taxId').value = systemSettings.taxId || '';
-            document.getElementById('setting_phone').value = systemSettings.phone || '';
-            document.getElementById('setting_address').value = systemSettings.address || '';
-            document.getElementById('setting_website').value = systemSettings.website || '';
-            document.getElementById('setting_showTaxId').checked = systemSettings.showTaxId !== false;
-            document.getElementById('setting_showPhone').checked = systemSettings.showPhone !== false;
-            document.getElementById('setting_showAddress').checked = systemSettings.showAddress !== false;
-            document.getElementById('setting_showWebsite').checked = systemSettings.showWebsite !== false;
-            document.getElementById('setting_showSocial').checked = systemSettings.showSocial !== false;
-            document.getElementById('setting_footerText').value = systemSettings.footerText || '感謝您的購買！\n歡迎再次光臨';
-            
-            // 載入社群連結
-            loadSocialLinks();
-            
+            renderShopTabs();
+            loadShopToForm();
             document.getElementById('systemSettingsModal').classList.add('show');
+        }
+
+        function renderShopTabs() {
+            const container = document.getElementById('shopSelectorTabs');
+            const shops = systemSettings.shops || {};
+            container.innerHTML = Object.keys(shops).map(id => {
+                const isActive = id === systemSettings.activeShopId;
+                return `<button onclick="switchShop('${id}')" style="padding:8px 16px;border:2px solid ${isActive ? 'var(--primary-color)' : '#ddd'};background:${isActive ? 'var(--primary-color)' : 'white'};color:${isActive ? 'white' : '#333'};border-radius:8px;cursor:pointer;font-size:13px;font-weight:${isActive ? '600' : '400'};">${shops[id].label || shops[id].shopName || '未命名'}</button>`;
+            }).join('');
+        }
+
+        function switchShop(shopId) {
+            saveCurrentShopFromForm();
+            systemSettings.activeShopId = shopId;
+            renderShopTabs();
+            loadShopToForm();
+        }
+
+        function loadShopToForm() {
+            const shop = getActiveShop();
+            document.getElementById('setting_shopName').value = shop.shopName || '';
+            document.getElementById('setting_taxId').value = shop.taxId || '';
+            document.getElementById('setting_phone').value = shop.phone || '';
+            document.getElementById('setting_address').value = shop.address || '';
+            document.getElementById('setting_website').value = shop.website || '';
+            document.getElementById('setting_showTaxId').checked = shop.showTaxId !== false;
+            document.getElementById('setting_showPhone').checked = shop.showPhone !== false;
+            document.getElementById('setting_showAddress').checked = shop.showAddress !== false;
+            document.getElementById('setting_showWebsite').checked = shop.showWebsite !== false;
+            document.getElementById('setting_showSocial').checked = shop.showSocial !== false;
+            document.getElementById('setting_footerText').value = shop.footerText || '感謝您的購買！\n歡迎再次光臨';
+            loadSocialLinks();
+        }
+
+        function saveCurrentShopFromForm() {
+            const socialLinksData = [];
+            document.querySelectorAll('.social-platform').forEach((select, index) => {
+                const value = document.querySelectorAll('.social-value')[index].value.trim();
+                if (value) socialLinksData.push({ platform: select.value, value });
+            });
+
+            const shop = getActiveShop();
+            shop.shopName = document.getElementById('setting_shopName').value.trim();
+            shop.taxId = document.getElementById('setting_taxId').value.trim();
+            shop.phone = document.getElementById('setting_phone').value.trim();
+            shop.address = document.getElementById('setting_address').value.trim();
+            shop.website = document.getElementById('setting_website').value.trim();
+            shop.socialLinks = socialLinksData;
+            shop.showTaxId = document.getElementById('setting_showTaxId').checked;
+            shop.showPhone = document.getElementById('setting_showPhone').checked;
+            shop.showAddress = document.getElementById('setting_showAddress').checked;
+            shop.showWebsite = document.getElementById('setting_showWebsite').checked;
+            shop.showSocial = document.getElementById('setting_showSocial').checked;
+            shop.footerText = document.getElementById('setting_footerText').value;
+        }
+
+        function addNewShop() {
+            const name = prompt('請輸入新店家名稱：');
+            if (!name || !name.trim()) return;
+            const id = 'shop_' + Date.now();
+            systemSettings.shops[id] = {
+                label: name.trim(),
+                shopName: name.trim(),
+                taxId: '', phone: '', address: '', website: '',
+                socialLinks: [],
+                showTaxId: true, showPhone: true, showAddress: true, showWebsite: true, showSocial: true,
+                footerText: '感謝您的購買！\n歡迎再次光臨'
+            };
+            saveCurrentShopFromForm();
+            systemSettings.activeShopId = id;
+            renderShopTabs();
+            loadShopToForm();
+        }
+
+        function renameCurrentShop() {
+            const shop = getActiveShop();
+            const newName = prompt('請輸入新名稱：', shop.label || shop.shopName);
+            if (!newName || !newName.trim()) return;
+            shop.label = newName.trim();
+            renderShopTabs();
+        }
+
+        function deleteCurrentShop() {
+            const keys = Object.keys(systemSettings.shops || {});
+            if (keys.length <= 1) { alert('至少需保留一家店家'); return; }
+            const shop = getActiveShop();
+            if (!confirm(`確定要刪除「${shop.label || shop.shopName}」嗎？`)) return;
+            delete systemSettings.shops[systemSettings.activeShopId];
+            systemSettings.activeShopId = Object.keys(systemSettings.shops)[0];
+            renderShopTabs();
+            loadShopToForm();
         }
 
         // 載入社群連結列表
         function loadSocialLinks() {
             const container = document.getElementById('socialLinksList');
-            
-            if (!systemSettings.socialLinks || systemSettings.socialLinks.length === 0) {
+            const shop = getActiveShop();
+
+            if (!shop.socialLinks || shop.socialLinks.length === 0) {
                 container.innerHTML = '<div style="padding: 12px; text-align: center; color: #999; font-size: 13px;">尚未新增社群連結，點擊下方按鈕新增</div>';
                 return;
             }
-            
-            container.innerHTML = systemSettings.socialLinks.map((link, index) => {
-                const platformOptions = socialPlatforms.map(p => 
+
+            container.innerHTML = shop.socialLinks.map((link, index) => {
+                const platformOptions = socialPlatforms.map(p =>
                     `<option value="${p.value}" ${link.platform === p.value ? 'selected' : ''}>${p.icon} ${p.label}</option>`
                 ).join('');
-                
+
                 return `
                     <div class="social-link-item">
                         <select class="social-platform" data-index="${index}">${platformOptions}</select>
@@ -14733,21 +14846,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 新增社群連結輸入框
         function addSocialLinkInput() {
-            if (!systemSettings.socialLinks) {
-                systemSettings.socialLinks = [];
-            }
-            
-            systemSettings.socialLinks.push({
-                platform: 'instagram',
-                value: ''
-            });
-            
+            const shop = getActiveShop();
+            if (!shop.socialLinks) shop.socialLinks = [];
+            shop.socialLinks.push({ platform: 'instagram', value: '' });
             loadSocialLinks();
         }
 
         // 刪除社群連結
         function removeSocialLink(index) {
-            systemSettings.socialLinks.splice(index, 1);
+            const shop = getActiveShop();
+            shop.socialLinks.splice(index, 1);
             loadSocialLinks();
         }
 
@@ -14758,38 +14866,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 儲存系統設定
         function saveSystemSettings() {
-            // 收集社群連結
-            const socialLinksData = [];
-            const platformSelects = document.querySelectorAll('.social-platform');
-            const valueInputs = document.querySelectorAll('.social-value');
-            
-            platformSelects.forEach((select, index) => {
-                const value = valueInputs[index].value.trim();
-                if (value) { // 只保存有填寫的
-                    socialLinksData.push({
-                        platform: select.value,
-                        value: value
-                    });
-                }
-            });
-            
-            systemSettings = {
-                shopName: document.getElementById('setting_shopName').value.trim() || '',  // 改為空字串
-                taxId: document.getElementById('setting_taxId').value.trim(),
-                phone: document.getElementById('setting_phone').value.trim(),
-                address: document.getElementById('setting_address').value.trim(),
-                website: document.getElementById('setting_website').value.trim(),
-                socialLinks: socialLinksData,
-                showTaxId: document.getElementById('setting_showTaxId').checked,
-                showPhone: document.getElementById('setting_showPhone').checked,
-                showAddress: document.getElementById('setting_showAddress').checked,
-                showWebsite: document.getElementById('setting_showWebsite').checked,
-                showSocial: document.getElementById('setting_showSocial').checked,
-                footerText: document.getElementById('setting_footerText').value
-            };
-            
+            saveCurrentShopFromForm();
             saveDataToLocalStorage();
-            updateSystemTitle();  // 更新標題
+            updateSystemTitle();
             showNotification('✅ 設定已儲存');
             closeSystemSettings();
         }
