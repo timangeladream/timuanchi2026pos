@@ -4492,10 +4492,12 @@ async function saveSaleToFirestore(saleData) {
             return obj;
         }
         const cleanData = removeUndefined(saleWithCashier);
-        await db.collection('sales').add(cleanData);
+        const docRef = await db.collection('sales').add(cleanData);
         console.log('✅ 銷售記錄已儲存到 Firebase');
+        return docRef.id;
     } catch (e) {
         console.error('銷售記錄儲存失敗:', e);
+        return null;
     }
 }
 
@@ -13245,8 +13247,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 salesPersonName: saleRecord.salesPersonName || saleRecord.salesPerson || currentUserName || ''
             });
             
-            // 非同步儲存到 Firebase
-            saveSaleToFirestore(saleRecord).catch(e => console.error('銷售記錄儲存失敗:', e));
+            // 儲存到 Firebase 並回寫 _firebaseId
+            saveSaleToFirestore(saleRecord).then(docId => {
+                if (docId) {
+                    const idx = salesHistory.findIndex(s => s.orderNumber === saleRecord.orderNumber);
+                    if (idx !== -1) salesHistory[idx]._firebaseId = docId;
+                }
+            }).catch(e => console.error('銷售記錄儲存失敗:', e));
             
             showNotification(`✅ 結帳完成！總金額：NT$ ${total}`);
             
@@ -14558,7 +14565,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             sale.cancelledAt = new Date().toISOString();
             sale.cancelledAtDisplay = new Date().toLocaleString('zh-TW', {hour12: false});
             
-            // 同步到 Firebase（等待完成確保狀態正確）
+            // 同步到 Firebase
+            let firebaseUpdated = false;
             if (sale._firebaseId) {
                 try {
                     await updateSaleInFirestore(sale._firebaseId, {
@@ -14566,21 +14574,23 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         cancelledAt: firebase.firestore.Timestamp.now(),
                         cancelledAtDisplay: sale.cancelledAtDisplay
                     });
+                    firebaseUpdated = true;
                 } catch(e) { console.error('更新取消狀態失敗:', e); }
             }
-            
+
             saveDataToLocalStorage();
             loadProducts();
-            loadAddonItems(); // 更新加購項目庫存顯示
-            loadGiftButtons(); // 更新贈品庫存顯示
+            loadAddonItems();
+            loadGiftButtons();
 
             // 同步更新顧客資料（扣除取消的訂單）
             if (sale.memberPhone || sale.memberEmail || sale.memberAccount) {
                 updateCustomerOnCancel(sale);
             }
 
-            // 重新從 Firebase 載入銷售記錄確保狀態正確
-            salesHistory = await loadSalesFromFirestore();
+            if (firebaseUpdated) {
+                salesHistory = await loadSalesFromFirestore();
+            }
             filterByTime(currentTimeFilter);
             showNotification('✅ 訂單已取消，庫存已回復');
         }
