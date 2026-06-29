@@ -3233,7 +3233,7 @@
     <div id="importModal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
-                <h3>📥 匯入資料</h3>
+                <h3>匯入資料</h3>
                 <button class="modal-close" onclick="closeImportModal()">×</button>
             </div>
             <div class="modal-body">
@@ -3242,14 +3242,14 @@
                 <input type="file" id="importAddonFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 <input type="file" id="importGiftFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 <input type="file" id="importGiftFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <button class="add-discount-btn" onclick="openProductImportOptionsModal()" style="width: 100%; margin-bottom: 12px;">
-                    📦 匯入商品資料
+                <button class="add-discount-btn" onclick="openProductImportOptionsModal()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                    匯入商品資料
                 </button>
-                <button class="add-discount-btn" onclick="openAddonImportOptionsModal()" style="width: 100%; margin-bottom: 12px; background: var(--highlight-color);">
-                    🎁 匯入加購項目
+                <button class="add-discount-btn" onclick="openAddonImportOptionsModal()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                    匯入加購項目
                 </button>
-                <button class="add-discount-btn" onclick="openGiftImportOptionsModal()" style="width: 100%; margin-bottom: 12px; background: var(--success-color);">
-                    🎁 匯入贈品資料
+                <button class="add-discount-btn" onclick="openGiftImportOptionsModal()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                    匯入贈品資料
                 </button>
             </div>
         </div>
@@ -3259,27 +3259,27 @@
     <div id="productImportOptionsModal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
-                <h3>📥 匯入商品資料</h3>
+                <h3>匯入商品資料</h3>
                 <button class="modal-close" onclick="closeProductImportOptionsModal()">×</button>
             </div>
             <div class="modal-body">
                 <input type="file" id="importProductFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 
-                <button class="add-discount-btn" onclick="downloadProductExample()" style="width: 100%; margin-bottom: 12px; background: var(--highlight-color); font-size: 12px;">
-                    📄 下載商品資料欄位說明(副檔名為.xlsx)
+                <button class="add-discount-btn" onclick="downloadProductExample()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                    下載商品資料欄位說明(副檔名為.xlsx)
                 </button>
-                
-                <button class="add-discount-btn" onclick="downloadProductTemplate()" style="width: 100%; margin-bottom: 12px; background: var(--success-color); font-size: 12px;">
-                    📋 下載商品資料空白檔(副檔名為.xlsx)
+
+                <button class="add-discount-btn" onclick="downloadProductTemplate()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                    下載商品資料空白檔(副檔名為.xlsx)
                 </button>
-                
-                <button class="add-discount-btn" onclick="document.getElementById('importProductFile').click()" style="width: 100%; margin-bottom: 12px; background: var(--primary-color); font-size: 12px;">
-                    📦 完整匯入(新增/更新全部欄位)
+
+                <button class="add-discount-btn" onclick="document.getElementById('importProductFile').click()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                    完整匯入(新增/更新全部欄位)
                 </button>
-                
+
                 <input type="file" id="importProductPriceStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <button class="add-discount-btn" onclick="document.getElementById('importProductPriceStockFile').click()" style="width: 100%; background: #e67e22; font-size: 12px;">
-                    💰 只更新價格和庫存
+                <button class="add-discount-btn" onclick="document.getElementById('importProductPriceStockFile').click()" style="width: 100%; background: #28a745; font-size: 12px;">
+                    只更新價格和庫存
                 </button>
             </div>
         </div>
@@ -3289,27 +3289,27 @@
     <div id="addonImportOptionsModal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
-                <h3>📥 匯入加購項目</h3>
+                <h3>匯入加購項目</h3>
                 <button class="modal-close" onclick="closeAddonImportOptionsModal()">×</button>
             </div>
             <div class="modal-body">
                 <input type="file" id="importAddonFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 
-                <button class="add-discount-btn" onclick="downloadAddonExample()" style="width: 100%; margin-bottom: 12px; background: var(--highlight-color); font-size: 12px;">
-                    📄 下載加購項目資料欄位說明(副檔名為.xlsx)
+                <button class="add-discount-btn" onclick="downloadAddonExample()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                    下載加購項目資料欄位說明(副檔名為.xlsx)
                 </button>
-                
-                <button class="add-discount-btn" onclick="downloadAddonTemplate()" style="width: 100%; margin-bottom: 12px; background: var(--success-color); font-size: 12px;">
-                    📋 下載加購項目資料空白檔(副檔名為.xlsx)
+
+                <button class="add-discount-btn" onclick="downloadAddonTemplate()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                    下載加購項目資料空白檔(副檔名為.xlsx)
                 </button>
-                
-                <button class="add-discount-btn" onclick="document.getElementById('importAddonFile').click()" style="width: 100%; margin-bottom: 12px; background: var(--primary-color); font-size: 12px;">
-                    📦 完整匯入加購項目資料(新增/更新全部欄位)
+
+                <button class="add-discount-btn" onclick="document.getElementById('importAddonFile').click()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                    完整匯入加購項目資料(新增/更新全部欄位)
                 </button>
-                
+
                 <input type="file" id="importAddonPriceStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <button class="add-discount-btn" onclick="document.getElementById('importAddonPriceStockFile').click()" style="width: 100%; background: #e67e22; font-size: 12px;">
-                    💰 只更新價格和庫存
+                <button class="add-discount-btn" onclick="document.getElementById('importAddonPriceStockFile').click()" style="width: 100%; background: #28a745; font-size: 12px;">
+                    只更新價格和庫存
                 </button>
             </div>
         </div>
@@ -3319,22 +3319,22 @@
     <div id="giftImportOptionsModal" class="modal">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
-                <h3>📥 匯入贈品資料</h3>
+                <h3>匯入贈品資料</h3>
                 <button class="modal-close" onclick="closeGiftImportOptionsModal()">×</button>
             </div>
             <div class="modal-body">
                 <input type="file" id="importGiftFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 
-                <button class="add-discount-btn" onclick="downloadGiftExample()" style="width: 100%; margin-bottom: 12px; background: var(--highlight-color); font-size: 12px;">
-                    📄 下載贈品資料欄位說明(副檔名為.xlsx)
+                <button class="add-discount-btn" onclick="downloadGiftExample()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                    下載贈品資料欄位說明(副檔名為.xlsx)
                 </button>
-                
-                <button class="add-discount-btn" onclick="downloadGiftTemplate()" style="width: 100%; margin-bottom: 12px; background: var(--success-color); font-size: 12px;">
-                    📋 下載贈品資料空白檔(副檔名為.xlsx)
+
+                <button class="add-discount-btn" onclick="downloadGiftTemplate()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                    下載贈品資料空白檔(副檔名為.xlsx)
                 </button>
-                
-                <button class="add-discount-btn" onclick="document.getElementById('importGiftFile').click()" style="width: 100%; background: var(--primary-color); font-size: 12px;">
-                    📁 匯入贈品資料(副檔名為.xlsx)
+
+                <button class="add-discount-btn" onclick="document.getElementById('importGiftFile').click()" style="width: 100%; background: #28a745; font-size: 12px;">
+                    匯入贈品資料(副檔名為.xlsx)
                 </button>
             </div>
         </div>
