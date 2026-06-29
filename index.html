@@ -2718,7 +2718,7 @@
                 <span class="menu-icon-text">👥</span>
                 <span>帳號管理</span>
             </button>
-            <button class="menu-item admin-only" onclick="openCustomerManager(); toggleMenu();">
+            <button class="menu-item" onclick="openCustomerManager(); toggleMenu();">
                 <span class="menu-icon-text">👤</span>
                 <span>顧客管理</span>
             </button>
@@ -2746,11 +2746,11 @@
                 <span class="menu-icon-text">🎁</span>
                 <span>優惠折扣管理</span>
             </button>
-            <button class="menu-item admin-only" onclick="openRestockModal(); toggleMenu();">
+            <button class="menu-item" onclick="openRestockModal(); toggleMenu();">
                 <span class="menu-icon-text">📦</span>
                 <span>補貨管理</span>
             </button>
-            <button class="menu-item admin-only" onclick="openStockMovementModal(); toggleMenu();">
+            <button class="menu-item" onclick="openStockMovementModal(); toggleMenu();">
                 <span class="menu-icon-text">📋</span>
                 <span>庫存異動記錄</span>
             </button>
@@ -2879,7 +2879,7 @@
                     </div>
                 </div>
                 <div id="stockMovementList" class="scroll-list"></div>
-                <div class="export-footer">
+                <div class="export-footer admin-only">
                     <button onclick="exportStockMovements()" class="add-discount-btn btn-bg-purple">
                         📥 匯出異動記錄
                     </button>
@@ -15701,6 +15701,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 匯出庫存異動記錄（從總覽彈窗內）
         async function exportStockMovements() {
+            if (currentUserRole !== 'admin') { alert('僅管理員可匯出'); return; }
             const data = filteredMovements.length > 0 ? filteredMovements : allStockMovements;
             if (data.length === 0) {
                 alert('沒有可匯出的記錄');
