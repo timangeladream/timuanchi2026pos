@@ -2612,8 +2612,7 @@
                         只顯示已刪除商品的記錄
                     </label>
                 </div>
-                <div id="stockMovementList" style="max-height:450px;overflow-y:auto;"></div>
-                <div id="smPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:8px 0 0 0;background:transparent;border-radius:0;">
+                <div id="smPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:0 0 8px 0;background:transparent;border-radius:0;">
                     <button class="pagination-btn" id="smPrevPageBtn" onclick="changeSmPage('prev')">←</button>
                     <div class="pagination-numbers" id="smPageNumbers"></div>
                     <button class="pagination-btn" id="smNextPageBtn" onclick="changeSmPage('next')">→</button>
@@ -2624,6 +2623,7 @@
                         <button onclick="jumpToSmPage()" style="height:22px;padding:2px 8px;font-size:10px;background:var(--primary-color);color:white;border:none;border-radius:4px;cursor:pointer;">GO</button>
                     </div>
                 </div>
+                <div id="stockMovementList" style="max-height:450px;overflow-y:auto;"></div>
                 <div style="margin-top:12px;text-align:right;">
                     <button onclick="exportStockMovements()" class="add-discount-btn" style="background:#8e44ad;">
                         📥 匯出異動記錄
