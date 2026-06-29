@@ -6103,11 +6103,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 刪除折扣按鈕
         function deleteDiscountButton(index) {
             if (confirm('確定要刪除此折扣嗎？')) {
+                const deleted = discountButtons[index];
                 discountButtons.splice(index, 1);
+                if (deleted && deleted.id) {
+                    discounts = discounts.filter(d => d.discountId !== deleted.id);
+                }
                 showNotification('✅ 折扣已刪除');
-                saveDataToLocalStorage(); // 自動保存
+                saveDataToLocalStorage();
                 loadDiscountButtons();
                 loadDiscountList();
+                updateOrder();
             }
         }
 
