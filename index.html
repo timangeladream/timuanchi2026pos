@@ -2379,6 +2379,268 @@
         /* Header user info */
         #headerUserInfo { font-size: 12px; }
 
+        /* ===== Refactored Inline Styles ===== */
+
+        /* Modal content widths */
+        .modal-w-350 { max-width: 350px; }
+        .modal-w-380 { max-width: 380px; }
+        .modal-w-400 { max-width: 400px; }
+        .modal-w-450 { max-width: 450px; }
+        .modal-w-600 { max-width: 600px; }
+        .modal-w-700 { max-width: 700px; }
+        .modal-w-750 { max-width: 750px; }
+        .modal-w-800 { max-width: 800px; }
+
+        /* Header action buttons */
+        .header-action-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Modal header "add" buttons */
+        .modal-add-btn {
+            padding: 6px 14px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Stacked button spacing */
+        .btn-mb { margin-bottom: 12px; }
+        .btn-text-sm { font-size: 12px; }
+        .btn-flex-1 { flex: 1; }
+        .btn-flex-2 { flex: 2; }
+
+        /* Button background variants */
+        .btn-bg-blue { background: #195a84; }
+        .btn-bg-purple { background: #8e44ad; }
+        .btn-bg-orange { background: #FFAA33; }
+        .btn-bg-red-orange { background: #FF7744; }
+        .btn-bg-red { background: #d32f2f; }
+        .btn-bg-green-dark { background: #2E8B57; }
+        .btn-bg-gray { background: #666; }
+        .btn-bg-gray-light { background: #999; }
+        .btn-bg-secondary { background: var(--secondary-color); }
+
+        /* Modal bottom action row */
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid var(--border-color);
+        }
+        .modal-actions-simple { display: flex; gap: 10px; margin-top: 20px; }
+
+        /* Modal description text */
+        .modal-desc { color: #666; margin-bottom: 20px; font-size: 14px; }
+        .modal-desc-danger { color: #d32f2f; margin-bottom: 20px; font-size: 14px; font-weight: 600; }
+
+        /* Category section header */
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 12px 8px 12px;
+        }
+        .section-label { font-size: 14px; font-weight: 600; color: var(--primary-color); }
+        .section-label-lg { font-size: 15px; font-weight: 600; color: var(--primary-color); }
+
+        /* Products section header */
+        .products-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* Scrollable list containers */
+        .scroll-list-sm { max-height: 440px; overflow-y: auto; }
+        .scroll-list { max-height: 450px; overflow-y: auto; }
+        .scroll-list-lg { max-height: 500px; overflow-y: auto; }
+
+        /* Hint / description text */
+        .hint-text { font-size: 12px; color: #999; margin-top: 4px; }
+        .input-readonly { background: #f5f5f5; cursor: not-allowed; }
+        .input-readonly-light { background: #f8f9fa; cursor: default; }
+
+        /* Restock tab */
+        .restock-tab {
+            flex: 1; padding: 8px; border: none; border-radius: 8px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+
+        /* Auto-optimize discount box */
+        .auto-optimize-box { background: #f8f9fa; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
+
+        /* Info box */
+        .info-box { margin-bottom: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px; font-size: 13px; }
+
+        /* Form label small */
+        .form-label-sm { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+
+        /* Scan button */
+        .scan-btn {
+            padding: 10px 16px; background: var(--primary-color); color: white;
+            border: none; border-radius: 10px; font-size: 18px;
+            cursor: pointer; margin-left: 8px; flex-shrink: 0;
+        }
+
+        /* Filter components */
+        .filter-label { font-size: 13px; color: #666; margin-bottom: 4px; display: block; }
+        .filter-select { width: 100%; padding: 8px; border: 2px solid var(--border-color); border-radius: 6px; }
+        .filter-box { background: var(--bg-light); padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+        .filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
+
+        /* Stat detail */
+        .stat-detail-wrapper { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; }
+        .stat-detail-text { font-size: 11px; color: var(--text-light); }
+
+        /* Pagination containers */
+        .pagination-inline { display: none; padding: 0; margin: 0; background: transparent; border-radius: 0; }
+        .pagination-sm { display: none; padding: 8px 0; margin: 0 0 8px 0; background: transparent; border-radius: 0; }
+        .pagination-sm-product { display: none; padding: 8px 0; margin: 12px 0 0 0; background: transparent; border-radius: 0; }
+
+        /* Pagination jump section */
+        .pagination-jump { display: flex; align-items: center; gap: 4px; margin-left: 8px; }
+        .pagination-jump-label { font-size: 10px; color: var(--text-light); }
+        .pagination-jump-input {
+            width: 40px; height: 22px; padding: 2px 4px; font-size: 10px;
+            border: 1.5px solid var(--border-color); border-radius: 4px; text-align: center;
+        }
+        .pagination-jump-btn {
+            height: 22px; padding: 2px 8px; font-size: 10px;
+            background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer;
+        }
+        .pagination-info-sm { font-size: 10px; }
+
+        /* Main product pagination (compact) */
+        .main-pagination { display: none; padding: 2px 6px; margin: 0; background: white; border-radius: 4px; }
+        .main-pagination .pagination-btn { padding: 0 3px; font-size: 9px; min-width: 16px; height: 18px; }
+        .main-pagination .pagination-numbers { gap: 2px; }
+        .main-pagination .pagination-info { font-size: 9px; margin: 0 2px; }
+        .main-pagination-jump { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
+        .main-pagination-jump span { font-size: 9px; color: var(--text-light); }
+        .main-pagination-jump input {
+            width: 32px; height: 18px; padding: 1px 2px; font-size: 9px;
+            border: 1px solid var(--border-color); border-radius: 3px; text-align: center;
+        }
+        .main-pagination-jump button {
+            height: 18px; padding: 1px 6px; font-size: 9px;
+            background: var(--primary-color); color: white; border: none; border-radius: 3px; cursor: pointer;
+        }
+
+        /* SM filter components */
+        .sm-filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .sm-search-input { flex: 1; min-width: 140px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+        .sm-filter-input { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+        .sm-filter-checkbox { margin-bottom: 10px; }
+        .sm-filter-label { font-size: 13px; color: #666; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+        /* Restock search */
+        .restock-search {
+            width: 100%; padding: 8px 12px; border: 1px solid #ddd;
+            border-radius: 8px; font-size: 14px; box-sizing: border-box;
+        }
+
+        /* Restock confirm */
+        .restock-qty-input {
+            width: 100%; padding: 8px; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 15px; text-align: center; box-sizing: border-box;
+        }
+        .restock-note-input {
+            width: 100%; padding: 8px; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 13px; box-sizing: border-box;
+        }
+        .restock-actions { display: flex; gap: 8px; }
+        .restock-cancel-btn {
+            flex: 1; padding: 10px; border: 1px solid #ddd; background: white;
+            border-radius: 8px; cursor: pointer; font-size: 14px;
+        }
+        .restock-confirm-btn {
+            flex: 2; padding: 10px; background: var(--primary-color); color: white;
+            border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+        }
+
+        /* Export footer */
+        .export-footer { margin-top: 12px; text-align: right; }
+
+        /* Checkout buttons row */
+        .checkout-row { display: flex; gap: 8px; }
+
+        /* Empty order icon */
+        .empty-order-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+
+        /* Order count summary text */
+        .order-count-text { font-size: 11px; color: #999; font-weight: 400; margin-left: 6px; }
+
+        /* Header date */
+        .header-date { font-size: 12px; color: rgba(255,255,255,0.75); font-weight: 400; }
+
+        /* Customer info buttons */
+        .customer-info-btn {
+            padding: 4px 10px; font-size: 12px; color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-weight: 500;
+        }
+
+        /* Variant display */
+        .variant-price-text { font-size: 18px; font-weight: 700; color: var(--accent-color); margin-top: 8px; }
+        .variant-stock-text { font-size: 14px; color: #666; margin-top: 4px; }
+
+        /* Theme selector */
+        .theme-selector-box {
+            padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;
+            cursor: pointer; display: flex; justify-content: space-between;
+            align-items: center; background: white;
+        }
+
+        /* Brand select list */
+        .brand-select-list { display: flex; flex-direction: column; gap: 12px; }
+        .theme-options-list { display: flex; flex-direction: column; gap: 8px; }
+
+        /* Category management */
+        .category-heading { margin: 20px 0 12px 0; color: var(--primary-color); }
+        .category-input-row { display: flex; gap: 8px; }
+
+        /* Modal search input */
+        .modal-search-input {
+            width: 100%; padding: 10px; border: 2px solid var(--border-color);
+            border-radius: 8px; font-size: 14px; box-sizing: border-box;
+        }
+
+        /* Location input */
+        .location-input {
+            width: 100%; padding: 10px; border: 2px solid var(--border-color);
+            border-radius: 8px; font-size: 14px; margin-bottom: 12px;
+        }
+
+        /* Section header flex */
+        .section-header-flex {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 8px;
+        }
+
+        /* Auto-optimize label */
+        .auto-optimize-label { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+        .auto-optimize-title { font-size: 13px; font-weight: 600; color: var(--text-color); }
+        .auto-optimize-desc { font-size: 11px; color: #999; margin-top: 2px; }
+
+        /* Flex helpers */
+        .flex-row { display: flex; }
+        .flex-center { align-items: center; }
+        .flex-wrap { flex-wrap: wrap; }
+
     </style>
     
     <!-- html2pdf.js CDN -->
@@ -2422,14 +2684,14 @@
             <div style="display:flex;flex-direction:column;gap:2px;">
                 <div style="display:flex;align-items:center;gap:8px;">
                     <h1 id="systemTitle">銷售系統</h1>
-                    <span id="headerDate" style="font-size:12px;color:rgba(255,255,255,0.75);font-weight:400;"></span>
+                    <span id="headerDate" class="header-date"></span>
                 </div>
                 <div id="headerUserInfo"></div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
-                <button onclick="showCustomerQR()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">👁️</button>
-                <button onclick="location.reload()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">🔄</button>
-                <button onclick="doLogout()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;">登出</button>
+                <button class="header-action-btn" onclick="showCustomerQR()">👁️</button>
+                <button class="header-action-btn" onclick="location.reload()">🔄</button>
+                <button class="header-action-btn" onclick="doLogout()">登出</button>
                 <button class="menu-toggle" onclick="toggleMenu();">
                     <span class="menu-icon">☰</span>
                 </button>
@@ -2515,62 +2777,58 @@
 
     <!-- 補貨管理彈窗 -->
     <div id="restockModal" class="modal">
-        <div class="modal-content" style="max-width:600px;">
+        <div class="modal-content modal-w-600">
             <div class="modal-header">
                 <h3>📦 補貨管理</h3>
                 <button class="modal-close" onclick="closeRestockModal()">×</button>
             </div>
             <div class="modal-body">
                 <div style="display:flex;gap:6px;margin-bottom:12px;">
-                    <button id="restockTabProduct" onclick="switchRestockTab('product')" 
-                        style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:var(--primary-color);color:white;">
+                    <button id="restockTabProduct" onclick="switchRestockTab('product')"
+                        class="restock-tab" style="background:var(--primary-color);color:white;">
                         商品
                     </button>
                     <button id="restockTabAddon" onclick="switchRestockTab('addon')"
-                        style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#eee;color:#666;">
+                        class="restock-tab" style="background:#eee;color:#666;">
                         加購品
                     </button>
                     <button id="restockTabGift" onclick="switchRestockTab('gift')"
-                        style="flex:1;padding:8px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:#eee;color:#666;">
+                        class="restock-tab" style="background:#eee;color:#666;">
                         贈品
                     </button>
                 </div>
                 <div style="margin-bottom:12px;">
-                    <input type="text" id="restockSearch" placeholder="搜尋名稱或貨號..." 
-                        style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box;"
+                    <input type="text" id="restockSearch" placeholder="搜尋名稱或貨號..."
+                        class="restock-search"
                         oninput="filterRestockProducts()">
                 </div>
-                <div id="restockProductList" style="max-height:440px;overflow-y:auto;"></div>
+                <div id="restockProductList" class="scroll-list-sm"></div>
             </div>
         </div>
     </div>
 
     <!-- 補貨確認彈窗 -->
     <div id="restockConfirmModal" class="modal" style="z-index:10001;">
-        <div class="modal-content" style="max-width:380px;">
+        <div class="modal-content modal-w-380">
             <div class="modal-header">
                 <h3>📦 補貨</h3>
                 <button class="modal-close" onclick="closeRestockConfirmModal()">×</button>
             </div>
             <div class="modal-body">
-                <div id="restockConfirmInfo" style="margin-bottom:16px;padding:12px;background:#f8f9fa;border-radius:8px;font-size:13px;"></div>
+                <div id="restockConfirmInfo" class="info-box"></div>
                 <div style="margin-bottom:12px;">
-                    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">補貨數量</label>
-                    <input type="number" id="restockConfirmQty" min="1" value="1"
-                        style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:15px;text-align:center;box-sizing:border-box;">
+                    <label class="form-label-sm">補貨數量</label>
+                    <input type="number" id="restockConfirmQty" min="1" value="1" class="restock-qty-input">
                 </div>
                 <div style="margin-bottom:16px;">
-                    <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">備註</label>
-                    <input type="text" id="restockConfirmNote" placeholder="例如：到貨補貨、盤點調整..."
-                        style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:13px;box-sizing:border-box;">
+                    <label class="form-label-sm">備註</label>
+                    <input type="text" id="restockConfirmNote" placeholder="例如：到貨補貨、盤點調整..." class="restock-note-input">
                 </div>
-                <div style="display:flex;gap:8px;">
-                    <button onclick="closeRestockConfirmModal()" 
-                        style="flex:1;padding:10px;border:1px solid #ddd;background:white;border-radius:8px;cursor:pointer;font-size:14px;">
+                <div class="restock-actions">
+                    <button onclick="closeRestockConfirmModal()" class="restock-cancel-btn">
                         取消
                     </button>
-                    <button onclick="executeRestock()"
-                        style="flex:2;padding:10px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">
+                    <button onclick="executeRestock()" class="restock-confirm-btn">
                         ✅ 確認補貨
                     </button>
                 </div>
@@ -2580,18 +2838,17 @@
 
     <!-- 庫存異動記錄總覽彈窗 -->
     <div id="stockMovementModal" class="modal">
-        <div class="modal-content" style="max-width:750px;">
+        <div class="modal-content modal-w-750">
             <div class="modal-header">
                 <h3>📋 庫存異動記錄</h3>
                 <button class="modal-close" onclick="closeStockMovementModal()">×</button>
             </div>
             <div class="modal-body">
-                <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-                    <input type="text" id="smSearchProduct" placeholder="商品名稱或貨號..." 
-                        style="flex:1;min-width:140px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;"
+                <div class="sm-filter-bar">
+                    <input type="text" id="smSearchProduct" placeholder="商品名稱或貨號..."
+                        class="sm-search-input"
                         oninput="filterStockMovements()">
-                    <select id="smFilterType" onchange="filterStockMovements()"
-                        style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                    <select id="smFilterType" onchange="filterStockMovements()" class="sm-filter-input">
                         <option value="">全部類型</option>
                         <option value="初始庫存">初始庫存</option>
                         <option value="補貨">補貨</option>
@@ -2601,31 +2858,29 @@
                         <option value="手動調整">手動調整</option>
                         <option value="清除">清除</option>
                     </select>
-                    <input type="date" id="smFilterDateStart" onchange="filterStockMovements()"
-                        style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
-                    <input type="date" id="smFilterDateEnd" onchange="filterStockMovements()"
-                        style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                    <input type="date" id="smFilterDateStart" onchange="filterStockMovements()" class="sm-filter-input">
+                    <input type="date" id="smFilterDateEnd" onchange="filterStockMovements()" class="sm-filter-input">
                 </div>
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:13px;color:#666;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <div class="sm-filter-checkbox">
+                    <label class="sm-filter-label">
                         <input type="checkbox" id="smFilterDeletedOnly" onchange="filterStockMovements()">
                         只顯示已刪除商品的記錄
                     </label>
                 </div>
-                <div id="smPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:0 0 8px 0;background:transparent;border-radius:0;">
+                <div id="smPaginationContainer" class="pagination-container pagination-sm">
                     <button class="pagination-btn" id="smPrevPageBtn" onclick="changeSmPage('prev')">←</button>
                     <div class="pagination-numbers" id="smPageNumbers"></div>
                     <button class="pagination-btn" id="smNextPageBtn" onclick="changeSmPage('next')">→</button>
-                    <span class="pagination-info" id="smPaginationInfo" style="font-size:10px;"></span>
-                    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
-                        <span style="font-size:10px;color:var(--text-light);">跳至</span>
-                        <input type="number" id="smPageJumpInput" min="1" style="width:40px;height:22px;padding:2px 4px;font-size:10px;border:1.5px solid var(--border-color);border-radius:4px;text-align:center;" onkeypress="if(event.key==='Enter')jumpToSmPage()">
-                        <button onclick="jumpToSmPage()" style="height:22px;padding:2px 8px;font-size:10px;background:var(--primary-color);color:white;border:none;border-radius:4px;cursor:pointer;">GO</button>
+                    <span class="pagination-info pagination-info-sm" id="smPaginationInfo"></span>
+                    <div class="pagination-jump">
+                        <span class="pagination-jump-label">跳至</span>
+                        <input type="number" id="smPageJumpInput" min="1" class="pagination-jump-input" onkeypress="if(event.key==='Enter')jumpToSmPage()">
+                        <button onclick="jumpToSmPage()" class="pagination-jump-btn">GO</button>
                     </div>
                 </div>
-                <div id="stockMovementList" style="max-height:450px;overflow-y:auto;"></div>
-                <div style="margin-top:12px;text-align:right;">
-                    <button onclick="exportStockMovements()" class="add-discount-btn" style="background:#8e44ad;">
+                <div id="stockMovementList" class="scroll-list"></div>
+                <div class="export-footer">
+                    <button onclick="exportStockMovements()" class="add-discount-btn btn-bg-purple">
                         📥 匯出異動記錄
                     </button>
                 </div>
@@ -2635,13 +2890,13 @@
 
     <!-- 商品個別異動記錄彈窗 -->
     <div id="productStockLogModal" class="modal" style="z-index:10000;">
-        <div class="modal-content" style="max-width:600px;">
+        <div class="modal-content modal-w-600">
             <div class="modal-header">
                 <h3 id="productStockLogTitle">📋 庫存異動記錄</h3>
                 <button class="modal-close" onclick="document.getElementById('productStockLogModal').classList.remove('show')">×</button>
             </div>
             <div class="modal-body">
-                <div id="productStockLogList" style="max-height:450px;overflow-y:auto;"></div>
+                <div id="productStockLogList" class="scroll-list"></div>
             </div>
         </div>
     </div>
@@ -2678,17 +2933,7 @@
             <button class="search-clear" id="searchClear" onclick="clearSearch()">×</button>
             <span class="search-icon">🔍</span>
         </div>
-        <button id="scanBtn" onclick="openScanner()" style="
-            padding: 10px 16px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
-            margin-left: 8px;
-            flex-shrink: 0;
-        " title="掃描 QR Code">📷</button>
+        <button id="scanBtn" onclick="openScanner()" class="scan-btn" title="掃描 QR Code">📷</button>
         <div class="search-results-count" id="searchResultsCount"></div>
     </div>
 
@@ -2698,8 +2943,8 @@
     </div>
 
     <div class="category-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 12px 8px 12px;">
-            <div style="font-size: 14px; font-weight: 600; color: var(--primary-color);">大分類</div>
+        <div class="category-header">
+            <div class="section-label">大分類</div>
             <button class="file-btn" onclick="openCategoryManager()">⚙️ 管理</button>
         </div>
         <div class="category-scroll">
@@ -2709,8 +2954,8 @@
 
     <!-- 子分類 -->
     <div class="category-section" style="background: #fafafa;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 12px 8px 12px;">
-            <div style="font-size: 14px; font-weight: 600; color: var(--primary-color);">小分類</div>
+        <div class="category-header">
+            <div class="section-label">小分類</div>
         </div>
         <div class="category-scroll">
             <div class="category-buttons" id="subCategoryButtons"></div>
@@ -2718,22 +2963,21 @@
     </div>
 
     <div class="products-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-            <div style="font-size: 15px; font-weight: 600; color: var(--primary-color);">商品列表</div>
+        <div class="products-header">
+            <div class="section-label-lg">商品列表</div>
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <!-- 主畫面商品分頁控制（縮小版） -->
-                <div id="mainProductPaginationContainer" class="pagination-container" style="display: none; padding: 2px 6px; margin: 0; background: white; border-radius: 4px;">
-                    <button class="pagination-btn" id="mainProductPrevPageBtn" onclick="changeMainProductPage('prev')" style="padding: 0 3px; font-size: 9px; min-width: 16px; height: 18px;">←</button>
-                    <div class="pagination-numbers" id="mainProductPageNumbers" style="gap: 2px;"></div>
-                    <button class="pagination-btn" id="mainProductNextPageBtn" onclick="changeMainProductPage('next')" style="padding: 0 3px; font-size: 9px; min-width: 16px; height: 18px;">→</button>
-                    <span class="pagination-info" id="mainProductPaginationInfo" style="font-size: 9px; margin: 0 2px;"></span>
-                    <div style="display: flex; align-items: center; gap: 2px; margin-left: 4px;">
-                        <span style="font-size: 9px; color: var(--text-light);">跳至</span>
-                        <input type="number" id="mainProductPageJumpInput" min="1" style="width: 32px; height: 18px; padding: 1px 2px; font-size: 9px; border: 1px solid var(--border-color); border-radius: 3px; text-align: center;" onkeypress="if(event.key === 'Enter') jumpToMainProductPage()">
-                        <button onclick="jumpToMainProductPage()" style="height: 18px; padding: 1px 6px; font-size: 9px; background: var(--primary-color); color: white; border: none; border-radius: 3px; cursor: pointer;">GO</button>
+                <div id="mainProductPaginationContainer" class="pagination-container main-pagination">
+                    <button class="pagination-btn" id="mainProductPrevPageBtn" onclick="changeMainProductPage('prev')">←</button>
+                    <div class="pagination-numbers" id="mainProductPageNumbers"></div>
+                    <button class="pagination-btn" id="mainProductNextPageBtn" onclick="changeMainProductPage('next')">→</button>
+                    <span class="pagination-info" id="mainProductPaginationInfo"></span>
+                    <div class="main-pagination-jump">
+                        <span>跳至</span>
+                        <input type="number" id="mainProductPageJumpInput" min="1" onkeypress="if(event.key === 'Enter') jumpToMainProductPage()">
+                        <button onclick="jumpToMainProductPage()">GO</button>
                     </div>
                 </div>
-
             </div>
         </div>
         <div class="products-scroll">
@@ -2745,7 +2989,7 @@
     <div class="order-info-section">
         <div class="order-header">
             <div class="order-title">📝 訂單資訊</div>
-            <button class="clear-btn" onclick="toggleOrderInfoForm()" style="background: var(--secondary-color);">
+            <button class="clear-btn btn-bg-secondary" onclick="toggleOrderInfoForm()">
                 <span id="orderInfoToggleIcon">▼</span> 顯示
             </button>
         </div>
@@ -2768,15 +3012,15 @@
                 </div>
                 <div class="order-info-field">
                     <label>銷售人員</label>
-                    <input type="text" id="salesPerson" readonly style="background:#f8f9fa;cursor:default;" />
+                    <input type="text" id="salesPerson" readonly class="input-readonly-light" />
                 </div>
             </div>
             
             <div class="order-info-divider" style="display:flex;justify-content:space-between;align-items:center;">
                 <span>👤 顧客資訊</span>
                 <div style="display:flex;gap:6px;">
-                    <button type="button" onclick="openCustomerSearchModal()" style="padding:4px 10px;font-size:12px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500;">🔍 查詢顧客</button>
-                    <button type="button" onclick="clearCustomerInfo()" style="padding:4px 10px;font-size:12px;background:#95a5a6;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500;">✕ 清空</button>
+                    <button type="button" onclick="openCustomerSearchModal()" class="customer-info-btn btn-bg-secondary">🔍 查詢顧客</button>
+                    <button type="button" onclick="clearCustomerInfo()" class="customer-info-btn" style="background:#95a5a6;">✕ 清空</button>
                 </div>
             </div>
             
@@ -2810,13 +3054,13 @@
         <div class="order-header">
             <div class="order-title">
                 📋 訂單明細
-                <span id="orderItemCountSummary" style="font-size:11px;color:#999;font-weight:400;margin-left:6px;"></span>
+                <span id="orderItemCountSummary" class="order-count-text"></span>
             </div>
             <button class="clear-btn" onclick="clearOrder()">清空</button>
         </div>
         <div class="order-list" id="orderList">
             <div class="empty-order">
-                <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">🛍️</div>
+                <div class="empty-order-icon">🛍️</div>
                 <div>尚無商品，請選擇商品加入訂單</div>
             </div>
         </div>
@@ -2859,9 +3103,9 @@
             <span class="final-total-label">總計：</span>
             <span class="final-total-value" id="total">NT$ 0</span>
         </div>
-        <div style="display: flex; gap: 8px;">
-            <button class="checkout-btn" id="checkoutBtn" onclick="checkout()" disabled style="flex: 1;">💳 結帳</button>
-            <button class="checkout-btn" id="printPreviewBtn" onclick="openPrintPreview()" disabled style="flex: 1; background: var(--secondary-color);">🖨️ 列印預覽</button>
+        <div class="checkout-row">
+            <button class="checkout-btn btn-flex-1" id="checkoutBtn" onclick="checkout()" disabled>💳 結帳</button>
+            <button class="checkout-btn btn-flex-1 btn-bg-secondary" id="printPreviewBtn" onclick="openPrintPreview()" disabled>🖨️ 列印預覽</button>
         </div>
     </div>
 
@@ -2873,18 +3117,18 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>優惠折扣管理</h3>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <button onclick="openAddDiscountModal()" style="padding:6px 14px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">➕ 新增折扣</button>
+                <div class="flex-row flex-center" style="gap:8px;">
+                    <button onclick="openAddDiscountModal()" class="modal-add-btn">➕ 新增折扣</button>
                     <button class="modal-close" onclick="closeDiscountManager()">×</button>
                 </div>
             </div>
             <div class="modal-body">
-                <div style="background:#f8f9fa;border-radius:10px;padding:12px 14px;margin-bottom:16px;">
-                    <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+                <div class="auto-optimize-box">
+                    <label class="auto-optimize-label">
                         <input type="checkbox" id="autoOptimizeDiscountToggle" onchange="toggleAutoOptimizeDiscount()" style="margin-top:2px;width:16px;height:16px;cursor:pointer;">
                         <span>
-                            <div style="font-size:13px;font-weight:600;color:var(--text-color);">自動套用最優折扣組合</div>
-                            <div style="font-size:11px;color:#999;margin-top:2px;">開啟後，「任選N件折X元」規則會依商品件數自動找出最划算的組合並套用（可混用多個規則）。關閉時則維持手動選擇單一折扣。</div>
+                            <div class="auto-optimize-title">自動套用最優折扣組合</div>
+                            <div class="auto-optimize-desc">開啟後，「任選N件折X元」規則會依商品件數自動找出最划算的組合並套用（可混用多個規則）。關閉時則維持手動選擇單一折扣。</div>
                         </span>
                     </label>
                 </div>
@@ -2946,15 +3190,15 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>贈品項目管理</h3>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <button onclick="openAddGiftModal()" style="padding:6px 14px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">➕ 新增贈品</button>
+                <div class="flex-row flex-center" style="gap:8px;">
+                    <button onclick="openAddGiftModal()" class="modal-add-btn">➕ 新增贈品</button>
                     <button class="modal-close" onclick="closeGiftManager()">×</button>
                 </div>
             </div>
             <div class="modal-body">
                 <div style="margin-bottom:12px;">
                     <input type="text" id="giftSearchInput" placeholder="搜尋贈品活動名稱或贈品名稱..."
-                        style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:14px;box-sizing:border-box;"
+                        class="modal-search-input"
                         oninput="filterGiftList()">
                 </div>
                 <div class="discount-list" id="giftList"></div>
@@ -3053,15 +3297,15 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>加購項目管理</h3>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <button onclick="openAddAddonModal()" style="padding:6px 14px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">➕ 新增加購項目</button>
+                <div class="flex-row flex-center" style="gap:8px;">
+                    <button onclick="openAddAddonModal()" class="modal-add-btn">➕ 新增加購項目</button>
                     <button class="modal-close" onclick="closeAddonManager()">×</button>
                 </div>
             </div>
             <div class="modal-body">
                 <div style="margin-bottom:12px;">
                     <input type="text" id="addonSearchInput" placeholder="搜尋加購項目名稱或貨號..."
-                        style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:14px;box-sizing:border-box;"
+                        class="modal-search-input"
                         oninput="filterAddonList()">
                 </div>
                 <div class="discount-list" id="addonList"></div>
@@ -3071,7 +3315,7 @@
 
     <!-- 新增加購項目彈窗 -->
     <div id="addAddonModal" class="modal" style="z-index:10001;">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content modal-w-600">
             <div class="modal-header">
                 <h3 id="addonModalTitle">新增加購項目</h3>
                 <button class="modal-close" onclick="closeAddAddonModal()">×</button>
@@ -3090,7 +3334,7 @@
 
                     <div class="form-group" id="addonTotalPriceDisplay" style="display: none;">
                         <label>項目價格區間（由各規格價格自動計算）</label>
-                        <input type="text" id="addonDisplayTotalPrice" readonly style="background: #f5f5f5; cursor: not-allowed;" />
+                        <input type="text" id="addonDisplayTotalPrice" readonly class="input-readonly" />
                     </div>
 
                     <div class="form-group" id="addonSimplePriceSection">
@@ -3100,7 +3344,7 @@
 
                     <div class="form-group" id="addonTotalStockDisplay" style="display: none;">
                         <label>庫存總和（由各規格庫存自動計算）</label>
-                        <input type="text" id="addonDisplayTotalStock" readonly style="background: #f5f5f5; cursor: not-allowed;" />
+                        <input type="text" id="addonDisplayTotalStock" readonly class="input-readonly" />
                     </div>
 
                     <div class="form-group" id="addonSimpleStockSection">
@@ -3109,7 +3353,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                        <label class="section-header-flex">
                             <span>項目規格</span>
                             <button type="button" class="file-btn" onclick="addAddonVariantGroup()">➕ 新增規格</button>
                         </label>
@@ -3140,7 +3384,7 @@
                 <div class="location-list" id="locationList"></div>
                 <div class="add-discount-form">
                     <h4>新增銷售地點</h4>
-                    <input type="text" id="newLocationName" placeholder="例如：新竹門市" style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px; margin-bottom: 12px;" />
+                    <input type="text" id="newLocationName" placeholder="例如：新竹門市" class="location-input" />
                     <button class="add-discount-btn" onclick="addNewLocation()">➕ 新增地點</button>
                 </div>
             </div>
@@ -3179,9 +3423,9 @@
                     <div class="stat-icon">📦</div>
                     <div class="stat-info">
                         <div class="stat-label">訂單數量</div>
-                        <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;">
+                        <div class="stat-detail-wrapper">
                             <div class="stat-value" id="statOrders">0 筆</div>
-                            <div id="statOrdersDetail" style="font-size:11px;color:var(--text-light);"></div>
+                            <div id="statOrdersDetail" class="stat-detail-text"></div>
                         </div>
                     </div>
                 </div>
@@ -3196,9 +3440,9 @@
                     <div class="stat-icon">🎁</div>
                     <div class="stat-info">
                         <div class="stat-label">商品銷量</div>
-                        <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;">
+                        <div class="stat-detail-wrapper">
                             <div class="stat-value" id="statItems">0 件</div>
-                            <div id="statItemsDetail" style="font-size:11px;color:var(--text-light);"></div>
+                            <div id="statItemsDetail" class="stat-detail-text"></div>
                         </div>
                     </div>
                 </div>
@@ -3206,13 +3450,13 @@
 
             <!-- 訂單列表 -->
             <div class="analysis-section">
-                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div class="section-header section-header-flex">
                     <h3>📋 歷史訂單</h3>
-                    <div id="paginationContainer" class="pagination-container" style="display: none; padding: 0; margin: 0; background: transparent; border-radius: 0;">
+                    <div id="paginationContainer" class="pagination-container pagination-inline">
                         <button class="pagination-btn" id="prevPageBtn" onclick="changePage('prev')">←</button>
                         <div class="pagination-numbers" id="pageNumbers"></div>
                         <button class="pagination-btn" id="nextPageBtn" onclick="changePage('next')">→</button>
-                        <span class="pagination-info" id="paginationInfo" style="font-size: 10px;"></span>
+                        <span class="pagination-info pagination-info-sm" id="paginationInfo"></span>
                     </div>
                 </div>
                 <div id="historyList" class="history-list"></div>
@@ -3247,20 +3491,20 @@
 
     <!-- 匯入資料彈窗 -->
     <div id="importModal" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-content modal-w-450">
             <div class="modal-header">
                 <h3>匯入資料</h3>
                 <button class="modal-close" onclick="closeImportModal()">×</button>
             </div>
             <div class="modal-body">
-                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">請選擇要匯入的資料類型：</p>
-                <button class="add-discount-btn" onclick="openProductImportOptionsModal()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                <p class="modal-desc">請選擇要匯入的資料類型：</p>
+                <button class="add-discount-btn" onclick="openProductImportOptionsModal()" class="btn-mb">
                     匯入商品資料
                 </button>
-                <button class="add-discount-btn" onclick="openAddonImportOptionsModal()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                <button class="add-discount-btn" onclick="openAddonImportOptionsModal()" class="btn-mb">
                     匯入加購項目
                 </button>
-                <button class="add-discount-btn" onclick="openGiftImportOptionsModal()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                <button class="add-discount-btn" onclick="openGiftImportOptionsModal()" class="btn-mb">
                     匯入贈品資料
                 </button>
             </div>
@@ -3269,7 +3513,7 @@
 
     <!-- 商品匯入選項彈窗 -->
     <div id="productImportOptionsModal" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-content modal-w-450">
             <div class="modal-header">
                 <h3>匯入商品資料</h3>
                 <button class="modal-close" onclick="closeProductImportOptionsModal()">×</button>
@@ -3277,20 +3521,20 @@
             <div class="modal-body">
                 <input type="file" id="importProductFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 
-                <button class="add-discount-btn" onclick="downloadProductExample()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="downloadProductExample()" class="btn-mb btn-text-sm">
                     下載商品資料欄位說明(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="downloadProductTemplate()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="downloadProductTemplate()" class="btn-mb btn-text-sm">
                     下載商品資料空白檔(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="document.getElementById('importProductFile').click()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="document.getElementById('importProductFile').click()" class="btn-mb btn-text-sm">
                     完整匯入(新增/更新全部欄位)
                 </button>
 
                 <input type="file" id="importProductPriceStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <button class="add-discount-btn" onclick="document.getElementById('importProductPriceStockFile').click()" style="width: 100%; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="document.getElementById('importProductPriceStockFile').click()" class="btn-text-sm">
                     只更新價格和庫存
                 </button>
             </div>
@@ -3299,7 +3543,7 @@
 
     <!-- 加購項目匯入選項彈窗 -->
     <div id="addonImportOptionsModal" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-content modal-w-450">
             <div class="modal-header">
                 <h3>匯入加購項目</h3>
                 <button class="modal-close" onclick="closeAddonImportOptionsModal()">×</button>
@@ -3307,20 +3551,20 @@
             <div class="modal-body">
                 <input type="file" id="importAddonFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 
-                <button class="add-discount-btn" onclick="downloadAddonExample()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="downloadAddonExample()" class="btn-mb btn-text-sm">
                     下載加購項目資料欄位說明(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="downloadAddonTemplate()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="downloadAddonTemplate()" class="btn-mb btn-text-sm">
                     下載加購項目資料空白檔(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="document.getElementById('importAddonFile').click()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="document.getElementById('importAddonFile').click()" class="btn-mb btn-text-sm">
                     完整匯入加購項目資料(新增/更新全部欄位)
                 </button>
 
                 <input type="file" id="importAddonPriceStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <button class="add-discount-btn" onclick="document.getElementById('importAddonPriceStockFile').click()" style="width: 100%; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="document.getElementById('importAddonPriceStockFile').click()" class="btn-text-sm">
                     只更新價格和庫存
                 </button>
             </div>
@@ -3329,7 +3573,7 @@
 
     <!-- 贈品匯入選項彈窗 -->
     <div id="giftImportOptionsModal" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-content modal-w-450">
             <div class="modal-header">
                 <h3>匯入贈品資料</h3>
                 <button class="modal-close" onclick="closeGiftImportOptionsModal()">×</button>
@@ -3337,20 +3581,20 @@
             <div class="modal-body">
                 <input type="file" id="importGiftFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 
-                <button class="add-discount-btn" onclick="downloadGiftExample()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="downloadGiftExample()" class="btn-mb btn-text-sm">
                     下載贈品資料欄位說明(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="downloadGiftTemplate()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="downloadGiftTemplate()" class="btn-mb btn-text-sm">
                     下載贈品資料空白檔(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="document.getElementById('importGiftFile').click()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="document.getElementById('importGiftFile').click()" class="btn-mb btn-text-sm">
                     完整匯入贈品項目資料（新增／更新全部欄位）
                 </button>
 
                 <input type="file" id="importGiftStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <button class="add-discount-btn" onclick="document.getElementById('importGiftStockFile').click()" style="width: 100%; background: #28a745; font-size: 12px;">
+                <button class="add-discount-btn" onclick="document.getElementById('importGiftStockFile').click()" class="btn-text-sm">
                     只更新庫存
                 </button>
             </div>
@@ -3359,29 +3603,29 @@
 
     <!-- 匯出資料彈窗 -->
     <div id="exportModal" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-content modal-w-450">
             <div class="modal-header">
                 <h3>匯出資料</h3>
                 <button class="modal-close" onclick="closeExportModal()">×</button>
             </div>
             <div class="modal-body">
-                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">請選擇要匯出的資料類型：</p>
-                <button class="add-discount-btn" onclick="confirmExportProducts()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                <p class="modal-desc">請選擇要匯出的資料類型：</p>
+                <button class="add-discount-btn" onclick="confirmExportProducts()" class="btn-mb">
                     匯出商品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmExportAddons()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                <button class="add-discount-btn" onclick="confirmExportAddons()" class="btn-mb">
                     匯出加購項目資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmExportGifts()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                <button class="add-discount-btn" onclick="confirmExportGifts()" class="btn-mb">
                     匯出贈品項目資料
                 </button>
-                <button class="add-discount-btn" onclick="exportCustomers()" style="width: 100%; margin-bottom: 12px; background: #28a745;">
+                <button class="add-discount-btn" onclick="exportCustomers()" class="btn-mb">
                     匯出顧客資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmExportSales()" style="width: 100%; margin-bottom: 12px; background: #195a84;">
+                <button class="add-discount-btn" onclick="confirmExportSales()" class="btn-mb btn-bg-blue">
                     匯出銷售紀錄
                 </button>
-                <button class="add-discount-btn" onclick="exportStockMovementsFromMenu()" style="width: 100%; background: #195a84;">
+                <button class="add-discount-btn" onclick="exportStockMovementsFromMenu()" class="btn-bg-blue">
                     匯出庫存異動紀錄
                 </button>
             </div>
@@ -3390,23 +3634,23 @@
 
     <!-- 品牌選擇彈窗（用於商品匯出） -->
     <div id="brandSelectModal" class="modal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content modal-w-400">
             <div class="modal-header">
                 <h3>📦 選擇匯出品牌</h3>
                 <button class="modal-close" onclick="closeBrandSelectModal()">×</button>
             </div>
             <div class="modal-body">
-                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">請選擇要匯出的品牌：</p>
+                <p class="modal-desc">請選擇要匯出的品牌：</p>
                 
-                <div id="brandSelectOptions" style="display: flex; flex-direction: column; gap: 12px;">
+                <div id="brandSelectOptions" class="brand-select-list">
                     <!-- 品牌選項將動態生成在這裡 -->
                 </div>
                 
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button class="add-discount-btn" onclick="executeBrandExport()" style="flex: 1; background: var(--primary-color);">
+                <div class="modal-actions-simple">
+                    <button class="add-discount-btn btn-flex-1" onclick="executeBrandExport()">
                         確認匯出
                     </button>
-                    <button class="add-discount-btn" onclick="closeBrandSelectModal()" style="flex: 1; background: #999;">
+                    <button class="add-discount-btn btn-flex-1 btn-bg-gray-light" onclick="closeBrandSelectModal()">
                         取消
                     </button>
                 </div>
@@ -3416,32 +3660,32 @@
 
     <!-- 清除資料彈窗 -->
     <div id="clearDataModal" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-content modal-w-450">
             <div class="modal-header">
                 <h3>清除資料</h3>
                 <button class="modal-close" onclick="closeClearDataModal()">×</button>
             </div>
             <div class="modal-body">
-                <p style="color: #d32f2f; margin-bottom: 20px; font-size: 14px; font-weight: 600;">此操作無法復原，請謹慎選擇！</p>
-                <button class="add-discount-btn" onclick="confirmClearProducts()" style="width: 100%; margin-bottom: 12px; background: #FFAA33;">
+                <p class="modal-desc-danger">此操作無法復原，請謹慎選擇！</p>
+                <button class="add-discount-btn" onclick="confirmClearProducts()" class="btn-mb btn-bg-orange">
                     清除所有商品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearAddons()" style="width: 100%; margin-bottom: 12px; background: #FFAA33;">
+                <button class="add-discount-btn" onclick="confirmClearAddons()" class="btn-mb btn-bg-orange">
                     清除所有加購品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearGifts()" style="width: 100%; margin-bottom: 12px; background: #FFAA33;">
+                <button class="add-discount-btn" onclick="confirmClearGifts()" class="btn-mb btn-bg-orange">
                     清除所有贈品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearDiscounts()" style="width: 100%; margin-bottom: 12px; background: #FFAA33;">
+                <button class="add-discount-btn" onclick="confirmClearDiscounts()" class="btn-mb btn-bg-orange">
                     清除所有折扣設定
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearSales()" style="width: 100%; margin-bottom: 12px; background: #FF7744;">
+                <button class="add-discount-btn" onclick="confirmClearSales()" class="btn-mb btn-bg-red-orange">
                     清除所有銷售紀錄
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearStockMovements()" style="width: 100%; margin-bottom: 12px; background: #FF7744;">
+                <button class="add-discount-btn" onclick="confirmClearStockMovements()" class="btn-mb btn-bg-red-orange">
                     清除所有庫存異動紀錄
                 </button>
-                <button class="add-discount-btn" onclick="clearLocalStorage()" style="width: 100%; background: #d32f2f; color: white;">
+                <button class="add-discount-btn" onclick="clearLocalStorage()" class="btn-bg-red">
                     清除所有快取資料 (解決載入問題)
                 </button>
             </div>
@@ -3450,17 +3694,17 @@
 
     <!-- 列印預覽彈窗 -->
     <div id="printPreviewModal" class="modal">
-        <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-content modal-w-800">
             <div class="modal-header">
                 <h3>🖨️ 列印預覽</h3>
                 <button class="modal-close" onclick="closePrintPreview()">×</button>
             </div>
             <div class="modal-body">
                 <div id="printPreviewContent" class="print-preview-content"></div>
-                <div style="display: flex; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border-color);">
-                    <button class="add-discount-btn" onclick="printReceipt()" style="flex: 1;">🖨️ 列印</button>
-                    <button class="add-discount-btn" onclick="downloadPDF()" style="flex: 1; background: #2E8B57;">📄 轉成PDF</button>
-                    <button class="add-discount-btn" onclick="closePrintPreview()" style="flex: 1; background: #666;">取消</button>
+                <div class="modal-actions">
+                    <button class="add-discount-btn btn-flex-1" onclick="printReceipt()">🖨️ 列印</button>
+                    <button class="add-discount-btn btn-flex-1 btn-bg-green-dark" onclick="downloadPDF()">📄 轉成PDF</button>
+                    <button class="add-discount-btn btn-flex-1 btn-bg-gray" onclick="closePrintPreview()">取消</button>
                 </div>
             </div>
         </div>
@@ -3468,7 +3712,7 @@
 
     <!-- 系統配置彈窗 -->
     <div id="systemConfigModal" class="modal">
-        <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-content modal-w-450">
             <div class="modal-header">
                 <h3>⚙️ 系統設定</h3>
                 <button class="modal-close" onclick="closeSystemConfig()">×</button>
@@ -3477,24 +3721,24 @@
                 <div class="form-group">
                     <label>系統名稱</label>
                     <input type="text" id="config_systemName" placeholder="例如：TimuAnchi 銷售系統" />
-                    <div style="font-size: 12px; color: #999; margin-top: 4px;">顯示在標題列</div>
+                    <div class="hint-text">顯示在標題列</div>
                 </div>
-                
+
                 <div class="form-group">
                     <label>配色主題</label>
-                    <div class="theme-selector" onclick="openThemeModal()" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: white;">
+                    <div class="theme-selector theme-selector-box" onclick="openThemeModal()">
                         <span id="currentThemeDisplay" style="display: flex; align-items: center; gap: 8px;">
                             <span style="color: #0B4F7C; font-size: 20px;">●</span>
                             <span>經典藍</span>
                         </span>
                         <span style="color: #999;">▼</span>
                     </div>
-                    <div style="font-size: 12px; color: #999; margin-top: 4px;">點擊可更換配色</div>
+                    <div class="hint-text">點擊可更換配色</div>
                 </div>
-                
+
                 <div style="display: flex; gap: 12px; margin-top: 24px;">
-                    <button class="add-discount-btn" onclick="saveSystemConfig()" style="flex: 1;">💾 儲存設定</button>
-                    <button class="add-discount-btn" onclick="closeSystemConfig()" style="flex: 1; background: #666;">取消</button>
+                    <button class="add-discount-btn btn-flex-1" onclick="saveSystemConfig()">💾 儲存設定</button>
+                    <button class="add-discount-btn btn-flex-1 btn-bg-gray" onclick="closeSystemConfig()">取消</button>
                 </div>
             </div>
         </div>
@@ -3502,13 +3746,13 @@
 
     <!-- 配色選擇彈窗 -->
     <div id="themeModal" class="modal">
-        <div class="modal-content" style="max-width: 350px;">
+        <div class="modal-content modal-w-350">
             <div class="modal-header">
                 <h3>🎨 選擇配色主題</h3>
                 <button class="modal-close" onclick="closeThemeModal()">×</button>
             </div>
             <div class="modal-body">
-                <div id="themeOptions" style="display: flex; flex-direction: column; gap: 8px;">
+                <div id="themeOptions" class="theme-options-list">
                     <!-- 配色選項將由 JavaScript 動態生成 -->
                 </div>
             </div>
@@ -3517,7 +3761,7 @@
 
     <!-- 系統設定彈窗 -->
     <div id="systemSettingsModal" class="modal">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-content modal-w-700">
             <div class="modal-header">
                 <h3>🏢 基本資訊</h3>
                 <button class="modal-close" onclick="closeSystemSettings()">×</button>
@@ -3553,7 +3797,7 @@
                     <h4 class="settings-section-title">📱 社群連結</h4>
                     <div id="socialLinksList"></div>
                     <div style="margin-top: 12px;">
-                        <button class="add-discount-btn" onclick="addSocialLinkInput()" style="padding: 8px 16px; font-size: 13px;">➕ 新增社群</button>
+                        <button class="add-discount-btn btn-text-sm" onclick="addSocialLinkInput()" style="padding: 8px 16px;">➕ 新增社群</button>
                     </div>
                 </div>
 
@@ -3598,9 +3842,9 @@
                 </div>
 
                 <!-- 儲存按鈕 -->
-                <div style="display: flex; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border-color);">
-                    <button class="add-discount-btn" onclick="saveSystemSettings()" style="flex: 1;">💾 儲存設定</button>
-                    <button class="add-discount-btn" onclick="closeSystemSettings()" style="flex: 1; background: #666;">取消</button>
+                <div class="modal-actions">
+                    <button class="add-discount-btn btn-flex-1" onclick="saveSystemSettings()">💾 儲存設定</button>
+                    <button class="add-discount-btn btn-flex-1 btn-bg-gray" onclick="closeSystemSettings()">取消</button>
                 </div>
             </div>
         </div>
@@ -3612,8 +3856,8 @@
             <div class="variant-header">
                 <div class="variant-product-name" id="variantProductName"></div>
                 <div class="variant-product-sku" id="variantProductSku"></div>
-                <div style="font-size: 18px; font-weight: 700; color: var(--accent-color); margin-top: 8px;" id="variantProductPrice"></div>
-                <div style="font-size: 14px; color: #666; margin-top: 4px;" id="variantProductStock"></div>
+                <div class="variant-price-text" id="variantProductPrice"></div>
+                <div class="variant-stock-text" id="variantProductStock"></div>
             </div>
             <div id="variantGroups"></div>
             <div class="variant-actions">
@@ -3625,7 +3869,7 @@
 
     <!-- 新增商品彈窗 -->
     <div id="addProductModal" class="modal" style="z-index:10001;">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content modal-w-600">
             <div class="modal-header">
                 <h3 id="productModalTitle">新增商品</h3>
                 <button class="modal-close" onclick="closeAddProductModal()">×</button>
@@ -3661,7 +3905,7 @@
 
                     <div class="form-group" id="totalPriceDisplay" style="display: none;">
                         <label>價格區間（由各規格價格自動計算）</label>
-                        <input type="text" id="displayTotalPrice" readonly style="background: #f5f5f5; cursor: not-allowed;" />
+                        <input type="text" id="displayTotalPrice" readonly class="input-readonly" />
                     </div>
 
                     <div class="form-group" id="simplePriceSection">
@@ -3671,7 +3915,7 @@
 
                     <div class="form-group" id="totalStockDisplay" style="display: none;">
                         <label>庫存總和（由各規格庫存自動計算）</label>
-                        <input type="text" id="displayTotalStock" readonly style="background: #f5f5f5; cursor: not-allowed;" />
+                        <input type="text" id="displayTotalStock" readonly class="input-readonly" />
                     </div>
 
                     <div class="form-group" id="simpleStockSection">
@@ -3680,7 +3924,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label style="display: flex; justify-content: space-between; align-items: center;">
+                        <label class="section-header-flex">
                             <span>商品規格</span>
                             <button type="button" class="file-btn" onclick="addVariantGroup()">➕ 新增規格</button>
                         </label>
@@ -3702,7 +3946,7 @@
 
     <!-- 分類管理彈窗 -->
     <div id="categoryManagerModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content modal-w-600">
             <div class="modal-header">
                 <h3>分類管理</h3>
                 <button class="modal-close" onclick="closeCategoryManager()">×</button>
@@ -3717,22 +3961,22 @@
                         </select>
                     </div>
 
-                    <h4 style="margin: 20px 0 12px 0; color: var(--primary-color);">大分類列表</h4>
+                    <h4 class="category-heading">大分類列表</h4>
                     <div id="mainCategoryList" style="margin-bottom: 20px;"></div>
-                    
-                    <div style="display: flex; gap: 8px; margin-bottom: 24px;">
+
+                    <div class="category-input-row" style="margin-bottom: 24px;">
                         <input type="text" id="newMainCategoryName" placeholder="輸入新的大分類名稱" style="flex: 1; margin: 0;" />
                         <button class="file-btn" onclick="addMainCategory()">新增</button>
                     </div>
 
-                    <h4 style="margin: 20px 0 12px 0; color: var(--primary-color);">小分類列表</h4>
+                    <h4 class="category-heading">小分類列表</h4>
                     <div class="form-group">
                         <label>選擇大分類</label>
                         <select id="selectedMainCategoryForSub" onchange="loadSubCategoryList()"></select>
                     </div>
                     <div id="subCategoryList" style="margin-bottom: 20px;"></div>
-                    
-                    <div style="display: flex; gap: 8px;">
+
+                    <div class="category-input-row">
                         <input type="text" id="newSubCategoryName" placeholder="輸入新的小分類名稱" style="flex: 1; margin: 0;" />
                         <button class="file-btn" onclick="addSubCategory()">新增</button>
                     </div>
@@ -3743,7 +3987,7 @@
 
     <!-- === 新增：品牌管理模態框 === -->
     <div id="brandManagerModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content modal-w-500">
             <div class="modal-header">
                 <h3>🏷️ 品牌管理</h3>
                 <button class="modal-close" onclick="closeBrandManager()">×</button>
@@ -3752,15 +3996,15 @@
                 <div class="brand-manage-grid" id="brandManageList">
                     <!-- 品牌列表動態生成 -->
                 </div>
-                <div style="display: flex; gap: 8px; margin-top: 16px;">
-                    <input 
-                        type="text" 
-                        id="newBrandInput" 
+                <div class="category-input-row" style="margin-top: 16px;">
+                    <input
+                        type="text"
+                        id="newBrandInput"
                         placeholder="輸入新品牌名稱"
                         style="flex: 1; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 14px;"
                     >
-                    <button 
-                        class="file-btn" 
+                    <button
+                        class="file-btn"
                         onclick="addNewBrand()"
                         style="padding: 12px 24px;"
                     >
@@ -3773,57 +4017,57 @@
 
     <!-- 商品列表管理彈窗 -->
     <div id="productListModal" class="modal" style="z-index:10000;">
-        <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-content modal-w-800">
             <div class="modal-header">
                 <h3>📦 商品管理</h3>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <button onclick="openAddProductModal()" style="padding:6px 14px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">➕ 新增商品</button>
+                <div class="flex-row flex-center" style="gap:8px;">
+                    <button onclick="openAddProductModal()" class="modal-add-btn">➕ 新增商品</button>
                     <button class="modal-close" onclick="closeProductListManager()">×</button>
                 </div>
             </div>
             <div class="modal-body">
                 <!-- 篩選區域 -->
-                <div style="background: var(--bg-light); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px;">
+                <div class="filter-box">
+                    <div class="filter-grid">
                         <div>
-                            <label style="font-size: 13px; color: #666; margin-bottom: 4px; display: block;">品牌</label>
-                            <select id="filterBrand" onchange="filterProductList()" style="width: 100%; padding: 8px; border: 2px solid var(--border-color); border-radius: 6px;">
+                            <label class="filter-label">品牌</label>
+                            <select id="filterBrand" onchange="filterProductList()" class="filter-select">
                                 <option value="">全部</option>
                             </select>
                         </div>
                         <div>
-                            <label style="font-size: 13px; color: #666; margin-bottom: 4px; display: block;">大分類</label>
-                            <select id="filterMainCategory" onchange="filterProductList()" style="width: 100%; padding: 8px; border: 2px solid var(--border-color); border-radius: 6px;">
+                            <label class="filter-label">大分類</label>
+                            <select id="filterMainCategory" onchange="filterProductList()" class="filter-select">
                                 <option value="">全部</option>
                             </select>
                         </div>
                         <div>
-                            <label style="font-size: 13px; color: #666; margin-bottom: 4px; display: block;">小分類</label>
-                            <select id="filterSubCategory" onchange="filterProductList()" style="width: 100%; padding: 8px; border: 2px solid var(--border-color); border-radius: 6px;">
+                            <label class="filter-label">小分類</label>
+                            <select id="filterSubCategory" onchange="filterProductList()" class="filter-select">
                                 <option value="">全部</option>
                             </select>
                         </div>
                     </div>
                     <div>
-                        <input type="text" id="searchProduct" placeholder="🔍 搜尋商品名稱或貨號..." onkeyup="filterProductList()" style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 6px; font-size: 14px;">
+                        <input type="text" id="searchProduct" placeholder="🔍 搜尋商品名稱或貨號..." onkeyup="filterProductList()" class="modal-search-input">
                     </div>
-                    
+
                     <!-- 商品列表分頁控制（移到搜尋欄下方） -->
-                    <div id="productPaginationContainer" class="pagination-container" style="display: none; padding: 8px 0; margin: 12px 0 0 0; background: transparent; border-radius: 0;">
+                    <div id="productPaginationContainer" class="pagination-container pagination-sm-product">
                         <button class="pagination-btn" id="productPrevPageBtn" onclick="changeProductPage('prev')">←</button>
                         <div class="pagination-numbers" id="productPageNumbers"></div>
                         <button class="pagination-btn" id="productNextPageBtn" onclick="changeProductPage('next')">→</button>
-                        <span class="pagination-info" id="productPaginationInfo" style="font-size: 10px;"></span>
-                        <div style="display: flex; align-items: center; gap: 4px; margin-left: 8px;">
-                            <span style="font-size: 10px; color: var(--text-light);">跳至</span>
-                            <input type="number" id="productPageJumpInput" min="1" style="width: 40px; height: 22px; padding: 2px 4px; font-size: 10px; border: 1.5px solid var(--border-color); border-radius: 4px; text-align: center;" onkeypress="if(event.key === 'Enter') jumpToProductPage()">
-                            <button onclick="jumpToProductPage()" style="height: 22px; padding: 2px 8px; font-size: 10px; background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">GO</button>
+                        <span class="pagination-info pagination-info-sm" id="productPaginationInfo"></span>
+                        <div class="pagination-jump">
+                            <span class="pagination-jump-label">跳至</span>
+                            <input type="number" id="productPageJumpInput" min="1" class="pagination-jump-input" onkeypress="if(event.key === 'Enter') jumpToProductPage()">
+                            <button onclick="jumpToProductPage()" class="pagination-jump-btn">GO</button>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- 商品列表 -->
-                <div id="productListContent" style="max-height: 500px; overflow-y: auto;"></div>
+                <div id="productListContent" class="scroll-list-lg"></div>
             </div>
         </div>
     </div>
@@ -16116,7 +16360,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
 <!-- Account Manager Modal -->
 <div id="accountModal" class="modal">
-    <div class="modal-content" style="max-width:600px;">
+    <div class="modal-content modal-w-600">
         <div class="modal-header">
             <h3>👥 帳號管理</h3>
             <button class="modal-close" onclick="closeAccountManager()">×</button>
