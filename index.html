@@ -7165,20 +7165,21 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     });
                     
                     // 新增商品
-                    toAdd.forEach(product => {
+                    const importBaseTime = Date.now();
+                    toAdd.forEach((product, importIndex) => {
                         const { brand, mainCategory, subCategory } = product;
-                        
+
                         // 確保結構存在
                         if (!productData[brand]) productData[brand] = {};
                         if (!productData[brand][mainCategory]) productData[brand][mainCategory] = {};
                         if (!productData[brand][mainCategory][subCategory]) {
                             productData[brand][mainCategory][subCategory] = [];
                         }
-                        
+
                         // 分配 ID（UUID，避免重複）
                         product.id = generateProductId();
-                        product.createdAt = Date.now();
-                        
+                        product.createdAt = importBaseTime + importIndex;
+
                         productData[brand][mainCategory][subCategory].push(product);
                         addCount++;
                         // 記錄初始庫存
