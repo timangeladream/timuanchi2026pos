@@ -4856,7 +4856,10 @@ async function initApp() {
     try {
         // 從 Firebase 載入設定資料
         const hasData = await loadDataFromFirestore();
-        
+
+        // 載入該帳號的店家選擇
+        await loadActiveShopId();
+
         // 從 Firebase 載入銷售記錄
         salesHistory = await loadSalesFromFirestore();
         
@@ -5070,7 +5073,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 系統設定
         let systemSettings = {
-            activeShopId: 'shop_default',
             shops: {
                 shop_default: {
                     label: '預設店家',
@@ -5091,8 +5093,36 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             autoOptimizeDiscount: false
         };
 
+        function getActiveShopId() {
+            return _activeShopId || Object.keys(systemSettings.shops || {})[0] || 'shop_default';
+        }
+
+        let _activeShopId = null;
+
+        async function setActiveShopId(id) {
+            _activeShopId = id;
+            if (db && currentUser) {
+                try {
+                    await db.collection('users').doc(currentUser.uid).update({ activeShopId: id });
+                } catch(e) { console.error('儲存店家選擇失敗:', e); }
+            }
+        }
+
+        async function loadActiveShopId() {
+            if (db && currentUser) {
+                try {
+                    const doc = await db.collection('users').doc(currentUser.uid).get();
+                    if (doc.exists && doc.data().activeShopId) {
+                        _activeShopId = doc.data().activeShopId;
+                        return;
+                    }
+                } catch(e) {}
+            }
+            _activeShopId = Object.keys(systemSettings.shops || {})[0] || 'shop_default';
+        }
+
         function getActiveShop() {
-            const id = systemSettings.activeShopId;
+            const id = getActiveShopId();
             if (systemSettings.shops && systemSettings.shops[id]) return systemSettings.shops[id];
             const keys = Object.keys(systemSettings.shops || {});
             if (keys.length > 0) return systemSettings.shops[keys[0]];
@@ -5100,7 +5130,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         function migrateSystemSettings() {
-            if (systemSettings.shops) return;
+            if (systemSettings.shops) {
+                if (systemSettings.activeShopId) {
+                    _activeShopId = systemSettings.activeShopId;
+                    delete systemSettings.activeShopId;
+                }
+                return;
+            }
             const old = { ...systemSettings };
             const shopData = {
                 label: old.shopName || '預設店家',
@@ -5118,10 +5154,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 footerText: old.footerText || '感謝您的購買！\n歡迎再次光臨'
             };
             systemSettings = {
-                activeShopId: 'shop_default',
                 shops: { shop_default: shopData },
                 autoOptimizeDiscount: old.autoOptimizeDiscount || false
             };
+            _activeShopId = 'shop_default';
         }
 
         // 加購項目清單
@@ -14734,14 +14770,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const container = document.getElementById('shopSelectorTabs');
             const shops = systemSettings.shops || {};
             container.innerHTML = Object.keys(shops).map(id => {
-                const isActive = id === systemSettings.activeShopId;
+                const isActive = id === getActiveShopId();
                 return `<button onclick="switchShop('${id}')" style="padding:8px 16px;border:2px solid ${isActive ? 'var(--primary-color)' : '#ddd'};background:${isActive ? 'var(--primary-color)' : 'white'};color:${isActive ? 'white' : '#333'};border-radius:8px;cursor:pointer;font-size:13px;font-weight:${isActive ? '600' : '400'};">${shops[id].label || shops[id].shopName || '未命名'}</button>`;
             }).join('');
         }
 
         function switchShop(shopId) {
             saveCurrentShopFromForm();
-            systemSettings.activeShopId = shopId;
+            setActiveShopId(shopId);
             renderShopTabs();
             loadShopToForm();
         }
@@ -14797,7 +14833,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 footerText: '感謝您的購買！\n歡迎再次光臨'
             };
             saveCurrentShopFromForm();
-            systemSettings.activeShopId = id;
+            setActiveShopId(id);
             renderShopTabs();
             loadShopToForm();
         }
@@ -14815,8 +14851,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (keys.length <= 1) { alert('至少需保留一家店家'); return; }
             const shop = getActiveShop();
             if (!confirm(`確定要刪除「${shop.label || shop.shopName}」嗎？`)) return;
-            delete systemSettings.shops[systemSettings.activeShopId];
-            systemSettings.activeShopId = Object.keys(systemSettings.shops)[0];
+            delete systemSettings.shops[getActiveShopId()];
+            setActiveShopId(Object.keys(systemSettings.shops)[0]);
             renderShopTabs();
             loadShopToForm();
         }
