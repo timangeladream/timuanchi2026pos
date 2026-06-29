@@ -11612,8 +11612,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             // 判斷是編輯還是新增
             if (currentEditingProductPath) {
-                // 編輯模式：更新商品的id和資料
+                // 編輯模式：更新商品的id和資料，保留建立時間
                 product.id = currentEditingProductPath.productId || currentEditingProduct.id;
+                product.createdAt = currentEditingProduct.createdAt || Date.now();
+                if (currentEditingProduct.status) product.status = currentEditingProduct.status;
                 
                 // 比對庫存變化，記錄手動調整
                 const oldProductSnapshot = currentEditingProduct;
