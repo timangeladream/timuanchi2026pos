@@ -3335,8 +3335,13 @@
                     下載贈品資料空白檔(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="document.getElementById('importGiftFile').click()" style="width: 100%; background: #28a745; font-size: 12px;">
-                    匯入贈品資料(副檔名為.xlsx)
+                <button class="add-discount-btn" onclick="document.getElementById('importGiftFile').click()" style="width: 100%; margin-bottom: 12px; background: #28a745; font-size: 12px;">
+                    完整匯入贈品項目資料（新增／更新全部欄位）
+                </button>
+
+                <input type="file" id="importGiftStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
+                <button class="add-discount-btn" onclick="document.getElementById('importGiftStockFile').click()" style="width: 100%; background: #28a745; font-size: 12px;">
+                    只更新庫存
                 </button>
             </div>
         </div>
@@ -7847,7 +7852,78 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             reader.readAsArrayBuffer(file);
             e.target.value = '';
         });
-        
+
+        // 贈品「只更新庫存」匯入
+        document.getElementById('importGiftStockFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+                    if (rows.length === 0) {
+                        alert('❌ 檔案內沒有資料');
+                        return;
+                    }
+
+                    let updateCount = 0;
+                    let notFoundCount = 0;
+
+                    rows.forEach(row => {
+                        const name = String(row['贈品活動名稱'] || '').trim();
+                        if (!name) return;
+
+                        const gift = giftRules.find(g => g.name === name);
+                        if (!gift) {
+                            notFoundCount++;
+                            return;
+                        }
+
+                        const stock = parseInt(row['贈品庫存數量']);
+                        if (!isNaN(stock) && stock >= 0) {
+                            const beforeStock = gift.giftStock || 0;
+                            gift.giftStock = stock;
+                            if (beforeStock !== stock) {
+                                logStockMovement(
+                                    { id: gift.id, name: gift.giftName || gift.name, sku: gift.giftSku || '', brand: '' },
+                                    '', '匯入調整', stock - beforeStock, beforeStock, stock, 'Excel 匯入更新庫存'
+                                );
+                            }
+                            updateCount++;
+                        }
+                    });
+
+                    try {
+                        await saveDataToFirestore();
+                    } catch (saveErr) {
+                        alert('⚠️ 儲存失敗，請重試。');
+                        return;
+                    }
+
+                    loadGiftButtons();
+                    loadGiftList();
+                    closeGiftImportOptionsModal();
+                    e.target.value = '';
+
+                    let msg = `✅ 庫存更新完成！\n\n已更新: ${updateCount} 筆`;
+                    if (notFoundCount > 0) msg += `\n找不到對應名稱: ${notFoundCount} 筆`;
+                    alert(msg);
+
+                } catch (error) {
+                    console.error('匯入錯誤:', error);
+                    alert('❌ 檔案讀取失敗！');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            e.target.value = '';
+        });
+
         // 加入或更新贈品規則的輔助函數
         function addOrUpdateGift(gift, importMode) {
             if (importMode === 'merge') {
