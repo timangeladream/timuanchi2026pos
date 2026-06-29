@@ -15886,7 +15886,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const nextBtn = document.getElementById('customerNextPageBtn');
             const jumpInput = document.getElementById('customerPageJumpInput');
 
-            if (totalPages <= 1) { container.style.display = 'none'; return; }
             container.style.display = 'flex';
             prevBtn.disabled = customerCurrentPage === 1;
             nextBtn.disabled = customerCurrentPage === totalPages;
