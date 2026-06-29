@@ -7033,6 +7033,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         
         // 打開清除資料彈窗
         function openClearDataModal() {
+            if (currentUserRole !== 'admin') { alert('僅管理員可清除資料'); return; }
             document.getElementById('clearDataModal').classList.add('show');
         }
         
@@ -10478,6 +10479,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         
         // 確認重置系統
         async function confirmResetSystem() {
+            if (currentUserRole !== 'admin') { alert('僅管理員可重置系統'); return; }
             // 第一次確認
             if (!confirm('⚠️⚠️⚠️ 警告 ⚠️⚠️⚠️\n\n重置系統會刪除所有已建立的資料，僅保留帳號管理功能。\n\n將清除：\n• 所有商品資料（含品牌、分類）\n• 所有加購項目\n• 所有贈品規則\n• 所有折扣設定\n• 所有銷售記錄\n• 所有顧客資料\n• 所有庫存異動記錄\n• 所有基本資訊與系統設定\n\n保留：\n• 所有帳號（管理員與銷售員）\n\n🚨 此操作無法復原！\n🚨 建議先匯出資料備份！\n\n確定要繼續嗎？')) {
                 return;
