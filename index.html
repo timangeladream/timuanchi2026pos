@@ -4244,6 +4244,7 @@ async function doLogin() {
 // 登出
 async function doLogout() {
     if (confirm('確定要登出嗎？')) {
+        sessionStorage.removeItem('pos_welcomed');
         await auth.signOut();
     }
 }
@@ -4960,6 +4961,8 @@ async function initApp() {
 }
 
 function showWelcomeModal() {
+    if (sessionStorage.getItem('pos_welcomed')) return;
+    sessionStorage.setItem('pos_welcomed', '1');
     const shop = getActiveShop();
     const shopLabel = shop.label || shop.shopName || '未設定';
     const userName = currentUserName || currentUser?.email || '';
