@@ -15490,57 +15490,154 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         let customerSearchTimeout = null;
 
+        let customerCurrentPage = 1;
+        const customerItemsPerPage = 50;
+        let allCustomersCache = [];
+
         async function loadCustomerList(searchQuery = '') {
             const container = document.getElementById('customerList');
             container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">載入中...</div>';
-            
+
             try {
-                let query = db.collection('customers').limit(100);
-                const snapshot = await query.get();
-                
-                let customers = [];
-                snapshot.forEach(doc => customers.push({ id: doc.id, ...doc.data() }));
-                // 前端排序：依加入時間降序（新的在上面），沒有 createdAt 的排在最後
-                customers.sort((a, b) => {
+                const snapshot = await db.collection('customers').get();
+
+                allCustomersCache = [];
+                snapshot.forEach(doc => allCustomersCache.push({ id: doc.id, ...doc.data() }));
+                allCustomersCache.sort((a, b) => {
                     const aTime = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
                     const bTime = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
                     return bTime - aTime;
                 });
-                
-                // 前端搜尋
-                if (searchQuery) {
-                    const q = searchQuery.toLowerCase();
-                    customers = customers.filter(c => 
-                        (c.name && c.name.toLowerCase().includes(q)) ||
-                        (c.phone && c.phone.includes(q)) ||
-                        (c.email && c.email.toLowerCase().includes(q)) ||
-                        (c.account && c.account.toLowerCase().includes(q))
-                    );
-                }
-                
-                if (customers.length === 0) {
-                    container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">查無顧客資料</div>';
-                    return;
-                }
-                
-                container.innerHTML = customers.map(c => `
-                    <div style="padding:10px 12px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-                        <div onclick="openCustomerDetail('${c.id}')" style="flex:1;cursor:pointer;">
-                            <div style="font-size:12px;font-weight:600;">${c.name || '未填姓名'}</div>
-                            <div style="font-size:12px;color:#666;margin-top:2px;">${c.phone || '未填電話'}</div>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <div style="text-align:right;">
-                                <div style="font-size:12px;font-weight:600;color:var(--primary-color);">NT$ ${(c.totalSpent || 0).toLocaleString()}</div>
-                                <div style="font-size:12px;color:#999;">${c.totalOrders || 0} 筆訂單</div>
-                            </div>
-                            <button onclick="openEditCustomer('${c.id}')" style="padding:6px 10px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">編輯</button>
-                        </div>
-                    </div>
-                `).join('');
+
+                customerCurrentPage = 1;
+                renderCustomerList(searchQuery);
             } catch (e) {
                 container.innerHTML = '<div style="color:red;">載入失敗</div>';
             }
+        }
+
+        function renderCustomerList(searchQuery = '') {
+            const container = document.getElementById('customerList');
+            const searchInput = document.getElementById('customerSearchInput');
+            const q = (searchQuery || (searchInput ? searchInput.value.trim() : '')).toLowerCase();
+
+            let filtered = allCustomersCache;
+            if (q) {
+                filtered = allCustomersCache.filter(c =>
+                    (c.name && c.name.toLowerCase().includes(q)) ||
+                    (c.phone && c.phone.includes(q)) ||
+                    (c.email && c.email.toLowerCase().includes(q)) ||
+                    (c.account && c.account.toLowerCase().includes(q))
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">查無顧客資料</div>';
+                updateCustomerPagination(0, 0);
+                return;
+            }
+
+            const totalRecords = filtered.length;
+            const totalPages = Math.ceil(totalRecords / customerItemsPerPage);
+            if (customerCurrentPage > totalPages) customerCurrentPage = totalPages;
+            if (customerCurrentPage < 1) customerCurrentPage = 1;
+            const startIndex = (customerCurrentPage - 1) * customerItemsPerPage;
+            const endIndex = Math.min(startIndex + customerItemsPerPage, totalRecords);
+            const pageData = filtered.slice(startIndex, endIndex);
+
+            container.innerHTML = pageData.map(c => `
+                <div style="padding:10px 12px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                    <div onclick="openCustomerDetail('${c.id}')" style="flex:1;cursor:pointer;">
+                        <div style="font-size:12px;font-weight:600;">${c.name || '未填姓名'}</div>
+                        <div style="font-size:12px;color:#666;margin-top:2px;">${c.phone || '未填電話'}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="text-align:right;">
+                            <div style="font-size:12px;font-weight:600;color:var(--primary-color);">NT$ ${(c.totalSpent || 0).toLocaleString()}</div>
+                            <div style="font-size:12px;color:#999;">${c.totalOrders || 0} 筆訂單</div>
+                        </div>
+                        <button onclick="openEditCustomer('${c.id}')" style="padding:6px 10px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">編輯</button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateCustomerPagination(totalPages, totalRecords);
+        }
+
+        function updateCustomerPagination(totalPages, totalRecords) {
+            const container = document.getElementById('customerPaginationContainer');
+            const pageNumbers = document.getElementById('customerPageNumbers');
+            const info = document.getElementById('customerPaginationInfo');
+            const prevBtn = document.getElementById('customerPrevPageBtn');
+            const nextBtn = document.getElementById('customerNextPageBtn');
+            const jumpInput = document.getElementById('customerPageJumpInput');
+
+            if (totalPages <= 1) { container.style.display = 'none'; return; }
+            container.style.display = 'flex';
+            prevBtn.disabled = customerCurrentPage === 1;
+            nextBtn.disabled = customerCurrentPage === totalPages;
+            jumpInput.max = totalPages;
+            jumpInput.value = '';
+            jumpInput.placeholder = `1-${totalPages}`;
+
+            const startNum = (customerCurrentPage - 1) * customerItemsPerPage + 1;
+            const endNum = Math.min(customerCurrentPage * customerItemsPerPage, totalRecords);
+            info.textContent = `(${startNum}-${endNum}/${totalRecords})`;
+
+            let html = '';
+            const maxVisible = 5;
+            let startPage = Math.max(1, customerCurrentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            if (endPage - startPage + 1 < maxVisible) startPage = Math.max(1, endPage - maxVisible + 1);
+
+            if (startPage > 1) {
+                html += `<div class="pagination-number" onclick="goToCustomerPage(1)">1</div>`;
+                if (startPage > 2) html += `<span style="padding:0 4px;color:var(--text-light);">...</span>`;
+            }
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<div class="pagination-number ${i === customerCurrentPage ? 'active' : ''}" onclick="goToCustomerPage(${i})">${i}</div>`;
+            }
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<span style="padding:0 4px;color:var(--text-light);">...</span>`;
+                html += `<div class="pagination-number" onclick="goToCustomerPage(${totalPages})">${totalPages}</div>`;
+            }
+            pageNumbers.innerHTML = html;
+        }
+
+        function changeCustomerPage(direction) {
+            const searchInput = document.getElementById('customerSearchInput');
+            const q = searchInput ? searchInput.value.trim() : '';
+            const filtered = q ? allCustomersCache.filter(c =>
+                (c.name && c.name.toLowerCase().includes(q.toLowerCase())) ||
+                (c.phone && c.phone.includes(q)) ||
+                (c.email && c.email.toLowerCase().includes(q.toLowerCase())) ||
+                (c.account && c.account.toLowerCase().includes(q.toLowerCase()))
+            ) : allCustomersCache;
+            const totalPages = Math.ceil(filtered.length / customerItemsPerPage);
+            if (direction === 'prev' && customerCurrentPage > 1) customerCurrentPage--;
+            else if (direction === 'next' && customerCurrentPage < totalPages) customerCurrentPage++;
+            renderCustomerList();
+        }
+
+        function goToCustomerPage(page) {
+            customerCurrentPage = page;
+            renderCustomerList();
+        }
+
+        function jumpToCustomerPage() {
+            const target = parseInt(document.getElementById('customerPageJumpInput').value);
+            if (!target || target < 1) { alert('請輸入有效的頁碼'); return; }
+            const searchInput = document.getElementById('customerSearchInput');
+            const q = searchInput ? searchInput.value.trim() : '';
+            const filtered = q ? allCustomersCache.filter(c =>
+                (c.name && c.name.toLowerCase().includes(q.toLowerCase())) ||
+                (c.phone && c.phone.includes(q)) ||
+                (c.email && c.email.toLowerCase().includes(q.toLowerCase())) ||
+                (c.account && c.account.toLowerCase().includes(q.toLowerCase()))
+            ) : allCustomersCache;
+            const totalPages = Math.ceil(filtered.length / customerItemsPerPage);
+            if (target > totalPages) { alert(`頁碼超出範圍，目前共 ${totalPages} 頁`); return; }
+            goToCustomerPage(target);
         }
 
         function toggleNewCustomerForm() {
@@ -16026,7 +16123,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <div style="display:flex;gap:8px;margin-bottom:12px;">
                     <input type="text" id="customerSearchInput" placeholder="搜尋姓名、電話、Email..."
                         style="flex:1;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:14px;box-sizing:border-box;"
-                        oninput="clearTimeout(customerSearchTimeout); customerSearchTimeout = setTimeout(() => loadCustomerList(this.value), 300)">
+                        oninput="clearTimeout(customerSearchTimeout); customerSearchTimeout = setTimeout(() => { customerCurrentPage = 1; renderCustomerList(); }, 300)">
                     <button onclick="toggleNewCustomerForm()" id="toggleNewCustomerBtn"
                         style="padding:10px 14px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">
                         ➕ 新增
@@ -16060,6 +16157,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 </div>
                 
                 <div id="customerList" style="max-height:400px;overflow-y:auto;"></div>
+                <div id="customerPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:8px 0 0 0;background:transparent;border-radius:0;">
+                    <button class="pagination-btn" id="customerPrevPageBtn" onclick="changeCustomerPage('prev')">←</button>
+                    <div class="pagination-numbers" id="customerPageNumbers"></div>
+                    <button class="pagination-btn" id="customerNextPageBtn" onclick="changeCustomerPage('next')">→</button>
+                    <span class="pagination-info" id="customerPaginationInfo" style="font-size:10px;"></span>
+                    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
+                        <span style="font-size:10px;color:var(--text-light);">跳至</span>
+                        <input type="number" id="customerPageJumpInput" min="1" style="width:40px;height:22px;padding:2px 4px;font-size:10px;border:1.5px solid var(--border-color);border-radius:4px;text-align:center;" onkeypress="if(event.key==='Enter')jumpToCustomerPage()">
+                        <button onclick="jumpToCustomerPage()" style="height:22px;padding:2px 8px;font-size:10px;background:var(--primary-color);color:white;border:none;border-radius:4px;cursor:pointer;">GO</button>
+                    </div>
+                </div>
             </div>
             <!-- 詳細頁 -->
             <div id="customerDetailView" style="display:none;">
