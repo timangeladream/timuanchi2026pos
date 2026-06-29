@@ -2613,6 +2613,17 @@
                     </label>
                 </div>
                 <div id="stockMovementList" style="max-height:450px;overflow-y:auto;"></div>
+                <div id="smPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:8px 0 0 0;background:transparent;border-radius:0;">
+                    <button class="pagination-btn" id="smPrevPageBtn" onclick="changeSmPage('prev')">←</button>
+                    <div class="pagination-numbers" id="smPageNumbers"></div>
+                    <button class="pagination-btn" id="smNextPageBtn" onclick="changeSmPage('next')">→</button>
+                    <span class="pagination-info" id="smPaginationInfo" style="font-size:10px;"></span>
+                    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
+                        <span style="font-size:10px;color:var(--text-light);">跳至</span>
+                        <input type="number" id="smPageJumpInput" min="1" style="width:40px;height:22px;padding:2px 4px;font-size:10px;border:1.5px solid var(--border-color);border-radius:4px;text-align:center;" onkeypress="if(event.key==='Enter')jumpToSmPage()">
+                        <button onclick="jumpToSmPage()" style="height:22px;padding:2px 8px;font-size:10px;background:var(--primary-color);color:white;border:none;border-radius:4px;cursor:pointer;">GO</button>
+                    </div>
+                </div>
                 <div style="margin-top:12px;text-align:right;">
                     <button onclick="exportStockMovements()" class="add-discount-btn" style="background:#8e44ad;">
                         📥 匯出異動記錄
@@ -14992,6 +15003,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         let allStockMovements = [];
         let filteredMovements = [];
+        let smCurrentPage = 1;
+        const smItemsPerPage = 100;
 
         async function openStockMovementModal() {
             document.getElementById('stockMovementModal').classList.add('show');
@@ -15033,6 +15046,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (deletedOnly && !isItemDeleted(m.productId)) return false;
                 return true;
             });
+            smCurrentPage = 1;
             renderStockMovements();
         }
 
@@ -15047,12 +15061,22 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         function renderStockMovements() {
             const el = document.getElementById('stockMovementList');
+            const paginationContainer = document.getElementById('smPaginationContainer');
             if (filteredMovements.length === 0) {
                 el.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">沒有符合條件的記錄</div>';
+                paginationContainer.style.display = 'none';
                 return;
             }
+            const totalRecords = filteredMovements.length;
+            const totalPages = Math.ceil(totalRecords / smItemsPerPage);
+            if (smCurrentPage > totalPages) smCurrentPage = totalPages;
+            if (smCurrentPage < 1) smCurrentPage = 1;
+            const startIndex = (smCurrentPage - 1) * smItemsPerPage;
+            const endIndex = Math.min(startIndex + smItemsPerPage, totalRecords);
+            const pageData = filteredMovements.slice(startIndex, endIndex);
+
             const typeColor = { '初始庫存': '#3498db', '補貨': '#27ae60', '銷售': '#e74c3c', '退貨': '#f39c12', '匯入調整': '#8e44ad', '手動調整': '#7f8c8d', '清除': '#c0392b' };
-            el.innerHTML = filteredMovements.map(m => {
+            el.innerHTML = pageData.map(m => {
                 const date = m.createdAt?.toDate ? m.createdAt.toDate() : new Date(m.createdAt);
                 const dateStr = date.toLocaleString('zh-TW', { hour12: false });
                 const changeStr = m.change >= 0 ? `+${m.change}` : `${m.change}`;
@@ -15076,6 +15100,67 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     </div>
                 </div>`;
             }).join('');
+            updateSmPagination(totalPages, totalRecords);
+        }
+
+        function updateSmPagination(totalPages, totalRecords) {
+            const container = document.getElementById('smPaginationContainer');
+            const pageNumbers = document.getElementById('smPageNumbers');
+            const info = document.getElementById('smPaginationInfo');
+            const prevBtn = document.getElementById('smPrevPageBtn');
+            const nextBtn = document.getElementById('smNextPageBtn');
+            const jumpInput = document.getElementById('smPageJumpInput');
+
+            if (totalPages <= 1) { container.style.display = 'none'; return; }
+            container.style.display = 'flex';
+            prevBtn.disabled = smCurrentPage === 1;
+            nextBtn.disabled = smCurrentPage === totalPages;
+            jumpInput.max = totalPages;
+            jumpInput.value = '';
+            jumpInput.placeholder = `1-${totalPages}`;
+
+            const startNum = (smCurrentPage - 1) * smItemsPerPage + 1;
+            const endNum = Math.min(smCurrentPage * smItemsPerPage, totalRecords);
+            info.textContent = `(${startNum}-${endNum}/${totalRecords})`;
+
+            let html = '';
+            const maxVisible = 5;
+            let startPage = Math.max(1, smCurrentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            if (endPage - startPage + 1 < maxVisible) startPage = Math.max(1, endPage - maxVisible + 1);
+
+            if (startPage > 1) {
+                html += `<div class="pagination-number" onclick="goToSmPage(1)">1</div>`;
+                if (startPage > 2) html += `<span style="padding:0 4px;color:var(--text-light);">...</span>`;
+            }
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<div class="pagination-number ${i === smCurrentPage ? 'active' : ''}" onclick="goToSmPage(${i})">${i}</div>`;
+            }
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<span style="padding:0 4px;color:var(--text-light);">...</span>`;
+                html += `<div class="pagination-number" onclick="goToSmPage(${totalPages})">${totalPages}</div>`;
+            }
+            pageNumbers.innerHTML = html;
+        }
+
+        function changeSmPage(direction) {
+            const totalPages = Math.ceil(filteredMovements.length / smItemsPerPage);
+            if (direction === 'prev' && smCurrentPage > 1) smCurrentPage--;
+            else if (direction === 'next' && smCurrentPage < totalPages) smCurrentPage++;
+            renderStockMovements();
+        }
+
+        function goToSmPage(page) {
+            smCurrentPage = page;
+            renderStockMovements();
+        }
+
+        function jumpToSmPage() {
+            const target = parseInt(document.getElementById('smPageJumpInput').value);
+            if (!target || target < 1) { alert('請輸入有效的頁碼'); return; }
+            const totalPages = Math.ceil(filteredMovements.length / smItemsPerPage);
+            if (target > totalPages) { alert(`頁碼超出範圍，目前共 ${totalPages} 頁`); return; }
+            goToSmPage(target);
         }
 
         // 商品個別異動記錄
