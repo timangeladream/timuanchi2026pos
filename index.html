@@ -3685,9 +3685,6 @@
                 <button class="add-discount-btn" onclick="confirmClearStockMovements()" class="btn-mb btn-bg-red-orange">
                     清除所有庫存異動紀錄
                 </button>
-                <button class="add-discount-btn" onclick="clearLocalStorage()" class="btn-bg-red">
-                    清除所有快取資料 (解決載入問題)
-                </button>
             </div>
         </div>
     </div>
@@ -10478,43 +10475,72 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
         
         // 清除 localStorage (解決載入問題)
-        function clearLocalStorage() {
-            if (!confirm('⚠️ 確定要清除快取資料嗎？\n\n這將清除本系統的所有資料：\n• 商品資料\n• 銷售記錄\n• 所有設定\n\n清除後頁面將重新載入。\n\n此操作無法復原！')) {
-                return;
-            }
-            // 線上版：清除 Firebase 設定資料
-            if (db && currentUser) {
-                db.collection('settings').doc('system').delete()
-                    .then(() => { alert('✅ 快取已清除！\n頁面即將重新載入...'); location.reload(); })
-                    .catch(e => { console.error(e); alert('清除失敗，請重試'); });
-            } else {
-                alert('✅ 快取已清除！\n頁面即將重新載入...');
-                location.reload();
-            }
-        }
         
         // 確認重置系統
-        function confirmResetSystem() {
+        async function confirmResetSystem() {
             // 第一次確認
-            if (!confirm('⚠️⚠️⚠️ 警告 ⚠️⚠️⚠️\n\n即將清除所有資料並重置系統！\n\n包含：\n• 所有品牌\n• 所有商品（含分類）\n• 所有銷售記錄\n• 所有加購項目\n• 所有折扣設定\n• 所有贈品規則\n• 所有基本資訊\n\n🚨 此操作無法復原！\n🚨 建議先匯出資料備份！\n\n確定要繼續嗎？')) {
+            if (!confirm('⚠️⚠️⚠️ 警告 ⚠️⚠️⚠️\n\n重置系統會刪除所有已建立的資料，僅保留帳號管理功能。\n\n將清除：\n• 所有商品資料（含品牌、分類）\n• 所有加購項目\n• 所有贈品規則\n• 所有折扣設定\n• 所有銷售記錄\n• 所有顧客資料\n• 所有庫存異動記錄\n• 所有基本資訊與系統設定\n\n保留：\n• 所有帳號（管理員與銷售員）\n\n🚨 此操作無法復原！\n🚨 建議先匯出資料備份！\n\n確定要繼續嗎？')) {
                 return;
             }
-            
+
             // 第二次確認（輸入文字確認）
             const confirmation = prompt('請輸入「重置系統」四個字來確認此操作：');
             if (confirmation !== '重置系統') {
                 showNotification('❌ 取消重置');
                 return;
             }
-            
-            // 執行重置：清除 Firebase 資料
+
+            // 執行重置：清除 Firebase 所有資料（保留帳號）
             if (db && currentUser) {
-                db.collection('settings').doc('system').delete()
-                    .then(() => { showNotification('✅ 系統已重置，頁面將重新載入'); setTimeout(() => location.reload(), 1500); })
-                    .catch(e => { console.error(e); showNotification('⚠️ 重置失敗，請重試'); });
-            } else {
-                showNotification('✅ 系統已重置，頁面將重新載入');
-                setTimeout(() => location.reload(), 1500);
+                try {
+                    // 清除 settings
+                    await db.collection('settings').doc('system').delete();
+
+                    // 清除所有銷售記錄
+                    const salesSnap = await db.collection('sales').get();
+                    const batch1 = db.batch();
+                    let count = 0;
+                    for (const doc of salesSnap.docs) {
+                        batch1.delete(doc.ref);
+                        count++;
+                        if (count >= 500) break;
+                    }
+                    if (count > 0) await batch1.commit();
+
+                    // 清除所有顧客資料
+                    const custSnap = await db.collection('customers').get();
+                    const batch2 = db.batch();
+                    count = 0;
+                    for (const doc of custSnap.docs) {
+                        batch2.delete(doc.ref);
+                        count++;
+                        if (count >= 500) break;
+                    }
+                    if (count > 0) await batch2.commit();
+
+                    // 清除所有庫存異動記錄
+                    const smSnap = await db.collection('stockMovements').get();
+                    const batch3 = db.batch();
+                    count = 0;
+                    for (const doc of smSnap.docs) {
+                        batch3.delete(doc.ref);
+                        count++;
+                        if (count >= 500) break;
+                    }
+                    if (count > 0) await batch3.commit();
+
+                    // 清除進行中訂單
+                    const aoSnap = await db.collection('activeOrders').get();
+                    const batch4 = db.batch();
+                    for (const doc of aoSnap.docs) { batch4.delete(doc.ref); }
+                    if (aoSnap.size > 0) await batch4.commit();
+
+                    showNotification('✅ 系統已重置，頁面將重新載入');
+                    setTimeout(() => location.reload(), 1500);
+                } catch (e) {
+                    console.error('重置失敗:', e);
+                    showNotification('⚠️ 重置失敗，請重試');
+                }
             }
         }
         
