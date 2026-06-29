@@ -6125,10 +6125,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         async function toggleGiftStatus(giftId) {
             const gift = giftRules.find(g => String(g.id) === String(giftId));
             if (!gift) return;
-            
+
             const wasActive = gift.status !== 'inactive';
             gift.status = wasActive ? 'inactive' : 'active';
-            
+            gift.statusChangedAt = Date.now();
+            gift.statusChangedBy = currentUserName || currentUser?.email || '';
+
             await saveDataToFirestore();
             loadGiftList();
             loadGiftButtons();
@@ -11053,20 +11055,21 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         async function toggleProductStatus(productId) {
             const product = products.find(p => String(p.id) === String(productId));
             if (!product) return;
-            
+
             const wasActive = product.status !== 'inactive';
             product.status = wasActive ? 'inactive' : 'active';
-            
-            // 同步更新 productData
+            product.statusChangedAt = Date.now();
+            product.statusChangedBy = currentUserName || currentUser?.email || '';
+
             const { brand, mainCategory, subCategory } = product;
             if (productData[brand] && productData[brand][mainCategory] && productData[brand][mainCategory][subCategory]) {
                 const idx = productData[brand][mainCategory][subCategory].findIndex(p => String(p.id) === String(productId));
                 if (idx !== -1) productData[brand][mainCategory][subCategory][idx] = product;
             }
-            
+
             await saveDataToFirestore();
-            filterProductList(); // 更新商品管理列表
-            loadProducts(); // 更新銷售頁面（下架商品會從列表消失）
+            filterProductList();
+            loadProducts();
             showNotification(wasActive ? `📦 ${product.name} 已下架` : `✅ ${product.name} 已上架`);
         }
 
@@ -13625,10 +13628,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         async function toggleAddonStatus(itemId) {
             const item = addOnItems.find(a => String(a.id) === String(itemId));
             if (!item) return;
-            
+
             const wasActive = item.status !== 'inactive';
             item.status = wasActive ? 'inactive' : 'active';
-            
+            item.statusChangedAt = Date.now();
+            item.statusChangedBy = currentUserName || currentUser?.email || '';
+
             await saveDataToFirestore();
             loadAddonList();
             loadAddonItems();
