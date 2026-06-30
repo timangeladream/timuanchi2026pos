@@ -17118,12 +17118,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             <button class="modal-close" onclick="closeOrderManagement()">×</button>
         </div>
         <div class="modal-body" style="overflow-y:auto;flex:1;">
-            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-                <input type="text" id="omSearchInput" placeholder="搜尋訂單編號、顧客姓名/電話、商品名稱/貨號...（按 Enter 或搜尋鈕查詢）"
-                    style="flex:1;min-width:160px;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;"
+            <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:nowrap;">
+                <input type="text" id="omSearchInput" placeholder="搜尋訂單編號、姓名/電話、商品名稱/貨號..."
+                    style="flex:1;min-width:0;padding:8px 6px;border:1px solid #ddd;border-radius:6px;font-size:13px;"
                     onkeypress="if(event.key==='Enter') searchAllHistory()">
-                <button onclick="searchAllHistory()" style="padding:8px 16px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">🔍 搜尋</button>
-                <select id="omFilterStatus" onchange="omCurrentPage = 1; renderOrderManagementList();" style="padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <button onclick="searchAllHistory()" style="padding:8px 10px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0;">🔍</button>
+                <select id="omFilterStatus" onchange="omCurrentPage = 1; renderOrderManagementList();" style="padding:8px 4px;border:1px solid #ddd;border-radius:6px;font-size:12px;flex-shrink:0;">
                     <option value="">全部狀態</option>
                     <option value="completed">已完成</option>
                     <option value="cancelled">已取消</option>
