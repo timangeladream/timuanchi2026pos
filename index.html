@@ -4525,19 +4525,23 @@ async function saveSaleToFirestore(saleData) {
     }
 }
 
-// 從 Firestore 載入銷售記錄
+// 從 Firestore 載入銷售記錄（預設只載入近 2 個月，更早的資料透過 loadOlderOrders() 依需求查詢）
 async function loadSalesFromFirestore() {
     if (!db || !currentUser) return [];
     try {
+        const twoMonthsAgo = new Date();
+        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+        const sinceTs = firebase.firestore.Timestamp.fromDate(twoMonthsAgo);
+
         let query;
         if (currentUserRole === 'admin') {
             // 管理員看全部（依時間排序）
-            query = db.collection('sales').orderBy('timestamp', 'desc').limit(500);
+            query = db.collection('sales').where('timestamp', '>=', sinceTs).orderBy('timestamp', 'desc');
         } else {
             // 銷售員只看自己的（不加 orderBy 避免複合索引問題，在記憶體中排序）
             query = db.collection('sales')
                 .where('salesPersonId', '==', currentUser.uid)
-                .limit(200);
+                .where('timestamp', '>=', sinceTs);
         }
         const snapshot = await query.get();
         const sales = [];
@@ -16440,6 +16444,74 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             goToOmPage(target);
         }
 
+        // 搜尋/載入超過近 2 個月載入範圍的更早訂單
+        // - 有輸入搜尋文字：用訂單編號(開頭符合)、顧客電話(完全相符)、顧客姓名(開頭符合) 分別查詢
+        // - 沒有搜尋文字但有設定日期區間：直接查詢該區間的訂單
+        async function loadOlderOrders() {
+            if (!db || !currentUser) return;
+            const q = (document.getElementById('omSearchInput').value || '').trim();
+            const startDateStr = document.getElementById('omFilterDateStart').value;
+            const endDateStr = document.getElementById('omFilterDateEnd').value;
+
+            if (!q && !startDateStr && !endDateStr) {
+                alert('請輸入搜尋內容，或設定日期區間後再搜尋更早的訂單');
+                return;
+            }
+
+            showNotification('⏳ 搜尋更早的訂單中...');
+            try {
+                const existingIds = new Set(salesHistory.map(s => s._firebaseId));
+                const seen = new Set();
+                let addedCount = 0;
+
+                const addDocs = (snapshot) => {
+                    snapshot.forEach(doc => {
+                        if (seen.has(doc.id) || existingIds.has(doc.id)) return;
+                        seen.add(doc.id);
+                        const data = doc.data();
+                        salesHistory.push({
+                            ...data,
+                            _firebaseId: doc.id,
+                            timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : (data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000).toISOString() : data.timestamp)
+                        });
+                        addedCount++;
+                    });
+                };
+
+                const baseQuery = () => {
+                    let bq = db.collection('sales');
+                    if (currentUserRole !== 'admin') bq = bq.where('salesPersonId', '==', currentUser.uid);
+                    return bq;
+                };
+
+                if (q) {
+                    const r1 = await baseQuery().where('orderNumber', '>=', q).where('orderNumber', '<', q + '').limit(50).get();
+                    addDocs(r1);
+                    const r2 = await baseQuery().where('memberPhone', '==', q).limit(50).get();
+                    addDocs(r2);
+                    const r3 = await baseQuery().where('memberName', '>=', q).where('memberName', '<', q + '').limit(50).get();
+                    addDocs(r3);
+                } else {
+                    let dq = baseQuery();
+                    if (startDateStr) dq = dq.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(new Date(startDateStr)));
+                    if (endDateStr) dq = dq.where('timestamp', '<=', firebase.firestore.Timestamp.fromDate(new Date(endDateStr + ' 23:59:59')));
+                    const r4 = await dq.limit(300).get();
+                    addDocs(r4);
+                }
+
+                if (addedCount === 0) {
+                    showNotification('查無更早的訂單');
+                } else {
+                    showNotification(`✅ 已載入 ${addedCount} 筆更早的訂單`);
+                    omCurrentPage = 1;
+                    renderOrderManagementList();
+                }
+            } catch (e) {
+                console.error('搜尋更早訂單失敗:', e);
+                alert('搜尋失敗，可能需要在 Firestore 建立索引。請打開瀏覽器開發者工具(F12)查看 Console 錯誤訊息，裡面會有建立索引的連結，點擊後等候幾分鐘即可。');
+            }
+        }
+
         function toggleNewCustomerForm() {
             const form = document.getElementById('newCustomerForm');
             const isVisible = form.style.display !== 'none';
@@ -17001,6 +17073,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <span style="color:#999;">~</span>
                 <input type="date" id="omFilterDateEnd" onchange="omCurrentPage = 1; renderOrderManagementList();" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
                 <button onclick="document.getElementById('omFilterDateStart').value='';document.getElementById('omFilterDateEnd').value='';document.getElementById('omSearchInput').value='';document.getElementById('omFilterStatus').value='';omCurrentPage=1;renderOrderManagementList();" style="padding:6px 12px;background:#999;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">清除篩選</button>
+            </div>
+            <div style="margin-bottom:12px;padding:8px 10px;background:#f8f9fa;border-radius:6px;font-size:12px;color:#666;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+                <span>📅 預設僅顯示近 2 個月的訂單，找不到想找的訂單時可點擊右側按鈕搜尋更早的資料</span>
+                <button onclick="loadOlderOrders()" style="padding:6px 12px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap;">🔍 搜尋更早的訂單</button>
             </div>
 
             <div id="omPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:0 0 8px 0;background:transparent;border-radius:0;">
