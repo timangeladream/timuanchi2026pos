@@ -4955,7 +4955,12 @@ async function initApp() {
         
         // 重新整理頁面後 orderItems 會重置為空，同步清空顧客顯示畫面避免殘留舊訂單
         syncActiveOrder();
-        
+
+        // 回補舊訂單缺少的店家快照（僅 admin 執行，避免重複）
+        if (currentUserRole === 'admin') {
+            backfillOrderShopInfo();
+        }
+
         // 顯示歡迎彈窗
         showWelcomeModal();
 
@@ -5234,6 +5239,32 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 autoOptimizeDiscount: old.autoOptimizeDiscount || false
             };
             _activeShopId = 'shop_default';
+        }
+
+        // 回補多店家功能上線前的舊訂單，固定店家快照避免跟著目前選擇的店家變動
+        async function backfillOrderShopInfo() {
+            if (!db || !currentUser) return;
+            const defaultShop = systemSettings.shops['shop_default'] || systemSettings.shops[Object.keys(systemSettings.shops || {})[0]];
+            if (!defaultShop) return;
+            const snapshot = JSON.parse(JSON.stringify(defaultShop));
+
+            const toFix = salesHistory.filter(s => !s.shopInfo && s._firebaseId);
+            if (toFix.length === 0) return;
+
+            try {
+                const batch = db.batch();
+                let count = 0;
+                for (const sale of toFix) {
+                    batch.update(db.collection('sales').doc(sale._firebaseId), { shopInfo: snapshot });
+                    sale.shopInfo = snapshot;
+                    count++;
+                    if (count >= 450) break; // Firestore batch 上限保護
+                }
+                await batch.commit();
+                console.log(`✅ 已回補 ${count} 筆舊訂單的店家快照`);
+            } catch (e) {
+                console.error('回補舊訂單店家快照失敗:', e);
+            }
         }
 
         // 加購項目清單
