@@ -8918,7 +8918,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            const ws_data = [['訂單編號', '訂單日期', '結帳時間', '銷售地點', '銷售人員', '官網會員帳號', '會員姓名', '會員電話', '會員Email', '訂單狀態', '項目類型', '商品名稱', '貨號', '規格', '數量', '單價', '小計', '折扣名稱', '折扣類型', '折扣描述', '折扣比例', '折扣金額', '訂單總額', '訂單備註']];
+            const ws_data = [['訂單編號', '訂單日期', '結帳時間', '銷售地點', '銷售人員', '官網會員帳號', '會員姓名', '會員電話', '會員Email', '訂單狀態', '取消時間', '項目類型', '商品名稱', '貨號', '規格', '數量', '單價', '小計', '折扣名稱', '折扣類型', '折扣描述', '折扣比例', '折扣金額', '訂單總額', '訂單備註']];
             
             filteredSalesForList.forEach(sale => {
                 let isFirstRow = true;
@@ -8961,6 +8961,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         isFirstRow ? (sale.memberPhone || '') : '',
                         isFirstRow ? (sale.memberEmail || '') : '',
                         isFirstRow ? (sale.status === 'cancelled' ? '已取消' : '已成立') : '',
+                        isFirstRow ? (sale.status === 'cancelled' ? (sale.cancelledAtDisplay || '') : '') : '',
                         '一般商品',
                         item.name,
                         item.sku || '',
@@ -8983,7 +8984,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 // 輸出加購項目
                 addons.forEach(addon => {
                     ws_data.push([
-                        '', '', '', '', '', '', '', '', '', '',
+                        '', '', '', '', '', '', '', '', '', '', '',
                         '加購項目',
                         addon.name,
                         addon.sku || '',
@@ -8998,7 +8999,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 // 輸出贈品
                 gifts.forEach(gift => {
                     ws_data.push([
-                        '', '', '', '', '', '', '', '', '', '',
+                        '', '', '', '', '', '', '', '', '', '', '',
                         '贈品',
                         gift.name,
                         gift.sku || '',
@@ -9017,8 +9018,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 設定欄寬
             ws['!cols'] = [
-                {wch: 15}, {wch: 12}, {wch: 18}, {wch: 12}, {wch: 10}, {wch: 12}, 
-                {wch: 10}, {wch: 12}, {wch: 20}, {wch: 10}, {wch: 25}, {wch: 15}, 
+                {wch: 15}, {wch: 12}, {wch: 18}, {wch: 12}, {wch: 10}, {wch: 12},
+                {wch: 10}, {wch: 12}, {wch: 20}, {wch: 10}, {wch: 18}, {wch: 25}, {wch: 15},
                 {wch: 20}, {wch: 8}, {wch: 10}, {wch: 10}, {wch: 18}, {wch: 12},
                 {wch: 20}, {wch: 10}, {wch: 10}, {wch: 12}, {wch: 30}
             ];
