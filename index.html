@@ -2641,6 +2641,19 @@
         .flex-center { align-items: center; }
         .flex-wrap { flex-wrap: wrap; }
 
+        /* 訂單管理：搜尋列（強制單行，手機窄螢幕也不換行） */
+        .om-search-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: nowrap; }
+        .om-search-input { flex: 1; min-width: 0; padding: 8px 6px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+        .om-search-btn { padding: 8px 10px; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+        .om-status-select { padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; flex-shrink: 0; }
+
+        /* 訂單管理：日期區間列 */
+        .om-date-hint { font-size: 11px; color: #666; margin-bottom: 6px; }
+        .om-date-row { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; }
+        .om-date-input { flex: 1; min-width: 0; padding: 6px 2px; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; }
+        .om-date-sep { color: #999; flex-shrink: 0; }
+        .om-clear-btn { padding: 6px 8px; background: #999; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; flex-shrink: 0; white-space: nowrap; }
+
     </style>
     
     <!-- html2pdf.js CDN -->
@@ -17118,24 +17131,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             <button class="modal-close" onclick="closeOrderManagement()">×</button>
         </div>
         <div class="modal-body" style="overflow-y:auto;flex:1;">
-            <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:nowrap;">
+            <div class="om-search-row">
                 <input type="text" id="omSearchInput" placeholder="搜尋訂單編號、姓名/電話、商品名稱/貨號..."
-                    style="flex:1;min-width:0;padding:8px 6px;border:1px solid #ddd;border-radius:6px;font-size:13px;"
+                    class="om-search-input"
                     onkeypress="if(event.key==='Enter') searchAllHistory()">
-                <button onclick="searchAllHistory()" style="padding:8px 10px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0;">🔍</button>
-                <select id="omFilterStatus" onchange="omCurrentPage = 1; renderOrderManagementList();" style="padding:8px 4px;border:1px solid #ddd;border-radius:6px;font-size:12px;flex-shrink:0;">
+                <button onclick="searchAllHistory()" class="om-search-btn">🔍</button>
+                <select id="omFilterStatus" onchange="omCurrentPage = 1; renderOrderManagementList();" class="om-status-select">
                     <option value="">全部狀態</option>
                     <option value="completed">已完成</option>
                     <option value="cancelled">已取消</option>
                 </select>
             </div>
             <div style="margin-bottom:12px;">
-                <div style="font-size:11px;color:#666;margin-bottom:6px;">📅 預設近 2 個月，日期區間超出範圍會自動查詢</div>
-                <div style="display:flex;gap:4px;align-items:center;flex-wrap:nowrap;">
-                    <input type="date" id="omFilterDateStart" onchange="onOmDateRangeChange()" style="flex:1;min-width:0;padding:6px 2px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
-                    <span style="color:#999;flex-shrink:0;">~</span>
-                    <input type="date" id="omFilterDateEnd" onchange="onOmDateRangeChange()" style="flex:1;min-width:0;padding:6px 2px;border:1px solid #ddd;border-radius:6px;font-size:12px;">
-                    <button onclick="document.getElementById('omFilterDateStart').value='';document.getElementById('omFilterDateEnd').value='';document.getElementById('omSearchInput').value='';document.getElementById('omFilterStatus').value='';omCurrentPage=1;renderOrderManagementList();" style="padding:6px 8px;background:#999;color:white;border:none;border-radius:6px;cursor:pointer;font-size:11px;flex-shrink:0;white-space:nowrap;">清除</button>
+                <div class="om-date-hint">📅 預設近 2 個月，日期區間超出範圍會自動查詢</div>
+                <div class="om-date-row">
+                    <input type="date" id="omFilterDateStart" onchange="onOmDateRangeChange()" class="om-date-input">
+                    <span class="om-date-sep">~</span>
+                    <input type="date" id="omFilterDateEnd" onchange="onOmDateRangeChange()" class="om-date-input">
+                    <button onclick="document.getElementById('omFilterDateStart').value='';document.getElementById('omFilterDateEnd').value='';document.getElementById('omSearchInput').value='';document.getElementById('omFilterStatus').value='';omCurrentPage=1;renderOrderManagementList();" class="om-clear-btn">清除</button>
                 </div>
             </div>
 
