@@ -4562,6 +4562,11 @@ async function loadSalesFromFirestore() {
         return sales;
     } catch (e) {
         console.error('❌ 載入銷售記錄失敗:', e);
+        if (e.code === 'failed-precondition') {
+            alert('⚠️ 銷售記錄載入失敗：缺少 Firestore 索引\n\n請打開瀏覽器開發者工具(F12)切換到 Console，找到錯誤訊息裡的連結並點擊建立索引，等候幾分鐘後重新整理頁面即可。');
+        } else {
+            showNotification('⚠️ 銷售記錄載入失敗，請重新整理頁面');
+        }
         return [];
     }
 }
