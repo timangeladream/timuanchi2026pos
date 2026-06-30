@@ -3780,7 +3780,7 @@
                 <div class="settings-section">
                     <h4 class="settings-section-title">🏪 店家切換</h4>
                     <div id="shopSelectorTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
-                    <div style="display:flex;gap:6px;">
+                    <div class="admin-only" style="display:flex;gap:6px;">
                         <button class="file-btn" onclick="addNewShop()">➕ 新增店家</button>
                         <button class="file-btn" onclick="renameCurrentShop()">✏️ 重新命名</button>
                         <button class="file-btn" onclick="deleteCurrentShop()" style="background:#dc3545;color:white;">🗑️ 刪除店家</button>
@@ -3788,7 +3788,7 @@
                 </div>
 
                 <!-- 店家資訊 -->
-                <div class="settings-section">
+                <div class="settings-section admin-only">
                     <h4 class="settings-section-title">🏢 店家資訊</h4>
                     <div class="form-group">
                         <label>店家名稱</label>
@@ -3813,7 +3813,7 @@
                 </div>
 
                 <!-- 社群連結 -->
-                <div class="settings-section">
+                <div class="settings-section admin-only">
                     <h4 class="settings-section-title">📱 社群連結</h4>
                     <div id="socialLinksList"></div>
                     <div style="margin-top: 12px;">
@@ -3822,7 +3822,7 @@
                 </div>
 
                 <!-- 收據設定 -->
-                <div class="settings-section">
+                <div class="settings-section admin-only">
                     <h4 class="settings-section-title">🧾 收據設定</h4>
                     <div class="form-group">
                         <label>
@@ -3862,9 +3862,12 @@
                 </div>
 
                 <!-- 儲存按鈕 -->
-                <div class="modal-actions">
+                <div class="modal-actions admin-only">
                     <button class="add-discount-btn btn-flex-1" onclick="saveSystemSettings()">💾 儲存設定</button>
                     <button class="add-discount-btn btn-flex-1 btn-bg-gray" onclick="closeSystemSettings()">取消</button>
+                </div>
+                <div class="modal-actions" id="cashierSettingsCloseRow" style="display:none;">
+                    <button class="add-discount-btn btn-flex-1 btn-bg-gray" onclick="closeSystemSettings()">關閉</button>
                 </div>
             </div>
         </div>
@@ -14833,6 +14836,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function openSystemSettings() {
             renderShopTabs();
             loadShopToForm();
+            document.getElementById('cashierSettingsCloseRow').style.display = currentUserRole === 'admin' ? 'none' : 'flex';
             document.getElementById('systemSettingsModal').classList.add('show');
         }
 
@@ -14891,6 +14895,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         function addNewShop() {
+            if (currentUserRole !== 'admin') { alert('僅管理員可新增店家'); return; }
             const name = prompt('請輸入新店家名稱：');
             if (!name || !name.trim()) return;
             const id = 'shop_' + Date.now();
@@ -14909,6 +14914,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         function renameCurrentShop() {
+            if (currentUserRole !== 'admin') { alert('僅管理員可重新命名店家'); return; }
             const shop = getActiveShop();
             const newName = prompt('請輸入新名稱：', shop.label || shop.shopName);
             if (!newName || !newName.trim()) return;
@@ -14917,6 +14923,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         function deleteCurrentShop() {
+            if (currentUserRole !== 'admin') { alert('僅管理員可刪除店家'); return; }
             const keys = Object.keys(systemSettings.shops || {});
             if (keys.length <= 1) { alert('至少需保留一家店家'); return; }
             const shop = getActiveShop();
@@ -14954,6 +14961,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 新增社群連結輸入框
         function addSocialLinkInput() {
+            if (currentUserRole !== 'admin') return;
             const shop = getActiveShop();
             if (!shop.socialLinks) shop.socialLinks = [];
             shop.socialLinks.push({ platform: 'instagram', value: '' });
@@ -14962,6 +14970,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 刪除社群連結
         function removeSocialLink(index) {
+            if (currentUserRole !== 'admin') return;
             const shop = getActiveShop();
             shop.socialLinks.splice(index, 1);
             loadSocialLinks();
@@ -14974,6 +14983,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 儲存系統設定
         function saveSystemSettings() {
+            if (currentUserRole !== 'admin') { alert('僅管理員可儲存設定'); return; }
             saveCurrentShopFromForm();
             saveDataToLocalStorage();
             updateSystemTitle();
