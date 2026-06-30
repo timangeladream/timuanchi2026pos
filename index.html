@@ -5396,6 +5396,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             filteredSales.forEach(sale => {
                 sale.items.forEach(item => {
+                    if (item.isAddon || item.isGift || item.isDiscount) return;
                     const key = item.displayName || item.name;
                     if (!productStats[key]) {
                         productStats[key] = { 
