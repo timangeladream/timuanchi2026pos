@@ -16248,7 +16248,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // ===== 訂單管理 =====
         let omCurrentPage = 1;
         const omItemsPerPage = 20;
-        let omSearchTimeout = null;
 
         function openOrderManagement() {
             omCurrentPage = 1;
@@ -16313,10 +16312,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const filtered = getFilteredOrderManagementList();
 
             if (filtered.length === 0) {
-                const q = (document.getElementById('omSearchInput').value || '').trim();
-                container.innerHTML = q
-                    ? `<div style="text-align:center;padding:30px;color:#999;">在目前載入的範圍內找不到「${q}」，可點擊上方「搜尋全部歷史訂單」</div>`
-                    : '<div style="text-align:center;padding:30px;color:#999;">查無符合條件的訂單</div>';
+                container.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">查無符合條件的訂單</div>';
                 updateOmPagination(0, 0);
                 return;
             }
@@ -16515,38 +16511,35 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 搜尋全部歷史訂單（不限近2個月範圍）
         // 訂單編號(開頭符合)、顧客電話(完全相符)、顧客姓名(開頭符合) 各別查詢
         // 另外額外抓回較大量的歷史訂單，供商品名稱/貨號等本地模糊搜尋使用
+        // 按下搜尋（按鈕或 Enter）才會觸發，一律直接查詢 Firestore 全部歷史資料
         async function searchAllHistory() {
             if (!db || !currentUser) return;
             const q = (document.getElementById('omSearchInput').value || '').trim();
 
-            showNotification('⏳ 載入全部歷史訂單中...');
+            omCurrentPage = 1;
+            if (!q) { renderOrderManagementList(); return; }
+
+            showNotification('⏳ 搜尋中...');
             try {
                 const existingIds = new Set(salesHistory.map(s => s._firebaseId));
                 const seen = new Set();
                 let addedCount = 0;
                 const rangeEnd = String.fromCharCode(0xf8ff);
 
-                if (q) {
-                    const r1 = await omBaseQuery().where('orderNumber', '>=', q).where('orderNumber', '<', q + rangeEnd).limit(50).get();
-                    addedCount += mergeOmDocsIntoSalesHistory(r1, existingIds, seen);
-                    const r2 = await omBaseQuery().where('memberPhone', '==', q).limit(50).get();
-                    addedCount += mergeOmDocsIntoSalesHistory(r2, existingIds, seen);
-                    const r3 = await omBaseQuery().where('memberName', '>=', q).where('memberName', '<', q + rangeEnd).limit(50).get();
-                    addedCount += mergeOmDocsIntoSalesHistory(r3, existingIds, seen);
-                }
+                const r1 = await omBaseQuery().where('orderNumber', '>=', q).where('orderNumber', '<', q + rangeEnd).limit(50).get();
+                addedCount += mergeOmDocsIntoSalesHistory(r1, existingIds, seen);
+                const r2 = await omBaseQuery().where('memberPhone', '==', q).limit(50).get();
+                addedCount += mergeOmDocsIntoSalesHistory(r2, existingIds, seen);
+                const r3 = await omBaseQuery().where('memberName', '>=', q).where('memberName', '<', q + rangeEnd).limit(50).get();
+                addedCount += mergeOmDocsIntoSalesHistory(r3, existingIds, seen);
 
-                // 供商品名稱/貨號等本地模糊搜尋使用：額外抓回較大量的歷史訂單
+                // 供商品名稱/貨號等本地模糊搜尋使用：額外抓回較大量的歷史訂單（上限 2000 筆）
                 let r4Query = omBaseQuery();
                 if (currentUserRole === 'admin') r4Query = r4Query.orderBy('timestamp', 'desc');
-                const r4 = await r4Query.limit(500).get();
+                const r4 = await r4Query.limit(2000).get();
                 addedCount += mergeOmDocsIntoSalesHistory(r4, existingIds, seen);
 
-                omCurrentPage = 1;
-                if (addedCount === 0) {
-                    showNotification('查無更早的訂單');
-                } else {
-                    showNotification(`✅ 已載入 ${addedCount} 筆更早的訂單`);
-                }
+                showNotification(addedCount > 0 ? `✅ 已載入 ${addedCount} 筆訂單` : '查詢完成');
                 renderOrderManagementList();
             } catch (e) {
                 console.error('搜尋全部歷史訂單失敗:', e);
@@ -17101,9 +17094,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         </div>
         <div class="modal-body" style="overflow-y:auto;flex:1;">
             <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-                <input type="text" id="omSearchInput" placeholder="搜尋訂單編號、顧客姓名/電話、商品名稱/貨號..."
+                <input type="text" id="omSearchInput" placeholder="搜尋訂單編號、顧客姓名/電話、商品名稱/貨號...（按 Enter 或搜尋鈕查詢）"
                     style="flex:1;min-width:160px;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;"
-                    oninput="clearTimeout(omSearchTimeout); omSearchTimeout = setTimeout(() => { omCurrentPage = 1; renderOrderManagementList(); }, 300)">
+                    onkeypress="if(event.key==='Enter') searchAllHistory()">
+                <button onclick="searchAllHistory()" style="padding:8px 16px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">🔍 搜尋</button>
                 <select id="omFilterStatus" onchange="omCurrentPage = 1; renderOrderManagementList();" style="padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
                     <option value="">全部狀態</option>
                     <option value="completed">已完成</option>
@@ -17116,7 +17110,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <span style="color:#999;">~</span>
                 <input type="date" id="omFilterDateEnd" onchange="onOmDateRangeChange()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
                 <button onclick="document.getElementById('omFilterDateStart').value='';document.getElementById('omFilterDateEnd').value='';document.getElementById('omSearchInput').value='';document.getElementById('omFilterStatus').value='';omCurrentPage=1;renderOrderManagementList();" style="padding:6px 12px;background:#999;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">清除篩選</button>
-                <button onclick="searchAllHistory()" style="padding:6px 12px;background:var(--primary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">🔍 搜尋全部歷史訂單</button>
             </div>
 
             <div id="omPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:0 0 8px 0;background:transparent;border-radius:0;">
