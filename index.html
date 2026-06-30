@@ -17055,7 +17055,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         ➕ 新增
                     </button>
                 </div>
-                
+
+                <div id="customerPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:0 0 12px 0;background:transparent;border-radius:0;">
+                    <button class="pagination-btn" id="customerPrevPageBtn" onclick="changeCustomerPage('prev')">←</button>
+                    <div class="pagination-numbers" id="customerPageNumbers"></div>
+                    <button class="pagination-btn" id="customerNextPageBtn" onclick="changeCustomerPage('next')">→</button>
+                    <span class="pagination-info" id="customerPaginationInfo" style="font-size:10px;"></span>
+                    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
+                        <span style="font-size:10px;color:var(--text-light);">跳至</span>
+                        <input type="number" id="customerPageJumpInput" min="1" style="width:40px;height:22px;padding:2px 4px;font-size:10px;border:1.5px solid var(--border-color);border-radius:4px;text-align:center;" onkeypress="if(event.key==='Enter')jumpToCustomerPage()">
+                        <button onclick="jumpToCustomerPage()" style="height:22px;padding:2px 8px;font-size:10px;background:var(--primary-color);color:white;border:none;border-radius:4px;cursor:pointer;">GO</button>
+                    </div>
+                </div>
+
                 <!-- 新增顧客表單（預設隱藏） -->
                 <div id="newCustomerForm" style="display:none;border:2px solid var(--primary-color);border-radius:10px;padding:16px;margin-bottom:16px;background:#f0f7ff;">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -17081,19 +17093,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         <button onclick="toggleNewCustomerForm()" style="padding:10px 16px;background:#6c757d;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;">取消</button>
                     </div>
                 </div>
-                
-                <div id="customerList" style="max-height:400px;overflow-y:auto;"></div>
-                <div id="customerPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:8px 0 0 0;background:transparent;border-radius:0;">
-                    <button class="pagination-btn" id="customerPrevPageBtn" onclick="changeCustomerPage('prev')">←</button>
-                    <div class="pagination-numbers" id="customerPageNumbers"></div>
-                    <button class="pagination-btn" id="customerNextPageBtn" onclick="changeCustomerPage('next')">→</button>
-                    <span class="pagination-info" id="customerPaginationInfo" style="font-size:10px;"></span>
-                    <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
-                        <span style="font-size:10px;color:var(--text-light);">跳至</span>
-                        <input type="number" id="customerPageJumpInput" min="1" style="width:40px;height:22px;padding:2px 4px;font-size:10px;border:1.5px solid var(--border-color);border-radius:4px;text-align:center;" onkeypress="if(event.key==='Enter')jumpToCustomerPage()">
-                        <button onclick="jumpToCustomerPage()" style="height:22px;padding:2px 8px;font-size:10px;background:var(--primary-color);color:white;border:none;border-radius:4px;cursor:pointer;">GO</button>
-                    </div>
-                </div>
+
+                <div id="customerList" class="scroll-list-lg"></div>
             </div>
             <!-- 詳細頁 -->
             <div id="customerDetailView" style="display:none;">
@@ -17143,7 +17144,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 </div>
             </div>
 
-            <div id="orderManagementList"></div>
+            <div id="orderManagementList" class="scroll-list-lg"></div>
         </div>
     </div>
 </div>
