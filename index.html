@@ -16282,7 +16282,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (q) {
                     const matches = (sale.orderNumber || '').toLowerCase().includes(q) ||
                         (sale.memberName || '').toLowerCase().includes(q) ||
-                        (sale.memberPhone || '').includes(q);
+                        (sale.memberPhone || '').includes(q) ||
+                        (sale.items || []).some(item =>
+                            (item.displayName || item.name || '').toLowerCase().includes(q) ||
+                            (item.sku || '').toLowerCase().includes(q)
+                        );
                     if (!matches) return false;
                 }
                 if (status && sale.status !== status) return false;
@@ -16483,15 +16487,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     if (currentUserRole !== 'admin') bq = bq.where('salesPersonId', '==', currentUser.uid);
                     return bq;
                 };
+                const rangeEnd = String.fromCharCode(0xf8ff);
 
+                // 訂單編號(開頭符合)、顧客電話(完全相符)、顧客姓名(開頭符合) - 不限時間範圍
                 if (q) {
-                    const r1 = await baseQuery().where('orderNumber', '>=', q).where('orderNumber', '<', q + '').limit(50).get();
+                    const r1 = await baseQuery().where('orderNumber', '>=', q).where('orderNumber', '<', q + rangeEnd).limit(50).get();
                     addDocs(r1);
                     const r2 = await baseQuery().where('memberPhone', '==', q).limit(50).get();
                     addDocs(r2);
-                    const r3 = await baseQuery().where('memberName', '>=', q).where('memberName', '<', q + '').limit(50).get();
+                    const r3 = await baseQuery().where('memberName', '>=', q).where('memberName', '<', q + rangeEnd).limit(50).get();
                     addDocs(r3);
-                } else {
+                }
+
+                // 日期區間 - 抓回整段時間的訂單，供商品名稱/貨號等本地模糊搜尋使用
+                if (startDateStr || endDateStr) {
                     let dq = baseQuery();
                     if (startDateStr) dq = dq.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(new Date(startDateStr)));
                     if (endDateStr) dq = dq.where('timestamp', '<=', firebase.firestore.Timestamp.fromDate(new Date(endDateStr + ' 23:59:59')));
@@ -17059,7 +17068,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         </div>
         <div class="modal-body" style="overflow-y:auto;flex:1;">
             <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-                <input type="text" id="omSearchInput" placeholder="搜尋訂單編號、顧客姓名或電話..."
+                <input type="text" id="omSearchInput" placeholder="搜尋訂單編號、顧客姓名/電話、商品名稱/貨號..."
                     style="flex:1;min-width:160px;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;"
                     oninput="clearTimeout(omSearchTimeout); omSearchTimeout = setTimeout(() => { omCurrentPage = 1; renderOrderManagementList(); }, 300)">
                 <select id="omFilterStatus" onchange="omCurrentPage = 1; renderOrderManagementList();" style="padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
@@ -17075,7 +17084,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <button onclick="document.getElementById('omFilterDateStart').value='';document.getElementById('omFilterDateEnd').value='';document.getElementById('omSearchInput').value='';document.getElementById('omFilterStatus').value='';omCurrentPage=1;renderOrderManagementList();" style="padding:6px 12px;background:#999;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">清除篩選</button>
             </div>
             <div style="margin-bottom:12px;padding:8px 10px;background:#f8f9fa;border-radius:6px;font-size:12px;color:#666;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-                <span>📅 預設僅顯示近 2 個月的訂單，找不到想找的訂單時可點擊右側按鈕搜尋更早的資料</span>
+                <span>📅 預設僅顯示近 2 個月的訂單。搜尋訂單編號/姓名/電話不限時間；搜尋商品名稱/貨號需先設定日期區間再點擊搜尋</span>
                 <button onclick="loadOlderOrders()" style="padding:6px 12px;background:var(--secondary-color);color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap;">🔍 搜尋更早的訂單</button>
             </div>
 
