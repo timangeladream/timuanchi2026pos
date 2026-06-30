@@ -17129,12 +17129,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <option value="cancelled">已取消</option>
                 </select>
             </div>
-            <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
-                <span style="font-size:12px;color:#666;">📅 預設顯示近 2 個月：</span>
-                <input type="date" id="omFilterDateStart" onchange="onOmDateRangeChange()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
-                <span style="color:#999;">~</span>
-                <input type="date" id="omFilterDateEnd" onchange="onOmDateRangeChange()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
-                <button onclick="document.getElementById('omFilterDateStart').value='';document.getElementById('omFilterDateEnd').value='';document.getElementById('omSearchInput').value='';document.getElementById('omFilterStatus').value='';omCurrentPage=1;renderOrderManagementList();" style="padding:6px 12px;background:#999;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">清除篩選</button>
+            <div style="margin-bottom:12px;">
+                <div style="font-size:12px;color:#666;margin-bottom:6px;">📅 預設顯示近 2 個月，設定日期區間超出範圍會自動查詢</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <div style="display:flex;flex-direction:column;gap:2px;">
+                        <label style="font-size:10px;color:var(--text-light);">開始日期</label>
+                        <input type="date" id="omFilterDateStart" onchange="onOmDateRangeChange()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                    <span style="color:#999;margin-top:14px;">~</span>
+                    <div style="display:flex;flex-direction:column;gap:2px;">
+                        <label style="font-size:10px;color:var(--text-light);">結束日期</label>
+                        <input type="date" id="omFilterDateEnd" onchange="onOmDateRangeChange()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                    <button onclick="document.getElementById('omFilterDateStart').value='';document.getElementById('omFilterDateEnd').value='';document.getElementById('omSearchInput').value='';document.getElementById('omFilterStatus').value='';omCurrentPage=1;renderOrderManagementList();" style="padding:6px 12px;background:#999;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;margin-top:14px;white-space:nowrap;">清除篩選</button>
+                </div>
             </div>
 
             <div id="omPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:0 0 8px 0;background:transparent;border-radius:0;">
