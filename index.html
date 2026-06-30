@@ -8900,27 +8900,45 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         // 確認匯出銷售記錄
-        function confirmExportSales() {
-            if (salesHistory.length === 0) {
-                alert('尚無銷售記錄可匯出');
-                return;
-            }
-            if (!confirm('確定要匯出銷售記錄嗎？')) return;
-            exportSales();
+        async function confirmExportSales() {
+            if (!confirm('確定要匯出銷售記錄嗎？\n\n將從 Firebase 重新讀取完整的銷售紀錄，資料量較大時可能需要一些時間。')) return;
             closeExportModal();
+            showNotification('⏳ 正在讀取完整銷售記錄...');
+            try {
+                let query = db.collection('sales');
+                if (currentUserRole !== 'admin') {
+                    query = query.where('salesPersonId', '==', currentUser.uid);
+                }
+                const snapshot = await query.get();
+                if (snapshot.empty) {
+                    alert('尚無銷售記錄可匯出');
+                    return;
+                }
+                const allSales = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        ...data,
+                        timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : (data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000).toISOString() : data.timestamp)
+                    };
+                });
+                allSales.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+                exportSales(allSales);
+            } catch (e) {
+                console.error('讀取完整銷售記錄失敗:', e);
+                alert('匯出失敗，請重試');
+            }
         }
 
-        // Excel 匯出 - 銷售記錄
-        function exportSales() {
-            // 使用 filteredSalesForList（包含已取消訂單），而非 filteredSales（統計用，排除已取消）
-            if (filteredSalesForList.length === 0) {
-                alert('目前篩選條件下無銷售記錄可匯出');
+        // Excel 匯出 - 銷售記錄（salesData 為完整、不受畫面篩選或本地快取限制的訂單清單）
+        function exportSales(salesData) {
+            if (!salesData || salesData.length === 0) {
+                alert('尚無銷售記錄可匯出');
                 return;
             }
 
             const ws_data = [['訂單編號', '訂單日期', '結帳時間', '銷售地點', '銷售人員', '官網會員帳號', '會員姓名', '會員電話', '會員Email', '訂單狀態', '取消時間', '項目類型', '商品名稱', '貨號', '規格', '數量', '單價', '小計', '折扣名稱', '折扣類型', '折扣描述', '折扣比例', '折扣金額', '訂單總額', '訂單備註']];
-            
-            filteredSalesForList.forEach(sale => {
+
+            salesData.forEach(sale => {
                 let isFirstRow = true;
                 
                 // 分類處理所有項目
