@@ -2734,6 +2734,10 @@
                 <span class="menu-icon-text">👤</span>
                 <span>顧客管理</span>
             </button>
+            <button class="menu-item" onclick="openOrderManagement(); toggleMenu();">
+                <span class="menu-icon-text">🧾</span>
+                <span>訂單管理</span>
+            </button>
             <button class="menu-item admin-only" onclick="openLocationManager(); toggleMenu();">
                 <span class="menu-icon-text">📍</span>
                 <span>銷售地點管理</span>
@@ -14776,6 +14780,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 salesHistory = await loadSalesFromFirestore();
             }
             filterByTime(currentTimeFilter);
+            if (document.getElementById('orderManagementModal').classList.contains('show')) {
+                renderOrderManagementList();
+            }
             showNotification('✅ 訂單已取消，庫存已回復');
         }
 
@@ -14795,6 +14802,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 salesHistory.splice(index, 1);
                 saveDataToLocalStorage();
                 filterByTime(currentTimeFilter);
+                if (document.getElementById('orderManagementModal').classList.contains('show')) {
+                    renderOrderManagementList();
+                }
                 showNotification('✅ 訂單記錄已刪除');
             }
         }
@@ -16200,6 +16210,205 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             goToCustomerPage(target);
         }
 
+        // ===== 訂單管理 =====
+        let omCurrentPage = 1;
+        const omItemsPerPage = 20;
+        let omSearchTimeout = null;
+
+        function openOrderManagement() {
+            omCurrentPage = 1;
+            document.getElementById('omSearchInput').value = '';
+            document.getElementById('omFilterStatus').value = '';
+            document.getElementById('omFilterDateStart').value = '';
+            document.getElementById('omFilterDateEnd').value = '';
+            renderOrderManagementList();
+            bringModalToFront('orderManagementModal');
+            document.getElementById('orderManagementModal').classList.add('show');
+        }
+
+        function closeOrderManagement() {
+            document.getElementById('orderManagementModal').classList.remove('show');
+        }
+
+        function getFilteredOrderManagementList() {
+            const q = (document.getElementById('omSearchInput').value || '').trim().toLowerCase();
+            const status = document.getElementById('omFilterStatus').value;
+            const startDateStr = document.getElementById('omFilterDateStart').value;
+            const endDateStr = document.getElementById('omFilterDateEnd').value;
+
+            const parseTimestamp = (ts) => {
+                if (!ts) return new Date(0);
+                if (ts.toDate) return ts.toDate();
+                if (ts.seconds !== undefined) return new Date(ts.seconds * 1000);
+                return new Date(ts);
+            };
+
+            let filtered = salesHistory.filter(sale => {
+                if (q) {
+                    const matches = (sale.orderNumber || '').toLowerCase().includes(q) ||
+                        (sale.memberName || '').toLowerCase().includes(q) ||
+                        (sale.memberPhone || '').includes(q);
+                    if (!matches) return false;
+                }
+                if (status && sale.status !== status) return false;
+                if (status === '' && !sale.status) {
+                    // 視為 completed
+                }
+                if (startDateStr) {
+                    const start = new Date(startDateStr);
+                    if (parseTimestamp(sale.timestamp) < start) return false;
+                }
+                if (endDateStr) {
+                    const end = new Date(endDateStr + ' 23:59:59');
+                    if (parseTimestamp(sale.timestamp) > end) return false;
+                }
+                return true;
+            });
+
+            filtered.sort((a, b) => parseTimestamp(b.timestamp) - parseTimestamp(a.timestamp));
+            return filtered;
+        }
+
+        function renderOrderManagementList() {
+            const container = document.getElementById('orderManagementList');
+            const filtered = getFilteredOrderManagementList();
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">查無符合條件的訂單</div>';
+                updateOmPagination(0, 0);
+                return;
+            }
+
+            const totalRecords = filtered.length;
+            const totalPages = Math.ceil(totalRecords / omItemsPerPage);
+            if (omCurrentPage > totalPages) omCurrentPage = totalPages;
+            if (omCurrentPage < 1) omCurrentPage = 1;
+            const startIndex = (omCurrentPage - 1) * omItemsPerPage;
+            const endIndex = Math.min(startIndex + omItemsPerPage, totalRecords);
+            const pageData = filtered.slice(startIndex, endIndex);
+
+            container.innerHTML = pageData.map(sale => {
+                const actualIndex = salesHistory.indexOf(sale);
+                const displayTime = sale.timestampDisplay
+                    ? sale.timestampDisplay
+                    : (sale.timestamp ? new Date(sale.timestamp).toLocaleString('zh-TW', {hour12: false}) : '');
+                return `
+                    <div class="sales-record-item">
+                        <div class="sales-record-header">
+                            <div onclick="toggleOmDetail(${actualIndex})" style="cursor: pointer; flex: 1;">
+                                <div class="sales-record-order-number" style="color: var(--primary-color); text-decoration: underline;">
+                                    ${sale.orderNumber || '無'} <span style="font-size: 12px; color: #999;">▼</span>
+                                </div>
+                                <div class="sales-record-info">
+                                    ${displayTime}
+                                    ${(sale.saleLocation || sale.salesPersonName) ? `<br>${sale.saleLocation || ''} ${sale.salesPersonName ? `｜ ${sale.salesPersonName}` : ''}` : ''}
+                                    ${(sale.memberName || sale.memberPhone) ? `<br>👤 ${sale.memberName || ''} ${sale.memberPhone ? `(${sale.memberPhone})` : ''}` : ''}
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="sales-record-total">NT$ ${(sale.total || 0).toLocaleString()}</div>
+                                ${sale.status === 'cancelled'
+                                    ? '<button class="cancelled-order-btn">已取消</button>'
+                                    : (currentUserRole === 'admin' ? `<button class="cancel-order-btn" onclick="cancelSalesOrder(${actualIndex})" title="取消訂單">取消</button>` : '')
+                                }
+                                <button class="view-receipt-btn" onclick="viewReceipt(${actualIndex})" title="查看單據">🖨️</button>
+                                ${currentUserRole === 'admin' ? `<button class="delete-order-btn" onclick="deleteSalesRecord(${actualIndex})" title="刪除記錄">🗑️</button>` : ''}
+                            </div>
+                        </div>
+                        <div id="omDetail_${actualIndex}" class="sales-detail" style="display: none;">
+                            ${sale.status === 'cancelled' ? `<div class="order-cancelled-notice">❌ 此訂單已取消${sale.cancelledAtDisplay ? `<span style="font-size:11px;font-weight:400;margin-left:8px;opacity:0.8;">（${sale.cancelledAtDisplay}）</span>` : ''}</div>` : ''}
+                            <div class="sales-record-items" style="margin-top:8px;">
+                                ${(() => {
+                                    const products = sale.items.filter(item => !item.isAddon && !item.isGift);
+                                    const addons = sale.items.filter(item => item.isAddon);
+                                    const gifts = sale.items.filter(item => item.isGift);
+                                    const sortedItems = [...products, ...addons, ...gifts];
+                                    return sortedItems.map(item => {
+                                        const displayName = item.displayName || item.name;
+                                        const itemTotal = item.price * item.quantity;
+                                        let label = '';
+                                        if (item.isGift) label = '【贈品】';
+                                        else if (item.isAddon) label = '【加購】';
+                                        return `<div class="sales-record-item-row"><span>${label}${displayName} × ${item.quantity}</span><span>NT$ ${itemTotal}</span></div>`;
+                                    }).join('');
+                                })()}
+                                ${sale.discountAmount > 0 ? `<div class="sales-record-item-row" style="color: #d32f2f;"><span>${sale.discountName}</span><span>- NT$ ${sale.discountAmount}</span></div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateOmPagination(totalPages, totalRecords);
+        }
+
+        function toggleOmDetail(index) {
+            const el = document.getElementById(`omDetail_${index}`);
+            if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function updateOmPagination(totalPages, totalRecords) {
+            const container = document.getElementById('omPaginationContainer');
+            const pageNumbers = document.getElementById('omPageNumbers');
+            const info = document.getElementById('omPaginationInfo');
+            const prevBtn = document.getElementById('omPrevPageBtn');
+            const nextBtn = document.getElementById('omNextPageBtn');
+            const jumpInput = document.getElementById('omPageJumpInput');
+
+            if (totalPages <= 1) { container.style.display = totalRecords > 0 ? 'flex' : 'none'; }
+            else { container.style.display = 'flex'; }
+            if (totalRecords === 0) { container.style.display = 'none'; return; }
+
+            prevBtn.disabled = omCurrentPage === 1;
+            nextBtn.disabled = omCurrentPage === totalPages;
+            jumpInput.max = totalPages;
+            jumpInput.value = '';
+            jumpInput.placeholder = `1-${totalPages}`;
+
+            const startNum = (omCurrentPage - 1) * omItemsPerPage + 1;
+            const endNum = Math.min(omCurrentPage * omItemsPerPage, totalRecords);
+            info.textContent = `(${startNum}-${endNum}/${totalRecords})`;
+
+            let html = '';
+            const maxVisible = 5;
+            let startPage = Math.max(1, omCurrentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            if (endPage - startPage + 1 < maxVisible) startPage = Math.max(1, endPage - maxVisible + 1);
+
+            if (startPage > 1) {
+                html += `<div class="pagination-number" onclick="goToOmPage(1)">1</div>`;
+                if (startPage > 2) html += `<span style="padding:0 4px;color:var(--text-light);">...</span>`;
+            }
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<div class="pagination-number ${i === omCurrentPage ? 'active' : ''}" onclick="goToOmPage(${i})">${i}</div>`;
+            }
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<span style="padding:0 4px;color:var(--text-light);">...</span>`;
+                html += `<div class="pagination-number" onclick="goToOmPage(${totalPages})">${totalPages}</div>`;
+            }
+            pageNumbers.innerHTML = html;
+        }
+
+        function changeOmPage(direction) {
+            const totalPages = Math.ceil(getFilteredOrderManagementList().length / omItemsPerPage);
+            if (direction === 'prev' && omCurrentPage > 1) omCurrentPage--;
+            else if (direction === 'next' && omCurrentPage < totalPages) omCurrentPage++;
+            renderOrderManagementList();
+        }
+
+        function goToOmPage(page) {
+            omCurrentPage = page;
+            renderOrderManagementList();
+        }
+
+        function jumpToOmPage() {
+            const target = parseInt(document.getElementById('omPageJumpInput').value);
+            if (!target || target < 1) { alert('請輸入有效的頁碼'); return; }
+            const totalPages = Math.ceil(getFilteredOrderManagementList().length / omItemsPerPage);
+            if (target > totalPages) { alert(`頁碼超出範圍，目前共 ${totalPages} 頁`); return; }
+            goToOmPage(target);
+        }
+
         function toggleNewCustomerForm() {
             const form = document.getElementById('newCustomerForm');
             const isVisible = form.style.display !== 'none';
@@ -16738,6 +16947,47 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
     </div>
 </div>
 
+<!-- 訂單管理彈窗 -->
+<div id="orderManagementModal" class="modal" style="z-index:10000;">
+    <div class="modal-content" style="max-width:700px;max-height:90vh;display:flex;flex-direction:column;">
+        <div class="modal-header">
+            <h3>🧾 訂單管理</h3>
+            <button class="modal-close" onclick="closeOrderManagement()">×</button>
+        </div>
+        <div class="modal-body" style="overflow-y:auto;flex:1;">
+            <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+                <input type="text" id="omSearchInput" placeholder="搜尋訂單編號、顧客姓名或電話..."
+                    style="flex:1;min-width:160px;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;"
+                    oninput="clearTimeout(omSearchTimeout); omSearchTimeout = setTimeout(() => { omCurrentPage = 1; renderOrderManagementList(); }, 300)">
+                <select id="omFilterStatus" onchange="omCurrentPage = 1; renderOrderManagementList();" style="padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                    <option value="">全部狀態</option>
+                    <option value="completed">已完成</option>
+                    <option value="cancelled">已取消</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap;">
+                <input type="date" id="omFilterDateStart" onchange="omCurrentPage = 1; renderOrderManagementList();" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <span style="color:#999;">~</span>
+                <input type="date" id="omFilterDateEnd" onchange="omCurrentPage = 1; renderOrderManagementList();" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <button onclick="document.getElementById('omFilterDateStart').value='';document.getElementById('omFilterDateEnd').value='';document.getElementById('omSearchInput').value='';document.getElementById('omFilterStatus').value='';omCurrentPage=1;renderOrderManagementList();" style="padding:6px 12px;background:#999;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">清除篩選</button>
+            </div>
+
+            <div id="omPaginationContainer" class="pagination-container" style="display:none;padding:8px 0;margin:0 0 8px 0;background:transparent;border-radius:0;">
+                <button class="pagination-btn" id="omPrevPageBtn" onclick="changeOmPage('prev')">←</button>
+                <div class="pagination-numbers" id="omPageNumbers"></div>
+                <button class="pagination-btn" id="omNextPageBtn" onclick="changeOmPage('next')">→</button>
+                <span class="pagination-info" id="omPaginationInfo" style="font-size:10px;"></span>
+                <div style="display:flex;align-items:center;gap:4px;margin-left:8px;">
+                    <span style="font-size:10px;color:var(--text-light);">跳至</span>
+                    <input type="number" id="omPageJumpInput" min="1" style="width:40px;height:22px;padding:2px 4px;font-size:10px;border:1.5px solid var(--border-color);border-radius:4px;text-align:center;" onkeypress="if(event.key==='Enter')jumpToOmPage()">
+                    <button onclick="jumpToOmPage()" style="height:22px;padding:2px 8px;font-size:10px;background:var(--primary-color);color:white;border:none;border-radius:4px;cursor:pointer;">GO</button>
+                </div>
+            </div>
+
+            <div id="orderManagementList"></div>
+        </div>
+    </div>
+</div>
 
 <!-- 編輯顧客 Modal -->
 <!-- 顧客消費記錄 - 訂單明細彈窗 -->
