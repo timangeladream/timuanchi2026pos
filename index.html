@@ -4525,16 +4525,12 @@ async function saveSaleToFirestore(saleData) {
     }
 }
 
-// 目前已載入訂單的起始日期（供訂單管理判斷日期篩選是否超出已載入範圍）
-let salesLoadedSinceDate = null;
-
 // 從 Firestore 載入銷售記錄（預設只載入近 2 個月，更早的資料透過 loadOlderOrders() 依需求查詢）
 async function loadSalesFromFirestore() {
     if (!db || !currentUser) return [];
     try {
         const twoMonthsAgo = new Date();
         twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-        salesLoadedSinceDate = twoMonthsAgo;
         const sinceTs = firebase.firestore.Timestamp.fromDate(twoMonthsAgo);
 
         let query;
@@ -16483,21 +16479,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (startDateStr) dq = dq.where('timestamp', '>=', firebase.firestore.Timestamp.fromDate(new Date(startDateStr)));
             if (endDateStr) dq = dq.where('timestamp', '<=', firebase.firestore.Timestamp.fromDate(new Date(endDateStr + ' 23:59:59')));
             const snapshot = await dq.limit(300).get();
-            const addedCount = mergeOmDocsIntoSalesHistory(snapshot, existingIds, seen);
-            if (startDateStr) {
-                const start = new Date(startDateStr);
-                if (!salesLoadedSinceDate || start < salesLoadedSinceDate) salesLoadedSinceDate = start;
-            }
-            return addedCount;
+            return mergeOmDocsIntoSalesHistory(snapshot, existingIds, seen);
         }
 
-        // 日期區間變更時：若超出目前已載入的範圍，自動向 Firestore 補抓該區間的資料
+        // 日期區間變更時：若早於預設載入門檻(近2個月)，一律重新向 Firestore 查詢該區間
+        // (不嘗試記錄「已查過的範圍」，避免因不同次查詢的結束日期不同而漏抓資料)
         async function onOmDateRangeChange() {
             omCurrentPage = 1;
             const startDateStr = document.getElementById('omFilterDateStart').value;
             const endDateStr = document.getElementById('omFilterDateEnd').value;
 
-            const needsFetch = startDateStr && salesLoadedSinceDate && new Date(startDateStr) < salesLoadedSinceDate;
+            const twoMonthsAgo = new Date();
+            twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+            const needsFetch = startDateStr && new Date(startDateStr) < twoMonthsAgo;
             if (!needsFetch) {
                 renderOrderManagementList();
                 return;
