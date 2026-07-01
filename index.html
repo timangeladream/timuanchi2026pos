@@ -2378,6 +2378,24 @@
             font-weight: 600;
             color: var(--text-dark);
         }
+        .edit-brand-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .delete-brand-btn{
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+        }
         /* === 手機響應式樣式 === */
         @media (max-width: 768px) {
             .order-info-grid {
@@ -9380,16 +9398,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button 
-                            class="edit-btn" 
-                            onclick="editBrand('${brand.replace(/'/g, "\\'")}', ${index})"
-                            style="background: var(--primary-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;"
+                            class="edit-brand-btn" 
+                            onclick="editBrand('${brand.replace(/'/g, "\\'")}', ${index})"                            
                         >
                             編輯
                         </button>
                         <button 
-                            class="remove-btn" 
+                            class="delete-brand-btn" 
                             onclick="removeBrand('${brand.replace(/'/g, "\\'")}')"
-                            style="background: var(--danger-color); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer;"
                         >
                             刪除
                         </button>
