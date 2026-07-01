@@ -2376,6 +2376,55 @@
             margin-top:8px;
         }
 
+        .gift-save-btn {
+            width:100%;
+            padding:8px;
+            background:var(--success-color);
+            color:white;
+            border:none;
+            border-radius:8px;
+            font-size:14px;
+            font-weight:600;
+            cursor:pointer;
+            margin-top:8px;
+        }
+        .gift-update-btn {
+            width:100%;
+            padding:8px;
+            background:var(--success-color);
+            color:white;
+            border:none;
+            border-radius:8px;
+            font-size:14px;
+            font-weight:600;
+            cursor:pointer;
+            margin-top:8px;
+        }
+        .gift-variant-btn {
+            width:100%;
+            padding:2px 6px;
+            background:var(--secondary-color);
+            color:white;
+            border:none;
+            border-radius:6px;
+            font-size:12px;
+            cursor:pointer;
+            font-weight:500;
+            margin-top:8px;
+        }
+        .gift-generate-btn {
+            width:100%;
+            padding:2px 6px;
+            background:var(--secondary-color);
+            color:white;
+            border:none;
+            border-radius:6px;
+            font-size:12px;
+            cursor:pointer;
+            font-weight:500;
+            margin-top:8px;
+        }
+
         /* === 新增：搜尋框樣式 === */
         .search-container {
             background: white;
@@ -3434,7 +3483,7 @@
 
     <!-- 編輯贈品彈窗 -->
     <div id="editGiftModal" class="modal" style="z-index:10001;">
-        <div class="modal-content">
+        <div class="modal-content modal-w-600">
             <div class="modal-header">
                 <h3>編輯贈品</h3>
                 <button class="modal-close" onclick="closeEditGiftModal()">×</button>
@@ -3465,11 +3514,29 @@
                         <label>贈品數量</label>
                         <input type="number" id="editGiftItemQty" min="1" value="1" placeholder="例如：1" />
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="editGiftTotalStockDisplay" style="display:none;">
+                        <label>庫存總和（由各規格庫存自動計算）</label>
+                        <input type="text" id="editGiftDisplayTotalStock" readonly class="input-readonly" />
+                    </div>
+                    <div class="form-group" id="editGiftSimpleStockSection">
                         <label>庫存數量(選填)</label>
                         <input type="number" id="editGiftItemStock" min="0" placeholder="例如：100" />
                     </div>
-                    <button class="add-discount-btn" onclick="updateGift()">確認更新贈品</button>
+                    <div class="form-group">
+                        <label class="section-header-flex">
+                            <span>贈品規格</span>
+                            <button type="button" class="gift-variant-btn" onclick="addEditGiftVariantGroup()">新增規格</button>
+                        </label>
+                        <div id="editGiftVariantGroupsContainer"><div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div></div>
+                        <button type="button" class="gift-generate-btn" onclick="generateEditGiftVariantCombinations()">產生規格組合</button>
+                        <div id="editGiftVariantSkuSection" style="display:none;">
+                            <div class="variant-sku-section">
+                                <div class="variant-sku-title">📦 規格貨號、庫存設定</div>
+                                <div id="editGiftVariantSkuList"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="gift-update-btn" onclick="updateGift()">確認更新贈品</button>
                 </div>
             </div>
         </div>
@@ -3477,7 +3544,7 @@
 
     <!-- 新增贈品彈窗 -->
     <div id="addGiftModal" class="modal" style="z-index:10001;">
-        <div class="modal-content">
+        <div class="modal-content modal-w-600">
             <div class="modal-header">
                 <h3>新增贈品</h3>
                 <button class="modal-close" onclick="closeAddGiftModal()">×</button>
@@ -3508,11 +3575,29 @@
                         <label>贈品數量</label>
                         <input type="number" id="addGiftItemQty" min="1" value="1" placeholder="例如：1" />
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="addGiftTotalStockDisplay" style="display:none;">
+                        <label>庫存總和（由各規格庫存自動計算）</label>
+                        <input type="text" id="addGiftDisplayTotalStock" readonly class="input-readonly" />
+                    </div>
+                    <div class="form-group" id="addGiftSimpleStockSection">
                         <label>贈品庫存數量(選填)</label>
                         <input type="number" id="addGiftItemStock" min="0" placeholder="例如：100" />
                     </div>
-                    <button class="add-discount-btn" onclick="addNewGift()">確認新增贈品</button>
+                    <div class="form-group">
+                        <label class="section-header-flex">
+                            <span>贈品規格</span>
+                            <button type="button" class="gift-variant-btn" onclick="addGiftVariantGroup()">新增規格</button>
+                        </label>
+                        <div id="addGiftVariantGroupsContainer"><div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div></div>
+                        <button type="button" class="gift-generate-btn" onclick="generateGiftVariantCombinations()">產生規格組合</button>
+                        <div id="addGiftVariantSkuSection" style="display:none;">
+                            <div class="variant-sku-section">
+                                <div class="variant-sku-title">📦 規格貨號、庫存設定</div>
+                                <div id="addGiftVariantSkuList"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="saveGiftBtn" class="gift-save-btn" onclick="addNewGift()">確認新增贈品</button>
                 </div>
             </div>
         </div>
@@ -6315,6 +6400,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
+            // 檢查是否有規格
+            const hasVariants = document.querySelectorAll('#addGiftVariantGroupsContainer .variant-group-builder').length > 0 &&
+                                document.getElementById('addGiftVariantSkuSection').style.display !== 'none';
+
             const newId = 'gift_' + Date.now();
             const newGift = {
                 id: newId,
@@ -6324,26 +6413,73 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 giftName,
                 giftQty
             };
-            
+
             if (giftSku) newGift.giftSku = giftSku;
-            if (giftStock) newGift.giftStock = parseInt(giftStock);
-            
+
+            if (hasVariants) {
+                // 收集規格資料
+                const variants = {};
+                const variantKeyOrder = [];
+                document.querySelectorAll('#addGiftVariantGroupsContainer .variant-group-builder').forEach(group => {
+                    const groupNameInput = group.querySelector('input[id^="addGiftVariantGroupName"]');
+                    const groupName = groupNameInput.value.trim();
+                    if (groupName) {
+                        const options = [];
+                        group.querySelectorAll('.variant-option-builder input').forEach(input => {
+                            const v = input.value.trim();
+                            if (v) options.push(v);
+                        });
+                        if (options.length > 0) {
+                            variants[groupName] = options;
+                            variantKeyOrder.push(groupName);
+                        }
+                    }
+                });
+                if (Object.keys(variants).length > 0) {
+                    newGift.variants = variants;
+                    newGift.variantKeyOrder = variantKeyOrder;
+                    const variantSkus = {};
+                    const variantStock = {};
+                    document.querySelectorAll('#addGiftVariantSkuList .variant-sku-input').forEach(input => {
+                        if (input.value.trim()) variantSkus[input.dataset.key] = input.value.trim();
+                    });
+                    document.querySelectorAll('#addGiftVariantSkuList .variant-stock-input').forEach(input => {
+                        const s = parseInt(input.value);
+                        if (!isNaN(s) && s >= 0) variantStock[input.dataset.key] = s;
+                    });
+                    if (Object.keys(variantSkus).length > 0) newGift.variantSkus = variantSkus;
+                    if (Object.keys(variantStock).length > 0) newGift.variantStock = variantStock;
+                }
+            } else {
+                if (giftStock) newGift.giftStock = parseInt(giftStock);
+            }
+
             giftRules.push(newGift);
-            
+
             // 記錄初始庫存
-            if (newGift.giftStock > 0) {
+            if (newGift.variants && newGift.variantStock) {
+                Object.keys(newGift.variantStock).forEach(key => {
+                    const s = newGift.variantStock[key];
+                    if (s > 0) {
+                        logStockMovement(
+                            { id: newGift.id, name: newGift.giftName, sku: newGift.variantSkus?.[key] || '', brand: '' },
+                            key, '初始庫存', s, 0, s, '新增贈品規則（有規格）'
+                        );
+                    }
+                });
+            } else if (newGift.giftStock > 0) {
                 logStockMovement(
                     { id: newGift.id, name: newGift.giftName, sku: newGift.giftSku || '', brand: '' },
                     '', '初始庫存', newGift.giftStock, 0, newGift.giftStock, '新增贈品規則'
                 );
             }
-            
+
             showNotification('✅ 贈品新增成功！');
             saveDataToLocalStorage();
             loadGiftButtons();
-            loadGiftList(); // 同步更新贈品管理列表
+            loadGiftList();
             closeAddGiftModal();
-            
+
             // 清空表單
             document.getElementById('addGiftName').value = '';
             document.getElementById('addGiftConditionValue').value = '';
@@ -6351,6 +6487,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('addGiftItemSku').value = '';
             document.getElementById('addGiftItemQty').value = '1';
             document.getElementById('addGiftItemStock').value = '';
+            document.getElementById('addGiftVariantGroupsContainer').innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
+            document.getElementById('addGiftVariantSkuSection').style.display = 'none';
+            document.getElementById('addGiftVariantSkuList').innerHTML = '';
+            document.getElementById('addGiftSimpleStockSection').style.display = 'block';
+            document.getElementById('addGiftTotalStockDisplay').style.display = 'none';
         }
 
         function applyGift(giftId) {
@@ -6795,21 +6936,71 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function editGift(index) {
             const gift = giftRules[index];
             currentEditingGiftIndex = index;
-            
+
+            // 重置規格區域
+            document.getElementById('editGiftVariantGroupsContainer').innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
+            document.getElementById('editGiftVariantSkuSection').style.display = 'none';
+            document.getElementById('editGiftVariantSkuList').innerHTML = '';
+            document.getElementById('editGiftSimpleStockSection').style.display = 'block';
+            document.getElementById('editGiftTotalStockDisplay').style.display = 'none';
+
             bringModalToFront('editGiftModal');
             document.getElementById('editGiftModal').classList.add('show');
-            
-            // 先設定類型並更新表單
+
             document.getElementById('editGiftConditionType').value = gift.conditionType;
             updateEditGiftForm();
-            
+
             setTimeout(() => {
                 document.getElementById('editGiftName').value = gift.name;
                 document.getElementById('editGiftConditionValue').value = gift.conditionValue;
                 document.getElementById('editGiftItemName').value = gift.giftName;
                 document.getElementById('editGiftItemSku').value = gift.giftSku || '';
                 document.getElementById('editGiftItemQty').value = gift.giftQty;
-                document.getElementById('editGiftItemStock').value = gift.giftStock !== undefined ? gift.giftStock : '';
+
+                if (gift.variants && Object.keys(gift.variants).length > 0) {
+                    // 有規格：重建規格群組
+                    const vkeys = (gift.variantKeyOrder || []).filter(k => gift.variants[k]);
+                    Object.keys(gift.variants).forEach(k => { if (!vkeys.includes(k)) vkeys.push(k); });
+                    vkeys.forEach(variantName => {
+                        const options = gift.variants[variantName];
+                        const groupId = giftVariantGroupCounter++;
+                        const groupHtml = `
+                            <div class="variant-group-builder" id="editGiftVariantGroup${groupId}">
+                                <div class="variant-group-header">
+                                    <input type="text" placeholder="規格名稱" id="editGiftVariantGroupName${groupId}" value="${variantName}" />
+                                    <button class="remove-variant-group-btn" onclick="removeEditGiftVariantGroup(${groupId})">刪除</button>
+                                </div>
+                                <div class="variant-options-builder" id="editGiftVariantOptions${groupId}">
+                                    ${options.map(opt => `
+                                        <div class="variant-option-builder">
+                                            <input type="text" value="${opt}" />
+                                            <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <button class="add-option-btn" onclick="addEditGiftVariantOption(${groupId})">新增選項</button>
+                            </div>
+                        `;
+                        document.getElementById('editGiftVariantGroupsContainer').insertAdjacentHTML('beforeend', groupHtml);
+                    });
+
+                    // 產生組合並填入庫存/貨號
+                    generateEditGiftVariantCombinations();
+                    setTimeout(() => {
+                        const variantStock = gift.variantStock || {};
+                        const variantSkus = gift.variantSkus || {};
+                        document.querySelectorAll('#editGiftVariantSkuList .variant-stock-input').forEach(input => {
+                            if (variantStock[input.dataset.key] !== undefined) input.value = variantStock[input.dataset.key];
+                        });
+                        document.querySelectorAll('#editGiftVariantSkuList .variant-sku-input').forEach(input => {
+                            if (variantSkus[input.dataset.key]) input.value = variantSkus[input.dataset.key];
+                        });
+                        updateGiftTotalStockDisplay('edit');
+                    }, 50);
+                } else {
+                    // 無規格：顯示單一庫存欄位
+                    document.getElementById('editGiftItemStock').value = gift.giftStock !== undefined ? gift.giftStock : '';
+                }
             }, 50);
         }
 
@@ -6820,7 +7011,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         function updateGift() {
             if (currentEditingGiftIndex === null) return;
-            
+
             const name = document.getElementById('editGiftName').value.trim();
             const conditionType = document.getElementById('editGiftConditionType').value;
             const conditionValue = parseInt(document.getElementById('editGiftConditionValue').value);
@@ -6828,46 +7019,94 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const giftSku = document.getElementById('editGiftItemSku').value.trim();
             const giftQty = parseInt(document.getElementById('editGiftItemQty').value);
             const giftStock = document.getElementById('editGiftItemStock').value.trim();
-            
+
             if (!name || !conditionValue || conditionValue <= 0 || !giftName || !giftQty || giftQty <= 0) {
                 alert('請填寫完整資訊');
                 return;
             }
-            
+
             const gift = giftRules[currentEditingGiftIndex];
-            const beforeGiftStock = gift.giftStock; // 記錄異動前庫存（可能是 undefined）
-            
+
+            // 檢查是否有規格
+            const hasVariants = document.querySelectorAll('#editGiftVariantGroupsContainer .variant-group-builder').length > 0 &&
+                                document.getElementById('editGiftVariantSkuSection').style.display !== 'none';
+
             gift.name = name;
             gift.conditionType = conditionType;
             gift.conditionValue = conditionValue;
             gift.giftName = giftName;
             gift.giftQty = giftQty;
-            
-            if (giftSku) {
-                gift.giftSku = giftSku;
-            } else {
-                delete gift.giftSku;
-            }
-            
-            if (giftStock) {
-                gift.giftStock = parseInt(giftStock);
-            } else {
+
+            if (giftSku) { gift.giftSku = giftSku; } else { delete gift.giftSku; }
+
+            if (hasVariants) {
+                // 收集規格資料
+                const variants = {};
+                const variantKeyOrder = [];
+                document.querySelectorAll('#editGiftVariantGroupsContainer .variant-group-builder').forEach(group => {
+                    const groupNameInput = group.querySelector('input[id^="editGiftVariantGroupName"]');
+                    const groupName = groupNameInput.value.trim();
+                    if (groupName) {
+                        const options = [];
+                        group.querySelectorAll('.variant-option-builder input').forEach(input => {
+                            const v = input.value.trim();
+                            if (v) options.push(v);
+                        });
+                        if (options.length > 0) {
+                            variants[groupName] = options;
+                            variantKeyOrder.push(groupName);
+                        }
+                    }
+                });
+                const oldVariantStock = gift.variantStock || {};
+                const newVariantStock = {};
+                const newVariantSkus = {};
+                document.querySelectorAll('#editGiftVariantSkuList .variant-stock-input').forEach(input => {
+                    const s = parseInt(input.value);
+                    if (!isNaN(s) && s >= 0) newVariantStock[input.dataset.key] = s;
+                });
+                document.querySelectorAll('#editGiftVariantSkuList .variant-sku-input').forEach(input => {
+                    if (input.value.trim()) newVariantSkus[input.dataset.key] = input.value.trim();
+                });
+                gift.variants = variants;
+                gift.variantKeyOrder = variantKeyOrder;
+                gift.variantStock = newVariantStock;
+                if (Object.keys(newVariantSkus).length > 0) { gift.variantSkus = newVariantSkus; } else { delete gift.variantSkus; }
                 delete gift.giftStock;
+
+                // 記錄規格庫存手動調整
+                const allKeys = new Set([...Object.keys(newVariantStock), ...Object.keys(oldVariantStock)]);
+                allKeys.forEach(key => {
+                    const before = oldVariantStock[key] || 0;
+                    const after = newVariantStock[key] || 0;
+                    if (before !== after) {
+                        logStockMovement(
+                            { id: gift.id, name: gift.giftName, sku: newVariantSkus[key] || '', brand: '' },
+                            key, '手動調整', after - before, before, after, '贈品編輯手動調整庫存'
+                        );
+                    }
+                });
+            } else {
+                // 無規格
+                delete gift.variants;
+                delete gift.variantKeyOrder;
+                delete gift.variantStock;
+                delete gift.variantSkus;
+                const beforeStockNum = gift.giftStock || 0;
+                if (giftStock) { gift.giftStock = parseInt(giftStock); } else { delete gift.giftStock; }
+                const afterStockNum = gift.giftStock || 0;
+                if (beforeStockNum !== afterStockNum) {
+                    logStockMovement(
+                        { id: gift.id, name: gift.giftName, sku: gift.giftSku || '', brand: '' },
+                        '', '手動調整', afterStockNum - beforeStockNum, beforeStockNum, afterStockNum, '贈品編輯手動調整庫存'
+                    );
+                }
             }
-            
-            // 比對庫存變化，記錄手動調整
-            const beforeStockNum = beforeGiftStock || 0;
-            const afterStockNum = gift.giftStock || 0;
-            if (beforeStockNum !== afterStockNum) {
-                logStockMovement(
-                    { id: gift.id, name: gift.giftName, sku: gift.giftSku || '', brand: '' },
-                    '', '手動調整', afterStockNum - beforeStockNum, beforeStockNum, afterStockNum, '贈品編輯手動調整庫存'
-                );
-            }
-            
+
             showNotification('✅ 贈品更新成功！');
             saveDataToLocalStorage();
             loadGiftButtons();
+            loadGiftList();
             closeEditGiftModal();
         }
 
@@ -10351,6 +10590,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         let currentSelectedAddon = null;  // 當前選擇的加購項目
         let variantGroupCounter = 0;
         let addonVariantGroupCounter = 0;  // 加購項目規格計數器
+        let giftVariantGroupCounter = 0;  // 贈品規格計數器
         let currentEditingProduct = null;
         let currentEditingProductPath = null;
         let currentEditingAddonIndex = null;  // 正在編輯的加購項目索引
@@ -14624,6 +14864,195 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (displayInput) {
                 displayInput.value = `${totalStock} 件`;
             }
+        }
+
+        // ===== 贈品規格函數（新增彈窗） =====
+
+        function addGiftVariantGroup() {
+            const container = document.getElementById('addGiftVariantGroupsContainer');
+            const groupId = giftVariantGroupCounter++;
+            const groupHtml = `
+                <div class="variant-group-builder" id="addGiftVariantGroup${groupId}">
+                    <div class="variant-group-header">
+                        <input type="text" placeholder="規格名稱 (例如：顏色)" id="addGiftVariantGroupName${groupId}" />
+                        <button class="remove-variant-group-btn" onclick="removeGiftVariantGroup(${groupId})">刪除</button>
+                    </div>
+                    <div class="variant-options-builder" id="addGiftVariantOptions${groupId}">
+                        <div class="variant-option-builder">
+                            <input type="text" placeholder="選項1" />
+                            <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                        </div>
+                    </div>
+                    <button class="add-option-btn" onclick="addGiftVariantOption(${groupId})">新增選項</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', groupHtml);
+        }
+
+        function removeGiftVariantGroup(groupId) {
+            const group = document.getElementById(`addGiftVariantGroup${groupId}`);
+            if (group) group.remove();
+            const container = document.getElementById('addGiftVariantGroupsContainer');
+            if (container.children.length === 0) {
+                container.innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
+            }
+        }
+
+        function addGiftVariantOption(groupId) {
+            const container = document.getElementById(`addGiftVariantOptions${groupId}`);
+            const optionHtml = `
+                <div class="variant-option-builder">
+                    <input type="text" placeholder="選項" />
+                    <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', optionHtml);
+        }
+
+        function generateGiftVariantCombinations() {
+            const variantGroups = document.querySelectorAll('#addGiftVariantGroupsContainer .variant-group-builder');
+            if (variantGroups.length === 0) {
+                document.getElementById('addGiftVariantSkuSection').style.display = 'none';
+                return;
+            }
+            const variants = [];
+            variantGroups.forEach(group => {
+                const groupNameInput = group.querySelector('input[id^="addGiftVariantGroupName"]');
+                const groupName = groupNameInput.value.trim();
+                if (groupName) {
+                    const options = [];
+                    group.querySelectorAll('.variant-option-builder input').forEach(input => {
+                        const v = input.value.trim();
+                        if (v) options.push(v);
+                    });
+                    if (options.length > 0) variants.push({ name: groupName, options });
+                }
+            });
+            if (variants.length === 0) {
+                document.getElementById('addGiftVariantSkuSection').style.display = 'none';
+                return;
+            }
+            const combinations = generateCombinations(variants);
+            document.getElementById('addGiftVariantSkuSection').style.display = 'block';
+            const container = document.getElementById('addGiftVariantSkuList');
+            const existingSkus = {};
+            const existingStocks = {};
+            container.querySelectorAll('.variant-sku-input').forEach(input => { existingSkus[input.dataset.key] = input.value; });
+            container.querySelectorAll('.variant-stock-input').forEach(input => { existingStocks[input.dataset.key] = input.value; });
+            container.innerHTML = combinations.map(combo => {
+                const key = combo.values.join(',');
+                const label = combo.labels.join(' + ');
+                return `
+                    <div class="variant-sku-item">
+                        <div class="variant-sku-label">${label}</div>
+                        <input type="text" class="variant-sku-input" data-key="${key}" value="${existingSkus[key] || ''}" placeholder="貨號" />
+                        <input type="number" class="variant-stock-input" data-key="${key}" value="${existingStocks[key] || ''}" placeholder="庫存" min="0" onchange="updateGiftTotalStockDisplay('add')" />
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('addGiftSimpleStockSection').style.display = 'none';
+            document.getElementById('addGiftTotalStockDisplay').style.display = 'block';
+            updateGiftTotalStockDisplay('add');
+        }
+
+        function updateGiftTotalStockDisplay(mode) {
+            const listId = mode === 'edit' ? 'editGiftVariantSkuList' : 'addGiftVariantSkuList';
+            const displayId = mode === 'edit' ? 'editGiftDisplayTotalStock' : 'addGiftDisplayTotalStock';
+            let totalStock = 0;
+            document.querySelectorAll(`#${listId} .variant-stock-input`).forEach(input => {
+                totalStock += parseInt(input.value) || 0;
+            });
+            const el = document.getElementById(displayId);
+            if (el) el.value = `${totalStock} 件`;
+        }
+
+        // ===== 贈品規格函數（編輯彈窗） =====
+
+        function addEditGiftVariantGroup() {
+            const container = document.getElementById('editGiftVariantGroupsContainer');
+            const groupId = giftVariantGroupCounter++;
+            const groupHtml = `
+                <div class="variant-group-builder" id="editGiftVariantGroup${groupId}">
+                    <div class="variant-group-header">
+                        <input type="text" placeholder="規格名稱 (例如：顏色)" id="editGiftVariantGroupName${groupId}" />
+                        <button class="remove-variant-group-btn" onclick="removeEditGiftVariantGroup(${groupId})">刪除</button>
+                    </div>
+                    <div class="variant-options-builder" id="editGiftVariantOptions${groupId}">
+                        <div class="variant-option-builder">
+                            <input type="text" placeholder="選項1" />
+                            <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                        </div>
+                    </div>
+                    <button class="add-option-btn" onclick="addEditGiftVariantOption(${groupId})">新增選項</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', groupHtml);
+        }
+
+        function removeEditGiftVariantGroup(groupId) {
+            const group = document.getElementById(`editGiftVariantGroup${groupId}`);
+            if (group) group.remove();
+            const container = document.getElementById('editGiftVariantGroupsContainer');
+            if (container.children.length === 0) {
+                container.innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
+            }
+        }
+
+        function addEditGiftVariantOption(groupId) {
+            const container = document.getElementById(`editGiftVariantOptions${groupId}`);
+            const optionHtml = `
+                <div class="variant-option-builder">
+                    <input type="text" placeholder="選項" />
+                    <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', optionHtml);
+        }
+
+        function generateEditGiftVariantCombinations() {
+            const variantGroups = document.querySelectorAll('#editGiftVariantGroupsContainer .variant-group-builder');
+            if (variantGroups.length === 0) {
+                document.getElementById('editGiftVariantSkuSection').style.display = 'none';
+                return;
+            }
+            const variants = [];
+            variantGroups.forEach(group => {
+                const groupNameInput = group.querySelector('input[id^="editGiftVariantGroupName"]');
+                const groupName = groupNameInput.value.trim();
+                if (groupName) {
+                    const options = [];
+                    group.querySelectorAll('.variant-option-builder input').forEach(input => {
+                        const v = input.value.trim();
+                        if (v) options.push(v);
+                    });
+                    if (options.length > 0) variants.push({ name: groupName, options });
+                }
+            });
+            if (variants.length === 0) {
+                document.getElementById('editGiftVariantSkuSection').style.display = 'none';
+                return;
+            }
+            const combinations = generateCombinations(variants);
+            document.getElementById('editGiftVariantSkuSection').style.display = 'block';
+            const container = document.getElementById('editGiftVariantSkuList');
+            const existingSkus = {};
+            const existingStocks = {};
+            container.querySelectorAll('.variant-sku-input').forEach(input => { existingSkus[input.dataset.key] = input.value; });
+            container.querySelectorAll('.variant-stock-input').forEach(input => { existingStocks[input.dataset.key] = input.value; });
+            container.innerHTML = combinations.map(combo => {
+                const key = combo.values.join(',');
+                const label = combo.labels.join(' + ');
+                return `
+                    <div class="variant-sku-item">
+                        <div class="variant-sku-label">${label}</div>
+                        <input type="text" class="variant-sku-input" data-key="${key}" value="${existingSkus[key] || ''}" placeholder="貨號" />
+                        <input type="number" class="variant-stock-input" data-key="${key}" value="${existingStocks[key] || ''}" placeholder="庫存" min="0" onchange="updateGiftTotalStockDisplay('edit')" />
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('editGiftSimpleStockSection').style.display = 'none';
+            document.getElementById('editGiftTotalStockDisplay').style.display = 'block';
+            updateGiftTotalStockDisplay('edit');
         }
 
         // 儲存新加購項目
