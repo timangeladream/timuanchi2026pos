@@ -5128,7 +5128,11 @@ function showWelcomeShopList() {
     const shops = systemSettings.shops || {};
     const currentId = getActiveShopId();
 
-    container.innerHTML = Object.keys(shops).map(id => {
+    container.innerHTML = Object.keys(shops).sort((a, b) => {
+        const tA = parseInt(a.replace('shop_', '')) || 0;
+        const tB = parseInt(b.replace('shop_', '')) || 0;
+        return tA - tB;
+    }).map(id => {
         const s = shops[id];
         const isActive = id === currentId;
         return `<div onclick="selectWelcomeShop('${id}')" style="padding:12px 16px;margin-bottom:8px;border:2px solid ${isActive ? 'var(--primary-color)' : '#ddd'};border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:${isActive ? 'rgba(11,79,124,0.05)' : 'white'};">
@@ -15039,7 +15043,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function renderShopTabs() {
             const container = document.getElementById('shopSelectorTabs');
             const shops = systemSettings.shops || {};
-            container.innerHTML = Object.keys(shops).map(id => {
+            container.innerHTML = Object.keys(shops).sort((a, b) => {
+                const tA = parseInt(a.replace('shop_', '')) || 0;
+                const tB = parseInt(b.replace('shop_', '')) || 0;
+                return tA - tB;
+            }).map(id => {
                 const isActive = id === getActiveShopId();
                 return `<button onclick="switchShop('${id}')" style="padding:5px 10px;border:2px solid ${isActive ? 'var(--primary-color)' : '#ddd'};background:${isActive ? 'var(--primary-color)' : 'white'};color:${isActive ? 'white' : '#333'};border-radius:8px;cursor:pointer;font-size:12px;font-weight:${isActive ? '600' : '400'}; ">${shops[id].label || shops[id].shopName || '未命名'}</button>`;
             }).join('');
