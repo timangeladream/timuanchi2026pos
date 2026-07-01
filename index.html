@@ -668,7 +668,7 @@
             gap: 4px;
         }
         .edit-discount-btn {
-            padding: 6px 6px;
+            padding: 4px 8px;
             background: var(--secondary-color);
             color: white;
             border: none;
@@ -678,25 +678,36 @@
             font-weight: 500;
         }
         .edit-gift-btn {
-            padding: 2px 6px;
+            padding: 4px 8px;
             background: var(--secondary-color);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 12px;
+            border-radius: 3px;
+            font-size: 10px;
             cursor: pointer;
             font-weight: 500;
         }
         .edit-addon-btn {
-            padding: 2px 6px;
+            padding: 4px 8px;
             background: var(--secondary-color);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 12px;
+            border-radius: 3px;
+            font-size: 10px;
             cursor: pointer;
             font-weight: 500;
         }
+        .delete-addon-btn{
+            padding: 4px 8px;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
         .stock-log-btn {
             padding: 4px 8px;
             background: #8e44ad;
@@ -1826,7 +1837,7 @@
         }
 
         .delete-discount-btn {
-            padding: 6px 6px;
+            padding: 4px 8px;
             background: var(--danger-color);
             color: white;
             border: none;
@@ -14732,7 +14743,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <div class="item-action-row">
                                 <button class="edit-addon-btn" onclick="editAddon(${originalIndex})">編輯</button>
                                 <button class="stock-log-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\\'")}')" >📋</button>
-                                <button class="remove-btn" onclick="removeAddon(${originalIndex})">刪除</button>
+                                <button class="delete-addon-btn" onclick="removeAddon(${originalIndex})">刪除</button>
                             </div>
                         </div>
                     </div>
