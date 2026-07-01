@@ -698,12 +698,12 @@
             font-weight: 500;
         }
         .stock-log-btn {
-            padding: 2px 6px;
+            padding: 4px 8px;
             background: #8e44ad;
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 12px;
+            border-radius: 3px;
+            font-size: 11px;
             cursor: pointer;
             font-weight: 500;
         }
@@ -2252,17 +2252,19 @@
             gap: 6px;
         }
 
-        .product-action-row {
+        .product-action-row,
+        .item-action-row {
             display: flex;
             gap: 6px;
             align-items: center;
         }
-        .product-action-row button {
+        .product-action-row button,
+        .item-action-row button {
             display: flex;
             align-items: center;
         }
         .edit-product-btn {
-            padding: 7px 11px;
+            padding: 4px 8px;
             background: var(--secondary-color);
             color: white;
             border: none;
@@ -2273,7 +2275,7 @@
         }
 
         .delete-product-btn {
-            padding: 7px 11px;
+            padding: 4px 8px;
             background: var(--danger-color);
             color: white;
             border: none;
@@ -6080,7 +6082,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleGiftStatus('${gift.id}')">
                                 <span class="status-toggle-slider"></span>
                             </label>
-                            <div style="display: flex; gap: 6px;">
+                            <div class="item-action-row">
                                 <button class="edit-gift-btn" onclick="editGift(${originalIndex})">編輯</button>
                                 <button class="stock-log-btn" onclick="openProductStockLog('${gift.id}', '${(gift.giftName || gift.name).replace(/'/g, "\\'")}')" >📋</button>
                                 <button class="delete-discount-btn" onclick="deleteGift(${originalIndex})">刪除</button>
@@ -6505,7 +6507,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <div class="discount-item-name-manage">${btn.name}</div>
                             <div class="discount-item-desc">${description}</div>
                         </div>
-                        <div style="display: flex; gap: 8px;">
+                        <div class="item-action-row">
                             <button class="edit-discount-btn" onclick="editDiscount(${index})">編輯</button>
                             <button class="delete-discount-btn" onclick="deleteDiscountButton(${index})">刪除</button>
                         </div>
@@ -14727,7 +14729,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleAddonStatus('${item.id}')">
                                 <span class="status-toggle-slider"></span>
                             </label>
-                            <div style="display: flex; gap: 6px;">
+                            <div class="item-action-row">
                                 <button class="edit-addon-btn" onclick="editAddon(${originalIndex})">編輯</button>
                                 <button class="stock-log-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\\'")}')" >📋</button>
                                 <button class="remove-btn" onclick="removeAddon(${originalIndex})">刪除</button>
