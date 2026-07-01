@@ -667,6 +667,16 @@
             align-items: center;
             gap: 4px;
         }
+        .edit-discount-btn {
+            padding: 2px 6px;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
 
         .file-input {
             display: none;
@@ -6457,7 +6467,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <div class="discount-item-desc">${description}</div>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                            <button class="file-btn" onclick="editDiscount(${index})">編輯</button>
+                            <button class="edit-discount-btn" onclick="editDiscount(${index})">編輯</button>
                             <button class="delete-discount-btn" onclick="deleteDiscountButton(${index})">刪除</button>
                         </div>
                     </div>
