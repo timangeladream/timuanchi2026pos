@@ -2151,8 +2151,8 @@
         .status-toggle {
             position: relative;
             display: inline-block;
-            width: 44px;
-            height: 24px;
+            width: 32px;
+            height: 18px;
             flex-shrink: 0;
         }
         .status-toggle input {
@@ -2171,8 +2171,8 @@
         .status-toggle-slider:before {
             position: absolute;
             content: "";
-            height: 18px;
-            width: 18px;
+            height: 12px;
+            width: 12px;
             left: 3px;
             bottom: 3px;
             background-color: white;
@@ -2183,7 +2183,7 @@
             background-color: #27ae60;
         }
         .status-toggle input:checked + .status-toggle-slider:before {
-            transform: translateX(20px);
+            transform: translateX(14px);
         }
         .status-badge-inactive {
             display: inline-block;
@@ -2213,23 +2213,23 @@
         }
 
         .edit-product-btn {
-            padding: 6px 12px;
+            padding: 7px 11px;
             background: var(--secondary-color);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 12px;
+            border-radius: 3px;
+            font-size: 10px;
             cursor: pointer;
             font-weight: 500;
         }
 
         .delete-product-btn {
-            padding: 6px 12px;
+            padding: 7px 11px;
             background: var(--danger-color);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 12px;
+            border-radius: 3px;
+            font-size: 10px;
             cursor: pointer;
             font-weight: 500;
         }
@@ -2404,13 +2404,13 @@
 
         /* Modal header "add" buttons */
         .modal-add-btn {
-            padding: 6px 14px;
+            padding: 4px;
             background: var(--primary-color);
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 10px;
             font-weight: 600;
         }
 
@@ -4061,7 +4061,7 @@
             <div class="modal-header">
                 <h3>📦 商品管理</h3>
                 <div class="flex-row flex-center" style="gap:8px;">
-                    <button onclick="openAddProductModal()" class="modal-add-btn">➕ 新增商品</button>
+                    <button onclick="openAddProductModal()" class="modal-add-btn">新增商品</button>
                     <button class="modal-close" onclick="closeProductListManager()">×</button>
                 </div>
             </div>
@@ -16998,7 +16998,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         <div class="modal-body">
             <div id="userList" style="margin-bottom:24px;max-height:300px;overflow-y:auto;"></div>
             <div style="border-top:2px solid var(--border-color);padding-top:20px;">
-                <h4 style="margin-bottom:16px;color:var(--primary-color);">➕ 新增帳號</h4>
+                <h4 style="margin-bottom:16px;color:var(--primary-color);font-size:14px;">➕ 新增帳號</h4>
                 <div class="form-group">
                     <label style="font-size:12px;">顧客姓名 *</label>
                     <input type="text" id="newUserName" placeholder="例如：小安" style="font-size:12px;" />
@@ -17008,17 +17008,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <input type="email" id="newUserEmail" placeholder="example@email.com" style="font-size:12px;" />
                 </div>
                 <div class="form-group">
-                    <label style="font-size:12px;">密碼 * (至少6個字元)</label>
-                    <input type="password" id="newUserPassword" placeholder="請輸入密碼"  style="font-size:12px;" />
+                    <label style="font-size:12px;">密碼 *</label>
+                    <input type="password" id="newUserPassword" placeholder="請輸入密碼(至少6個字元)"  style="font-size:12px;" />
                 </div>
-                <div class="form-group">
-                    <label style="font-size:12px;">角色</label>
-                    <select id="newUserRole" style="width:100%;padding:2px;border:2px solid var(--border-color);border-radius:5px;font-size:12px;">
+                <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+                    <label style="font-size:12px;white-space:nowrap;margin:0;">角色 *</label>
+                    <select id="newUserRole" style="flex:1;padding:2px;border:2px solid var(--border-color);border-radius:5px;font-size:12px;">
                         <option value="cashier">💰 銷售員</option>
                         <option value="admin">👑 管理員</option>
                     </select>
                 </div>
-                <button class="add-discount-btn" onclick="createNewUser()">💾 建立帳號</button>
+                <button class="add-discount-btn" onclick="createNewUser()">建立帳號</button>
             </div>
         </div>
     </div>
@@ -17027,7 +17027,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
 <!-- QR Code 掃描器 -->
 <div id="scannerModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:10000;flex-direction:column;align-items:center;justify-content:center;">
-    <div style="color:white;font-size:18px;font-weight:600;margin-bottom:16px;">📷 對準 QR Code 或條碼</div>
+    <div style="color:white;font-size:18px;font-weight:600;margin-bottom:16px;">對準 QR Code 或 條碼</div>
     <div style="position:relative;width:90%;max-width:400px;">
         <video id="scannerVideo" style="width:100%;border-radius:12px;" autoplay playsinline></video>
         <!-- 掃描框 -->
@@ -17041,7 +17041,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 <!-- 顧客顯示 QR Code Modal -->
 <div id="customerQRModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;">
     <div style="background:white;border-radius:20px;padding:32px;width:90%;max-width:360px;text-align:center;">
-        <h3 style="margin:0 0 8px;color:var(--primary-color);">👁️ 顧客顯示畫面</h3>
+        <h3 style="margin:0 0 8px;color:var(--primary-color);">顧客顯示畫面</h3>
         <p style="font-size:13px;color:#666;margin:0 0 20px;">請顧客掃描以下 QR Code</p>
         <div id="customerQRCode" style="margin:0 auto 20px;"></div>
         <p id="customerQRUrl" style="font-size:11px;color:#999;word-break:break-all;margin:0 0 12px;"></p>
@@ -17069,8 +17069,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         style="flex:1;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:14px;box-sizing:border-box;"
                         oninput="clearTimeout(customerSearchTimeout); customerSearchTimeout = setTimeout(() => { customerCurrentPage = 1; renderCustomerList(); }, 300)">
                     <button onclick="toggleNewCustomerForm()" id="toggleNewCustomerBtn"
-                        style="padding:10px 14px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">
-                        ➕ 新增
+                        style="padding:10px 14px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:10px;font-weight:600;white-space:nowrap;">
+                        新增
                     </button>
                 </div>
 
@@ -17207,7 +17207,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <label style="font-size:12px;">官網會員帳號</label>
                 <input type="text" id="editCustomerAccount" placeholder="帳號" />
             </div>
-            <button class="add-discount-btn" onclick="saveEditCustomer()">💾 儲存</button>
+            <button class="add-discount-btn" onclick="saveEditCustomer()">儲存</button>
         </div>
     </div>
 </div>
@@ -17217,7 +17217,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 <div id="customerSearchModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;align-items:center;justify-content:center;">
     <div style="background:white;border-radius:16px;width:90%;max-width:420px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h4 style="margin:0;color:var(--primary-color);">🔍 查詢顧客</h4>
+            <h4 style="margin:0;color:var(--primary-color);">查詢顧客</h4>
             <button onclick="closeCustomerSearchModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">×</button>
         </div>
         <input type="text" id="customerSearchQuery" placeholder="輸入姓名或電話搜尋..."
