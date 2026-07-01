@@ -672,8 +672,38 @@
             background: var(--secondary-color);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 3px;
             font-size: 10px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .edit-gift-btn {
+            padding: 2px 6px;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .edit-addon-btn {
+            padding: 2px 6px;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .stock-log-btn {
+            padding: 2px 6px;
+            background: #8e44ad;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
             cursor: pointer;
             font-weight: 500;
         }
@@ -6042,8 +6072,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <span class="status-toggle-slider"></span>
                             </label>
                             <div style="display: flex; gap: 6px;">
-                                <button class="file-btn" onclick="editGift(${originalIndex})">編輯</button>
-                                <button class="file-btn" onclick="openProductStockLog('${gift.id}', '${(gift.giftName || gift.name).replace(/'/g, "\\'")}')" style="background:#8e44ad;">📋</button>
+                                <button class="edit-gift-btn" onclick="editGift(${originalIndex})">編輯</button>
+                                <button class="stock-log-btn" onclick="openProductStockLog('${gift.id}', '${(gift.giftName || gift.name).replace(/'/g, "\\'")}')" >📋</button>
                                 <button class="delete-discount-btn" onclick="deleteGift(${originalIndex})">刪除</button>
                             </div>
                         </div>
@@ -11247,7 +11277,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 </label>
                                 <div style="display:flex;gap:6px;">
                                     <button class="edit-product-btn" onclick="editProductById('${product.id}')">編輯</button>
-                                    <button class="edit-product-btn" onclick="openProductStockLog('${product.id}', '${product.name.replace(/'/g, "\\'")}')" style="background:#8e44ad;">📋</button>
+                                    <button class="stock-log-btn" onclick="openProductStockLog('${product.id}', '${product.name.replace(/'/g, "\\'")}')" >📋</button>
                                     <button class="delete-product-btn" onclick="deleteProductById('${product.id}')">刪除</button>
                                 </div>
                             </div>
@@ -14689,8 +14719,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <span class="status-toggle-slider"></span>
                             </label>
                             <div style="display: flex; gap: 6px;">
-                                <button class="file-btn" onclick="editAddon(${originalIndex})">編輯</button>
-                                <button class="file-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\\'")}')" style="background:#8e44ad;">📋</button>
+                                <button class="edit-addon-btn" onclick="editAddon(${originalIndex})">編輯</button>
+                                <button class="stock-log-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\\'")}')" >📋</button>
                                 <button class="remove-btn" onclick="removeAddon(${originalIndex})">刪除</button>
                             </div>
                         </div>
