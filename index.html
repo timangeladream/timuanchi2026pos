@@ -2252,6 +2252,15 @@
             gap: 6px;
         }
 
+        .product-action-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .product-action-row button {
+            display: flex;
+            align-items: center;
+        }
         .edit-product-btn {
             padding: 7px 11px;
             background: var(--secondary-color);
@@ -11275,7 +11284,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                     <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleProductStatus('${product.id}')">
                                     <span class="status-toggle-slider"></span>
                                 </label>
-                                <div style="display:flex;gap:6px;">
+                                <div class="product-action-row">
                                     <button class="edit-product-btn" onclick="editProductById('${product.id}')">編輯</button>
                                     <button class="stock-log-btn" onclick="openProductStockLog('${product.id}', '${product.name.replace(/'/g, "\\'")}')" >📋</button>
                                     <button class="delete-product-btn" onclick="deleteProductById('${product.id}')">刪除</button>
