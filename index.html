@@ -2377,7 +2377,11 @@
         .brand-name-manage {
             font-weight: 600;
             color: var(--text-dark);
+            font-size: 12px;
         }
+        .brand-item-left { display:flex; gap:8px; align-items:center; flex:1; }
+        .brand-order-col { display:flex; flex-direction:column; gap:4px; }
+        .brand-order-btn { background:var(--primary-color); color:white; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:12px; }
         .edit-brand-btn {
             background: var(--primary-color);
             color: white;
@@ -9381,17 +9385,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 // 直接顯示品牌名稱，不做轉換
                 return `
                 <div class="brand-item-manage">
-                    <div style="display: flex; gap: 8px; align-items: center; flex: 1;">
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <button 
+                    <div class="brand-item-left">
+                        <div class="brand-order-col">
+                            <button
                                 onclick="moveBrandUp(${index})"
                                 ${index === 0 ? 'disabled' : ''}
-                                style="background: var(--primary-color); color: white; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;"
+                                class="brand-order-btn"
                             >▲</button>
-                            <button 
+                            <button
                                 onclick="moveBrandDown(${index})"
                                 ${index === brands.length - 1 ? 'disabled' : ''}
-                                style="background: var(--primary-color); color: white; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;"
+                                class="brand-order-btn"
                             >▼</button>
                         </div>
                         <div class="brand-name-manage">${brand}</div>
