@@ -2339,6 +2339,43 @@
             margin-top:8px; 
         }
 
+        .addon-save-btn {
+            width:100%;
+            padding:8px;
+            background:var(--success-color);
+            color:white;
+            border:none;
+            border-radius:8px;
+            font-size:14px;
+            font-weight:600;
+            cursor:pointer;
+            margin-top:8px;
+        }
+        .addon-variant-btn {
+            width:100%;
+            padding:2px 6px;
+            background:var(--secondary-color);
+            color:white;
+            border:none;
+            border-radius:6px;
+            font-size:12px;
+            cursor:pointer;
+            font-weight:500;
+            margin-top:8px;
+        }
+        .addon-generate-btn {
+            width:100%;
+            padding:2px 6px;
+            background:var(--secondary-color);
+            color:white;
+            border:none;
+            border-radius:6px;
+            font-size:12px;
+            cursor:pointer;
+            font-weight:500;
+            margin-top:8px;
+        }
+
         /* === 新增：搜尋框樣式 === */
         .search-container {
             background: white;
@@ -3544,10 +3581,10 @@
                     <div class="form-group">
                         <label class="section-header-flex">
                             <span>加購項目規格</span>
-                            <button type="button" class="file-btn" onclick="addAddonVariantGroup()">新增規格</button>
+                            <button type="button" class="addon-variant-btn" onclick="addAddonVariantGroup()">新增規格</button>
                         </label>
-                        <div id="addonVariantGroupsContainer"></div>
-                        <button type="button" class="file-btn" onclick="generateAddonVariantCombinations()" style="width: 100%; margin-top: 8px;">產生規格組合</button>
+                        <div id="addonVariantGroupsContainer"><div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div></div>
+                        <button type="button" class="addon-generate-btn" onclick="generateAddonVariantCombinations()">產生規格組合</button>
                         <div id="addonVariantSkuSection" style="display: none;">
                             <div class="variant-sku-section">
                                 <div class="variant-sku-title">📦 規格貨號、價格、庫存設定</div>
@@ -3556,7 +3593,7 @@
                         </div>
                     </div>
 
-                    <button id="saveAddonBtn" class="add-discount-btn" onclick="saveNewAddon()">確認新增加購項目</button>
+                    <button id="saveAddonBtn" class="addon-save-btn" onclick="saveNewAddon()">確認新增加購項目</button>
                 </div>
             </div>
         </div>
@@ -14278,7 +14315,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('newAddonStock').value = '';
             
             // 清空規格容器和組合列表
-            document.getElementById('addonVariantGroupsContainer').innerHTML = '';
+            document.getElementById('addonVariantGroupsContainer').innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
             document.getElementById('addonVariantSkuList').innerHTML = '';
             document.getElementById('addonVariantSkuSection').style.display = 'none';
             
@@ -14330,7 +14367,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('newAddonStock').value = addon.stock !== undefined ? addon.stock : '';
             
             // 清空規格容器和組合列表
-            document.getElementById('addonVariantGroupsContainer').innerHTML = '';
+            document.getElementById('addonVariantGroupsContainer').innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
             document.getElementById('addonVariantSkuList').innerHTML = '';
             document.getElementById('addonVariantSkuSection').style.display = 'none';
             
@@ -14440,6 +14477,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const group = document.getElementById(`addonVariantGroup${groupId}`);
             if (group) {
                 group.remove();
+            }
+            const container = document.getElementById('addonVariantGroupsContainer');
+            if (container.children.length === 0) {
+                container.innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
             }
         }
 
