@@ -2154,12 +2154,12 @@
         }
 
         .add-option-btn {
-            padding: 6px 12px;
+            padding: 4px 8px;
             background: var(--secondary-color);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 12px;
+            border-radius: 4px;
+            font-size: 10px;
             cursor: pointer;
             font-weight: 500;
             margin-top: 6px;
@@ -2302,9 +2302,42 @@
             cursor: pointer;
             font-weight: 500;
         }
-        .product-save-btn { width:100%; padding:12px; background:var(--success-color); color:white; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; margin-top:8px; }
-        .product-variant-btn { padding:2px 6px; background:var(--secondary-color); color:white; border:none; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; display:flex; align-items:center; gap:4px; }
-        .product-generate-btn { width:100%; padding:2px 6px; background:var(--secondary-color); color:white; border:none; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; margin-top:8px; }
+        .product-save-btn { 
+            width:100%; 
+            padding:8px; 
+            background:var(--success-color); 
+            color:white; 
+            border:none; 
+            border-radius:8px; 
+            font-size:14px; 
+            font-weight:600; 
+            cursor:pointer; 
+            margin-top:8px; 
+        }
+        .product-variant-btn {
+            width:100%; 
+            padding:2px 6px; 
+            background:var(--secondary-color); 
+            color:white; 
+            border:none; 
+            border-radius:6px; 
+            font-size:12px; 
+            cursor:pointer; 
+            font-weight:500; 
+            margin-top:8px;
+        }
+        .product-generate-btn { 
+            width:100%; 
+            padding:2px 6px; 
+            background:var(--secondary-color); 
+            color:white; 
+            border:none; 
+            border-radius:6px; 
+            font-size:12px; 
+            cursor:pointer; 
+            font-weight:500; 
+            margin-top:8px; 
+        }
 
         /* === 新增：搜尋框樣式 === */
         .search-container {
@@ -11590,7 +11623,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                     </div>
                                 `).join('')}
                             </div>
-                            <button class="add-option-btn" onclick="addVariantOption(${groupId})">➕ 新增選項</button>
+                            <button class="add-option-btn" onclick="addVariantOption(${groupId})">新增選項</button>
                         </div>
                     `;
                     container.insertAdjacentHTML('beforeend', groupHtml);
@@ -11772,7 +11805,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                     </div>
                                 `).join('')}
                             </div>
-                            <button class="add-option-btn" onclick="addVariantOption(${groupId})">➕ 新增選項</button>
+                            <button class="add-option-btn" onclick="addVariantOption(${groupId})">新增選項</button>
                         </div>
                     `;
                     container.insertAdjacentHTML('beforeend', groupHtml);
@@ -11821,7 +11854,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 });
             } else {
                 // 沒有規格時,切換顯示狀態
-                container.innerHTML = '<div class="empty-variants">暫無規格，點擊上方「➕ 新增規格」按鈕來新增</div>';
+                container.innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
                 document.getElementById('variantSkuSection').style.display = 'none';
                 document.getElementById('simplePriceSection').style.display = 'block';
                 document.getElementById('totalPriceDisplay').style.display = 'none';
@@ -12023,7 +12056,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
                         </div>
                     </div>
-                    <button class="add-option-btn" onclick="addVariantOption(${groupId})">➕ 新增選項</button>
+                    <button class="add-option-btn" onclick="addVariantOption(${groupId})">新增選項</button>
                 </div>
             `;
             
@@ -14332,7 +14365,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                     </div>
                                 `).join('')}
                             </div>
-                            <button class="add-option-btn" onclick="addAddonVariantOption(${groupId})">➕ 新增選項</button>
+                            <button class="add-option-btn" onclick="addAddonVariantOption(${groupId})">新增選項</button>
                         </div>
                     `;
                     
@@ -14395,7 +14428,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
                         </div>
                     </div>
-                    <button class="add-option-btn" onclick="addAddonVariantOption(${groupId})">➕ 新增選項</button>
+                    <button class="add-option-btn" onclick="addAddonVariantOption(${groupId})">新增選項</button>
                 </div>
             `;
             
