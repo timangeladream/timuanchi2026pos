@@ -2511,7 +2511,18 @@
 
         /* Stacked button spacing */
         .btn-mb { margin-bottom: 12px; }
-        .btn-text-sm { font-size: 12px; }
+        .add-socialLinks-btn {
+            width: 100%;
+            padding: 6px;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
         .btn-flex-1 { flex: 1; }
         .btn-flex-2 { flex: 2; }
 
@@ -3946,7 +3957,7 @@
                     <h4 class="settings-section-title">📱 社群連結</h4>
                     <div id="socialLinksList"></div>
                     <div style="margin-top: 12px;">
-                        <button class="add-discount-btn btn-text-sm" onclick="addSocialLinkInput()" style="padding: 8px 16px;">新增社群</button>
+                        <button class="add-socialLinks-btn" onclick="addSocialLinkInput()" style="padding: 8px 16px;">新增社群</button>
                     </div>
                 </div>
 
