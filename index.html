@@ -2167,9 +2167,9 @@
 
         .empty-variants {
             text-align: center;
-            padding: 20px;
+            padding: 8px;
             color: var(--text-light);
-            font-size: 13px;
+            font-size: 12px;
             background: var(--bg-light);
             border-radius: 8px;
         }
@@ -2304,6 +2304,7 @@
         }
         .product-save-btn { width:100%; padding:12px; background:var(--success-color); color:white; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; margin-top:8px; }
         .product-variant-btn { padding:2px 6px; background:var(--secondary-color); color:white; border:none; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; display:flex; align-items:center; gap:4px; }
+        .product-generate-btn { width:100%; padding:2px 6px; background:var(--secondary-color); color:white; border:none; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; margin-top:8px; }
 
         /* === 新增：搜尋框樣式 === */
         .search-container {
@@ -4095,7 +4096,7 @@
                             <button type="button" class="product-variant-btn" onclick="addVariantGroup()">新增規格</button>
                         </label>
                         <div id="variantGroupsContainer"></div>
-                        <button type="button" class="product-variant-btn" onclick="generateVariantCombinations()" style="width: 100%; margin-top: 8px;">產生規格組合</button>
+                        <button type="button" class="product-generate-btn" onclick="generateVariantCombinations()">產生規格組合</button>
                         <div id="variantSkuSection" style="display: none;">
                             <div class="variant-sku-section">
                                 <div class="variant-sku-title">📦 規格貨號、價格、庫存設定</div>
@@ -11623,7 +11624,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     updateTotalStockDisplay();
                 }, 100);
             } else {
-                container.innerHTML = '<div class="empty-variants">暫無規格，點擊上方「➕ 新增規格」按鈕來新增</div>';
+                container.innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
                 document.getElementById('variantSkuSection').style.display = 'none';
                 document.getElementById('simplePriceSection').style.display = 'block';
                 document.getElementById('totalPriceDisplay').style.display = 'none';
