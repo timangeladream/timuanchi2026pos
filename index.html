@@ -1648,6 +1648,12 @@
             margin-bottom: 16px;
         }
 
+        .shop-tabs-container { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+        .shop-admin-actions { display:flex; gap:6px; }
+        .add-shop-btn { background:var(--secondary-color); color:white; border:none; padding:2px 6px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; }
+        .rename-shop-btn { background:var(--secondary-color); color:white; border:none; padding:2px 6px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; }
+        .delete-shop-btn { background:#dc3545; color:white; border:none; padding:2px 6px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; }
+
         .social-link-item {
             display: flex;
             gap: 8px;
@@ -1894,6 +1900,7 @@
 
         .form-group {
             margin-bottom: 12px;
+            font-size: 12px;
         }
 
         .variant-modal {
@@ -3901,11 +3908,11 @@
                 <!-- 店家切換 -->
                 <div class="settings-section">
                     <h4 class="settings-section-title">🏪 店家切換</h4>
-                    <div id="shopSelectorTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
-                    <div class="admin-only" style="display:flex;gap:6px;">
-                        <button class="file-btn" onclick="addNewShop()">➕ 新增店家</button>
-                        <button class="file-btn" onclick="renameCurrentShop()">✏️ 重新命名</button>
-                        <button class="file-btn" onclick="deleteCurrentShop()" style="background:#dc3545;color:white;">🗑️ 刪除店家</button>
+                    <div id="shopSelectorTabs" class="shop-tabs-container"></div>
+                    <div class="admin-only shop-admin-actions">
+                        <button class="add-shop-btn" onclick="addNewShop()">新增店家</button>
+                        <button class="rename-shop-btn" onclick="renameCurrentShop()">重新命名</button>
+                        <button class="delete-shop-btn" onclick="deleteCurrentShop()">刪除店家</button>
                     </div>
                 </div>
 
@@ -3939,7 +3946,7 @@
                     <h4 class="settings-section-title">📱 社群連結</h4>
                     <div id="socialLinksList"></div>
                     <div style="margin-top: 12px;">
-                        <button class="add-discount-btn btn-text-sm" onclick="addSocialLinkInput()" style="padding: 8px 16px;">➕ 新增社群</button>
+                        <button class="add-discount-btn btn-text-sm" onclick="addSocialLinkInput()" style="padding: 8px 16px;">新增社群</button>
                     </div>
                 </div>
 
@@ -3985,7 +3992,7 @@
 
                 <!-- 儲存按鈕 -->
                 <div class="modal-actions admin-only">
-                    <button class="add-discount-btn btn-flex-1" onclick="saveSystemSettings()">💾 儲存設定</button>
+                    <button class="add-discount-btn btn-flex-1" onclick="saveSystemSettings()">儲存設定</button>
                     <button class="add-discount-btn btn-flex-1 btn-bg-gray" onclick="closeSystemSettings()">取消</button>
                 </div>
                 <div class="modal-actions" id="cashierSettingsCloseRow" style="display:none;">
@@ -15129,7 +15136,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const shop = getActiveShop();
 
             if (!shop.socialLinks || shop.socialLinks.length === 0) {
-                container.innerHTML = '<div style="padding: 12px; text-align: center; color: #999; font-size: 13px;">尚未新增社群連結，點擊下方按鈕新增</div>';
+                container.innerHTML = '<div style="padding: 0px; text-align: center; color: #999; font-size: 12px;">尚未新增社群連結，點擊下方按鈕新增</div>';
                 return;
             }
 
