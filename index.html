@@ -2302,6 +2302,9 @@
             cursor: pointer;
             font-weight: 500;
         }
+        .product-save-btn { width:100%; padding:12px; background:var(--success-color); color:white; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; margin-top:8px; }
+        .product-variant-btn { padding:2px 6px; background:var(--secondary-color); color:white; border:none; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; display:flex; align-items:center; gap:4px; }
+
         /* === 新增：搜尋框樣式 === */
         .search-container {
             background: white;
@@ -4089,10 +4092,10 @@
                     <div class="form-group">
                         <label class="section-header-flex">
                             <span>商品規格</span>
-                            <button type="button" class="file-btn" onclick="addVariantGroup()">➕ 新增規格</button>
+                            <button type="button" class="product-variant-btn" onclick="addVariantGroup()">新增規格</button>
                         </label>
                         <div id="variantGroupsContainer"></div>
-                        <button type="button" class="file-btn" onclick="generateVariantCombinations()" style="width: 100%; margin-top: 8px;">🔄 產生規格組合</button>
+                        <button type="button" class="product-variant-btn" onclick="generateVariantCombinations()" style="width: 100%; margin-top: 8px;">產生規格組合</button>
                         <div id="variantSkuSection" style="display: none;">
                             <div class="variant-sku-section">
                                 <div class="variant-sku-title">📦 規格貨號、價格、庫存設定</div>
@@ -4101,7 +4104,7 @@
                         </div>
                     </div>
 
-                    <button id="saveProductBtn" class="add-discount-btn" onclick="saveNewProduct()">確認新增商品</button>
+                    <button id="saveProductBtn" class="product-save-btn" onclick="saveNewProduct()">確認新增商品</button>
                 </div>
             </div>
         </div>
