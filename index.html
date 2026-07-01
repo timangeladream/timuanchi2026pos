@@ -11942,7 +11942,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             updateSubCategoryDropdown();
             
             // 清空規格區域
-            document.getElementById('variantGroupsContainer').innerHTML = '<div class="empty-variants">暫無規格，點擊上方「➕ 新增規格」按鈕來新增</div>';
+            document.getElementById('variantGroupsContainer').innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
             variantGroupCounter = 0;
             
             // 隱藏規格貨號區域，顯示一般價格和庫存欄位
@@ -12073,7 +12073,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 如果沒有規格群組了，顯示空白提示
             const container = document.getElementById('variantGroupsContainer');
             if (container.children.length === 0) {
-                container.innerHTML = '<div class="empty-variants">暫無規格，點擊上方「➕ 新增規格」按鈕來新增</div>';
+                container.innerHTML = '<div class="empty-variants">暫無規格，可點擊上方「新增規格」按鈕來新增</div>';
             }
         }
 
