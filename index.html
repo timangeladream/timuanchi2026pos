@@ -3396,7 +3396,7 @@
                         </div>
                     </div>
 
-                    <button class="add-discount-btn" onclick="saveNewAddon()">確認新增加購項目</button>
+                    <button id="saveAddonBtn" class="add-discount-btn" onclick="saveNewAddon()">確認新增加購項目</button>
                 </div>
             </div>
         </div>
@@ -14108,6 +14108,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 重置編輯狀態
             currentEditingAddonIndex = null;
             document.getElementById('addonModalTitle').textContent = '新增加購項目';
+            document.getElementById('saveAddonBtn').textContent = '確認新增加購項目';
             
             // 清空表單
             document.getElementById('newAddonName').value = '';
@@ -14159,6 +14160,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 修改標題
             document.getElementById('addonModalTitle').textContent = '編輯加購項目';
+            document.getElementById('saveAddonBtn').textContent = '確認更新加購項目';
             
             // 填入基本資料
             document.getElementById('newAddonName').value = addon.name || '';
