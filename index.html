@@ -1648,11 +1648,11 @@
             margin-bottom: 16px;
         }
 
-        .shop-tabs-container { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+        .shop-tabs-container { display:flex; align-items: center; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
         .shop-admin-actions { display:flex; gap:6px; }
-        .add-shop-btn { background:var(--secondary-color); color:white; border:none; padding:2px 6px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; }
-        .rename-shop-btn { background:var(--secondary-color); color:white; border:none; padding:2px 6px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; }
-        .delete-shop-btn { background:#dc3545; color:white; border:none; padding:2px 6px; border-radius:6px; font-size:12px; cursor:pointer; font-weight:500; }
+        .add-shop-btn { background:var(--secondary-color); color:white; border:none; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:500; }
+        .rename-shop-btn { background:var(--secondary-color); color:white; border:none; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:500; }
+        .delete-shop-btn { background:#dc3545; color:white; border:none; padding:2px 6px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:500; }
 
         .social-link-item {
             display: flex;
@@ -15041,7 +15041,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const shops = systemSettings.shops || {};
             container.innerHTML = Object.keys(shops).map(id => {
                 const isActive = id === getActiveShopId();
-                return `<button onclick="switchShop('${id}')" style="padding:8px 16px;border:2px solid ${isActive ? 'var(--primary-color)' : '#ddd'};background:${isActive ? 'var(--primary-color)' : 'white'};color:${isActive ? 'white' : '#333'};border-radius:8px;cursor:pointer;font-size:13px;font-weight:${isActive ? '600' : '400'};">${shops[id].label || shops[id].shopName || '未命名'}</button>`;
+                return `<button onclick="switchShop('${id}')" style="padding:5px 10px;border:2px solid ${isActive ? 'var(--primary-color)' : '#ddd'};background:${isActive ? 'var(--primary-color)' : 'white'};color:${isActive ? 'white' : '#333'};border-radius:8px;cursor:pointer;font-size:12px;font-weight:${isActive ? '600' : '400'}; ">${shops[id].label || shops[id].shopName || '未命名'}</button>`;
             }).join('');
         }
 
