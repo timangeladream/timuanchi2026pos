@@ -1394,19 +1394,19 @@
         }
 
         .location-item-name {
-            font-size: 15px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--text-dark);
         }
 
         .delete-location-btn {
-            padding: 6px 12px;
+            padding: 4px 8px;
             background: #d32f2f;
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 10px;
             transition: background 0.3s;
         }
 
@@ -1803,7 +1803,7 @@
         }
 
         .add-discount-form h4 {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             margin-bottom: 12px;
             color: var(--primary-color);
@@ -1812,10 +1812,10 @@
         .add-discount-form select,
         .add-discount-form input {
             width: 100%;
-            padding: 10px;
+            padding: 5px;
             border: 2px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
+            border-radius: 5px;
+            font-size: 12px;
             margin-bottom: 10px;
             font-family: inherit;
         }
@@ -3147,7 +3147,7 @@
             <div class="modal-header">
                 <h3>優惠折扣管理</h3>
                 <div class="flex-row flex-center" style="gap:8px;">
-                    <button onclick="openAddDiscountModal()" class="modal-add-btn">➕ 新增折扣</button>
+                    <button onclick="openAddDiscountModal()" class="modal-add-btn">新增折扣</button>
                     <button class="modal-close" onclick="closeDiscountManager()">×</button>
                 </div>
             </div>
@@ -3184,7 +3184,7 @@
                         <option value="buyNFixed">任選N件固定金額折扣</option>
                     </select>
                     <div id="addDiscountFormFields"></div>
-                    <button class="add-discount-btn" onclick="addNewDiscountFromModal()">➕ 新增折扣</button>
+                    <button class="add-discount-btn" onclick="addNewDiscountFromModal()">確認新增折扣</button>
                 </div>
             </div>
         </div>
@@ -3208,7 +3208,7 @@
                         <option value="buyNFixed">任選N件固定金額折扣</option>
                     </select>
                     <div id="editDiscountFormFields"></div>
-                    <button class="add-discount-btn" onclick="updateDiscount()">💾 更新折扣</button>
+                    <button class="add-discount-btn" onclick="updateDiscount()">確認更新折扣</button>
                 </div>
             </div>
         </div>
@@ -3220,7 +3220,7 @@
             <div class="modal-header">
                 <h3>贈品項目管理</h3>
                 <div class="flex-row flex-center" style="gap:8px;">
-                    <button onclick="openAddGiftModal()" class="modal-add-btn">➕ 新增贈品</button>
+                    <button onclick="openAddGiftModal()" class="modal-add-btn">新增贈品</button>
                     <button class="modal-close" onclick="closeGiftManager()">×</button>
                 </div>
             </div>
@@ -3272,7 +3272,7 @@
                         <label>庫存數量(選填)</label>
                         <input type="number" id="editGiftItemStock" min="0" placeholder="例如：100" />
                     </div>
-                    <button class="add-discount-btn" onclick="updateGift()">💾 更新贈品</button>
+                    <button class="add-discount-btn" onclick="updateGift()">確認更新贈品</button>
                 </div>
             </div>
         </div>
@@ -3315,7 +3315,7 @@
                         <label>贈品庫存數量(選填)</label>
                         <input type="number" id="addGiftItemStock" min="0" placeholder="例如：100" />
                     </div>
-                    <button class="add-discount-btn" onclick="addNewGift()">➕ 新增贈品</button>
+                    <button class="add-discount-btn" onclick="addNewGift()">確認新增贈品</button>
                 </div>
             </div>
         </div>
@@ -3327,7 +3327,7 @@
             <div class="modal-header">
                 <h3>加購項目管理</h3>
                 <div class="flex-row flex-center" style="gap:8px;">
-                    <button onclick="openAddAddonModal()" class="modal-add-btn">➕ 新增加購項目</button>
+                    <button onclick="openAddAddonModal()" class="modal-add-btn">新增加購項目</button>
                     <button class="modal-close" onclick="closeAddonManager()">×</button>
                 </div>
             </div>
@@ -3352,22 +3352,22 @@
             <div class="modal-body">
                 <div class="add-discount-form">
                     <div class="form-group">
-                        <label>項目名稱 *</label>
+                        <label>加購項目名稱 *</label>
                         <input type="text" id="newAddonName" placeholder="例如：精美禮盒" />
                     </div>
 
                     <div class="form-group">
-                        <label>項目主貨號</label>
+                        <label>加購項目主貨號</label>
                         <input type="text" id="newAddonSku" placeholder="例如：GIFT-001" />
                     </div>
 
                     <div class="form-group" id="addonTotalPriceDisplay" style="display: none;">
-                        <label>項目價格區間（由各規格價格自動計算）</label>
+                        <label>加購項目價格區間（由各規格價格自動計算）</label>
                         <input type="text" id="addonDisplayTotalPrice" readonly class="input-readonly" />
                     </div>
 
                     <div class="form-group" id="addonSimplePriceSection">
-                        <label>項目價格 *</label>
+                        <label>加購項目價格 *</label>
                         <input type="number" id="newAddonPrice" min="0" placeholder="例如：80" />
                     </div>
 
@@ -3377,17 +3377,17 @@
                     </div>
 
                     <div class="form-group" id="addonSimpleStockSection">
-                        <label>項目庫存</label>
+                        <label>加購項目庫存</label>
                         <input type="number" id="newAddonStock" min="0" placeholder="例如：20" />
                     </div>
 
                     <div class="form-group">
                         <label class="section-header-flex">
-                            <span>項目規格</span>
-                            <button type="button" class="file-btn" onclick="addAddonVariantGroup()">➕ 新增規格</button>
+                            <span>加購項目規格</span>
+                            <button type="button" class="file-btn" onclick="addAddonVariantGroup()">新增規格</button>
                         </label>
                         <div id="addonVariantGroupsContainer"></div>
-                        <button type="button" class="file-btn" onclick="generateAddonVariantCombinations()" style="width: 100%; margin-top: 8px;">🔄 產生規格組合</button>
+                        <button type="button" class="file-btn" onclick="generateAddonVariantCombinations()" style="width: 100%; margin-top: 8px;">產生規格組合</button>
                         <div id="addonVariantSkuSection" style="display: none;">
                             <div class="variant-sku-section">
                                 <div class="variant-sku-title">📦 規格貨號、價格、庫存設定</div>
@@ -3396,7 +3396,7 @@
                         </div>
                     </div>
 
-                    <button class="add-discount-btn" onclick="saveNewAddon()">💾 儲存項目</button>
+                    <button class="add-discount-btn" onclick="saveNewAddon()">確認新增加購項目</button>
                 </div>
             </div>
         </div>
@@ -3414,7 +3414,7 @@
                 <div class="add-discount-form">
                     <h4>新增銷售地點</h4>
                     <input type="text" id="newLocationName" placeholder="例如：新竹門市" class="location-input" />
-                    <button class="add-discount-btn" onclick="addNewLocation()">➕ 新增地點</button>
+                    <button class="add-discount-btn" onclick="addNewLocation()">新增地點</button>
                 </div>
             </div>
         </div>
@@ -10202,7 +10202,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <div class="location-item-name" id="location-name-${index}">${location}</div>
                         <div style="display:flex;gap:6px;">
-                            <button onclick="startEditLocation(${index})" style="padding:4px 10px;background:#6c757d;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">✏️ 編輯</button>
+                            <button onclick="startEditLocation(${index})" style="padding:4px 8px;background:#6c757d;color:white;border:none;border-radius:6px;cursor:pointer;font-size:10px;">編輯</button>
                             <button class="delete-location-btn" onclick="deleteLocation(${index})">刪除</button>
                         </div>
                     </div>
