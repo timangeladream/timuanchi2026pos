@@ -6655,7 +6655,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const variantLabel = vkeys.map(k => selectedGiftVariants[k]).join('/');
 
             const giftItem = {
-                name: `${gift.giftName}（${variantLabel}）`,
+                name: gift.giftName,
                 price: 0,
                 quantity: 1,
                 isGift: true,
@@ -13462,6 +13462,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         if (item.isGift) {
                             const skuInfo = item.sku ? `<div style="font-size: 11px; color: #999;">貨號: ${item.sku}</div>` : '';
                             const isVariantGift = item.selectedVariants && Object.keys(item.selectedVariants).length > 0;
+                            let giftVariantInfo = '';
+                            if (isVariantGift) {
+                                const _gvkeys = (item.variantKeyOrder || []).filter(k => item.selectedVariants[k]);
+                                Object.keys(item.selectedVariants).forEach(k => { if (!_gvkeys.includes(k)) _gvkeys.push(k); });
+                                giftVariantInfo = `<div style="font-size: 11px; color: #999;">${_gvkeys.map(k => `${k}: ${item.selectedVariants[k]}`).join(' | ')}</div>`;
+                            }
 
                             return `
                                 <div class="order-item" style="background: #f0f9ff;">
@@ -13469,6 +13475,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                         <div class="order-item-name">
                                             <span style="color: #4CAF50; font-weight: 600;">【贈品】</span>${item.name}
                                         </div>
+                                        ${giftVariantInfo}
                                         ${skuInfo}
                                         <div style="font-size: 11px; color: #999;">${item.giftRuleName || ''}</div>
                                         <div class="order-item-price">NT$ 0</div>
@@ -14423,17 +14430,25 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         <div class="receipt-item-qty">數量</div>
                         <div class="receipt-item-price"></div>
                     </div>
-                    ${items.filter(item => item.isGift).map(item => `
+                    ${items.filter(item => item.isGift).map(item => {
+                        let giftVariantLine = '';
+                        if (item.selectedVariants && Object.keys(item.selectedVariants).length > 0) {
+                            const _rgvkeys = (item.variantKeyOrder || []).filter(k => item.selectedVariants[k]);
+                            Object.keys(item.selectedVariants).forEach(k => { if (!_rgvkeys.includes(k)) _rgvkeys.push(k); });
+                            giftVariantLine = `<br><span style="font-size: 10px; color: #000;">${_rgvkeys.map(k => `${k}: ${item.selectedVariants[k]}`).join(' | ')}</span>`;
+                        }
+                        return `
                     <div class="receipt-item" style="background: #fff; font-size: 12px;">
                         <div class="receipt-item-name">
                             ${item.name}
+                            ${giftVariantLine}
                             ${item.sku ? `<br><span style="font-size: 10px; color: #000;">貨號: ${item.sku}</span>` : ''}
                             <br><span style="font-size: 10px; color: #000;">${item.giftRuleName || ''}</span>
                         </div>
                         <div class="receipt-item-qty">x ${item.quantity}</div>
                         <div class="receipt-item-price"></div>
-                    </div>
-                    `).join('')}
+                    </div>`;
+                    }).join('')}
                 </div>
                 ` : ''}
 
