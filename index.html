@@ -6214,15 +6214,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
-            // 計算一般商品金額(排除加購品)
-            const productSubtotal = orderItems
-                .filter(item => !item.isAddon)
+            // 計算一般商品金額（折後，排除加購品和贈品）
+            const productSubtotalRaw = orderItems
+                .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            
-            // 計算一般商品件數(排除加購品)
+            const totalDiscount = discounts.reduce((sum, d) => sum + (d.amount || 0), 0);
+            const productSubtotal = Math.max(0, productSubtotalRaw - totalDiscount);
+
+            // 計算一般商品件數（排除加購品和贈品）
             const productCount = orderItems
-                .filter(item => !item.isAddon)
+                .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
             
             container.innerHTML = activeGifts.map((gift, index) => {
@@ -6688,9 +6689,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (gift.giftStock !== undefined && gift.giftStock <= 0) { alert('此贈品已贈完！'); return; }
             }
 
-            // 條件檢查
-            const productSubtotal = orderItems.filter(item => !item.isAddon).reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const productCount = orderItems.filter(item => !item.isAddon).reduce((sum, item) => sum + item.quantity, 0);
+            // 條件檢查（折後金額）
+            const productSubtotalRaw = orderItems.filter(item => !item.isAddon && !item.isGift).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const totalDiscount = discounts.reduce((sum, d) => sum + (d.amount || 0), 0);
+            const productSubtotal = Math.max(0, productSubtotalRaw - totalDiscount);
+            const productCount = orderItems.filter(item => !item.isAddon && !item.isGift).reduce((sum, item) => sum + item.quantity, 0);
             let isEligible = false;
             if (gift.conditionType === 'minAmount') isEligible = productSubtotal >= gift.conditionValue;
             else if (gift.conditionType === 'minItems') isEligible = productCount >= gift.conditionValue;
@@ -13660,32 +13663,42 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 檢查並移除不符合條件的贈品
         function checkAndRemoveInvalidGifts() {
-            // 計算一般商品金額(排除加購品和贈品)
             const productSubtotal = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            // 計算一般商品件數(排除加購品和贈品)
+            const totalDiscount = discounts.reduce((sum, d) => sum + (d.amount || 0), 0);
+            const netSubtotal = Math.max(0, productSubtotal - totalDiscount);
+
             const productCount = orderItems
                 .filter(item => !item.isAddon && !item.isGift)
                 .reduce((sum, item) => sum + item.quantity, 0);
-            
-            // 檢查每個贈品是否還符合條件
+
+            const removedGifts = [];
+
             orderItems = orderItems.filter(item => {
-                if (!item.isGift) return true; // 保留非贈品
-                
+                if (!item.isGift) return true;
+
                 const gift = giftRules.find(g => g.id === item.giftId);
-                if (!gift) return false; // 贈品規則已刪除,移除贈品
-                
-                // 檢查條件
+                if (!gift) { removedGifts.push(item.name); return false; }
+
+                let keep = true;
                 if (gift.conditionType === 'minAmount') {
-                    return productSubtotal >= gift.conditionValue;
+                    keep = netSubtotal >= gift.conditionValue;
                 } else if (gift.conditionType === 'minItems') {
-                    return productCount >= gift.conditionValue;
+                    keep = productCount >= gift.conditionValue;
                 }
-                
-                return true;
+                if (!keep) removedGifts.push(`${item.name}（${gift.name}）`);
+                return keep;
             });
+
+            if (removedGifts.length > 0) {
+                const detail = removedGifts.map(n => `・${n}`).join('\n');
+                if (removedGifts.length === 1) {
+                    alert(`⚠️ 折後未達贈品門檻，已移除贈品：${removedGifts[0]}`);
+                } else {
+                    alert(`⚠️ 折後未達贈品門檻，已移除以下贈品：\n\n${detail}`);
+                }
+            }
         }
 
         // 百分比折扣
