@@ -13316,11 +13316,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         function updateOrder() {
             const container = document.getElementById('orderList');
-            // 分類：商品在前，加購項目，贈品，最後折扣
+            // products 先算（折扣重算需要用 productCount）；addons/gifts 延後到贈品移除後再算
             const products = orderItems.filter(item => !item.isAddon && !item.isGift);
-            const addons = orderItems.filter(item => item.isAddon);
-            const gifts = orderItems.filter(item => item.isGift);
-            
+
             // 更新標題旁的數量統計
             const productCount = products.reduce((sum, item) => sum + item.quantity, 0);
             
@@ -13345,6 +13343,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         type: rule.type,
                         count: rule.count,
                         discount: rule.discount,
+                        times,
                         amount: times * rule.discount,
                         description: `${rule.name} (已套用${times}次)`,
                         isDiscount: true
@@ -13399,6 +13398,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
                 return true;
             });
+
+            // 折扣重算完畢後，檢查訂單裡的贈品是否仍符合條件（折後金額可能已低於門檻）
+            checkAndRemoveInvalidGifts();
+
+            // 在贈品可能被移除後，再計算 addons/gifts 供後續渲染使用
+            const addons = orderItems.filter(item => item.isAddon);
+            const gifts = orderItems.filter(item => item.isGift);
+
             const addonCount = addons.reduce((sum, item) => sum + item.quantity, 0);
             const giftCount = gifts.reduce((sum, item) => sum + item.quantity, 0);
             const summaryEl = document.getElementById('orderItemCountSummary');
