@@ -14368,24 +14368,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         <div class="receipt-item-qty">數量</div>
                         <div class="receipt-item-price">小計</div>
                     </div>
-                    ${items.map(item => {
+                    ${items.filter(item => !item.isGift).map(item => {
                         const itemTotal = item.price * item.quantity;
-                        
-                        // 贈品標記
-                        if (item.isGift) {
-                            return `
-                            <div class="receipt-item" style="background: #fff; font-size: 12px;">
-                                <div class="receipt-item-name">
-                                    <span style="font-weight: 600;">【贈品】</span>${item.name}
-                                    ${item.sku ? `<br><span style="font-size: 10px; color: #000;">貨號: ${item.sku}</span>` : ''}
-                                    <br><span style="font-size: 10px; color: #000;">${item.giftRuleName || ''}</span>
-                                </div>
-                                <div class="receipt-item-qty">x ${item.quantity}</div>
-                                <div class="receipt-item-price">NT$ 0</div>
-                            </div>
-                            `;
-                        }
-                        
+
                         const addonLabel = item.isAddon ? '<span style="font-weight: 600;">【加購】</span>' : '';
                         
                         // 處理規格顯示
@@ -14430,6 +14415,27 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         <span>NT$ ${total}</span>
                     </div>
                 </div>
+
+                ${items.some(item => item.isGift) ? `
+                <div class="receipt-items" style="margin-top: 8px;">
+                    <div class="receipt-item" style="font-weight: bold; border-bottom: 1px solid #000;">
+                        <div class="receipt-item-name">贈品</div>
+                        <div class="receipt-item-qty">數量</div>
+                        <div class="receipt-item-price"></div>
+                    </div>
+                    ${items.filter(item => item.isGift).map(item => `
+                    <div class="receipt-item" style="background: #fff; font-size: 12px;">
+                        <div class="receipt-item-name">
+                            ${item.name}
+                            ${item.sku ? `<br><span style="font-size: 10px; color: #000;">貨號: ${item.sku}</span>` : ''}
+                            <br><span style="font-size: 10px; color: #000;">${item.giftRuleName || ''}</span>
+                        </div>
+                        <div class="receipt-item-qty">x ${item.quantity}</div>
+                        <div class="receipt-item-price"></div>
+                    </div>
+                    `).join('')}
+                </div>
+                ` : ''}
 
                 <div class="receipt-section" style="margin-top: 16px;">
                     <div class="receipt-info-row">
