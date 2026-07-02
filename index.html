@@ -13451,7 +13451,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         // 贈品標記
                         if (item.isGift) {
                             const skuInfo = item.sku ? `<div style="font-size: 11px; color: #999;">貨號: ${item.sku}</div>` : '';
-                            
+                            const isVariantGift = item.selectedVariants && Object.keys(item.selectedVariants).length > 0;
+
                             return `
                                 <div class="order-item" style="background: #f0f9ff;">
                                     <div class="order-item-info">
@@ -13463,9 +13464,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                         <div class="order-item-price">NT$ 0</div>
                                     </div>
                                     <div class="order-item-controls">
-                                        <button class="qty-btn" onclick="updateQuantity(${originalIndex}, -1)">-</button>
-                                        <span class="qty-display">${item.quantity}</span>
-                                        <button class="qty-btn" onclick="updateQuantity(${originalIndex}, 1)">+</button>
+                                        ${isVariantGift ? `
+                                            <span class="qty-display">x${item.quantity}</span>
+                                        ` : `
+                                            <button class="qty-btn" onclick="updateQuantity(${originalIndex}, -1)">-</button>
+                                            <span class="qty-display">${item.quantity}</span>
+                                            <button class="qty-btn" onclick="updateQuantity(${originalIndex}, 1)">+</button>
+                                        `}
                                         <button class="delete-btn" onclick="removeItem(${originalIndex})">×</button>
                                     </div>
                                 </div>
