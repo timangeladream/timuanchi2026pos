@@ -4172,6 +4172,21 @@
         </div>
     </div>
 
+    <!-- 贈品規格選擇彈窗 -->
+    <div id="giftVariantModal" class="variant-modal">
+        <div class="variant-content">
+            <div class="variant-header">
+                <div class="variant-product-name" id="giftVariantName"></div>
+                <div class="variant-product-sku" id="giftVariantProgress"></div>
+            </div>
+            <div id="giftVariantGroups"></div>
+            <div class="variant-actions">
+                <button class="variant-btn variant-cancel" onclick="closeGiftVariantModal()">取消</button>
+                <button class="variant-btn variant-confirm" onclick="confirmGiftVariantSelection()">加到訂單明細</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 規格選擇彈窗 -->
     <div id="variantModal" class="variant-modal">
         <div class="variant-content">
@@ -6214,50 +6229,62 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 let isEligible = false;
                 let statusText = '';
                 let buttonClass = 'discount-btn';
-                
-                // 檢查庫存是否為0
-                const isOutOfStock = gift.giftStock !== undefined && gift.giftStock <= 0;
-                
-                // 檢查是否符合條件
+
+                const hasVariants = gift.variants && Object.keys(gift.variants).length > 0;
+
+                // 庫存檢查
+                let isOutOfStock;
+                let stockText;
+                if (hasVariants) {
+                    const totalVariantStock = Object.values(gift.variantStock || {}).reduce((s, v) => s + (v || 0), 0);
+                    isOutOfStock = totalVariantStock <= 0;
+                    stockText = `<br><span style="font-size: 10px; opacity: 0.8;">庫存: ${totalVariantStock}</span>`;
+                } else {
+                    isOutOfStock = gift.giftStock !== undefined && gift.giftStock <= 0;
+                    stockText = gift.giftStock !== undefined ? `<br><span style="font-size: 10px; opacity: 0.8;">庫存: ${gift.giftStock}</span>` : '';
+                }
+
+                // 條件檢查
                 if (gift.conditionType === 'minAmount') {
                     isEligible = productSubtotal >= gift.conditionValue;
-                    if (!isEligible) {
-                        const diff = gift.conditionValue - productSubtotal;
-                        statusText = ` 還差${diff}元`;
-                    }
+                    if (!isEligible) statusText = ` 還差${gift.conditionValue - productSubtotal}元`;
                 } else if (gift.conditionType === 'minItems') {
                     isEligible = productCount >= gift.conditionValue;
-                    if (!isEligible) {
-                        const diff = gift.conditionValue - productCount;
-                        statusText = ` 還差${diff}件`;
-                    }
+                    if (!isEligible) statusText = ` 還差${gift.conditionValue - productCount}件`;
                 }
-                
-                // 檢查是否已贈送
-                const alreadyGifted = orderItems.some(item => item.isGift && item.giftId === gift.id);
-                
-                // 設定按鈕狀態(不在文字中顯示已贈完)
+
+                // 已選數量
+                const addedCount = orderItems.filter(item => item.isGift && item.giftId === gift.id).length;
+                const isComplete = hasVariants ? (addedCount >= gift.giftQty) : (addedCount > 0);
+
+                // 按鈕狀態
                 if (isOutOfStock) {
                     buttonClass = 'discount-btn gift-btn-disabled';
-                } else if (alreadyGifted) {
+                } else if (isComplete) {
                     buttonClass = 'discount-btn gift-btn-applied';
-                    statusText = ' ✓ 已贈送';
+                    statusText = hasVariants ? ` ✓ (${addedCount}/${gift.giftQty})` : ' ✓ 已贈送';
                 } else if (isEligible) {
                     buttonClass = 'discount-btn gift-btn-eligible';
+                    if (hasVariants && addedCount > 0) statusText = ` (${addedCount}/${gift.giftQty})`;
                 } else {
                     buttonClass = 'discount-btn gift-btn-disabled';
                 }
-                
+
                 // 已贈完標籤
                 const outOfStockLabel = isOutOfStock ? '<div class="sold-out-label">已贈完</div>' : '';
-                
-                // 組合顯示文字（加入贈品名稱）
-                const giftNameText = gift.giftName ? `<br><span style="font-size: 11px; opacity: 0.9;">🎁 ${gift.giftName}${gift.giftQty > 1 ? ' x' + gift.giftQty : ''}</span>` : '';
-                let displayText = gift.name + statusText;
+
+                // 贈品名稱顯示
+                let giftNameText = '';
+                if (gift.giftName) {
+                    const qtyLabel = hasVariants ? ` x${gift.giftQty}（可選${gift.giftQty}次）` : (gift.giftQty > 1 ? ` x${gift.giftQty}` : '');
+                    giftNameText = `<br><span style="font-size: 11px; opacity: 0.9;">🎁 ${gift.giftName}${qtyLabel}</span>`;
+                }
+
                 const skuText = gift.giftSku ? `<br><span style="font-size: 10px; opacity: 0.8;">貨號: ${gift.giftSku}</span>` : '';
-                const stockText = gift.giftStock !== undefined ? `<br><span style="font-size: 10px; opacity: 0.8;">庫存: ${gift.giftStock}</span>` : '';
-                
-                return `<button class="${buttonClass}" onclick="applyGift('${gift.id}')" id="gift-btn-${gift.id}" ${!isEligible || alreadyGifted || isOutOfStock ? 'disabled' : ''} style="position: relative;">${displayText}${giftNameText}${skuText}${stockText}${outOfStockLabel}</button>`;
+                const displayText = gift.name + statusText;
+                const isDisabled = !isEligible || isComplete || isOutOfStock;
+
+                return `<button class="${buttonClass}" onclick="applyGift('${gift.id}')" id="gift-btn-${gift.id}" ${isDisabled ? 'disabled' : ''} style="position: relative;">${displayText}${giftNameText}${skuText}${stockText}${outOfStockLabel}</button>`;
             }).join('');
         }
 
@@ -6494,64 +6521,205 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('addGiftTotalStockDisplay').style.display = 'none';
         }
 
+        // 開啟贈品規格選擇彈窗
+        function openGiftVariantModal(giftId) {
+            const gift = giftRules.find(g => g.id === giftId);
+            if (!gift || !gift.variants) return;
+            currentGiftForVariant = gift;
+            selectedGiftVariants = {};
+
+            const addedCount = orderItems.filter(item => item.isGift && item.giftId === gift.id).length;
+            document.getElementById('giftVariantName').textContent = `🎁 ${gift.giftName}`;
+            document.getElementById('giftVariantProgress').textContent = `已選 ${addedCount} / ${gift.giftQty}`;
+
+            const vkeys = (gift.variantKeyOrder || []).filter(k => gift.variants[k]);
+            Object.keys(gift.variants).forEach(k => { if (!vkeys.includes(k)) vkeys.push(k); });
+
+            document.getElementById('giftVariantGroups').innerHTML = vkeys.map(variantName => {
+                const options = gift.variants[variantName];
+                return `
+                    <div class="variant-group">
+                        <div class="variant-label">${variantName}</div>
+                        <div class="variant-options">
+                            ${options.map(option => `
+                                <div class="variant-option"
+                                    data-variant="${variantName}"
+                                    data-option="${option}"
+                                    onclick="selectGiftVariant('${variantName}', '${option}')">
+                                    ${option}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('giftVariantModal').classList.add('show');
+            updateGiftVariantStockStatus();
+        }
+
+        function closeGiftVariantModal() {
+            document.getElementById('giftVariantModal').classList.remove('show');
+            currentGiftForVariant = null;
+            selectedGiftVariants = {};
+        }
+
+        function getGiftVariantOptionStock(gift, variantName, option) {
+            if (!gift.variantStock) return 999;
+            const orderedKeys = (gift.variantKeyOrder || []).filter(k => gift.variants?.[k]);
+            Object.keys(gift.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+            const testVariants = { ...selectedGiftVariants, [variantName]: option };
+            let totalStock = 0;
+            const calcStock = (keys, currentCombo) => {
+                if (keys.length === 0) {
+                    const key = orderedKeys.map(k => currentCombo[k]).join(',');
+                    totalStock += gift.variantStock[key] || 0;
+                    return;
+                }
+                const [first, ...rest] = keys;
+                if (testVariants[first] !== undefined) {
+                    calcStock(rest, { ...currentCombo, [first]: testVariants[first] });
+                } else {
+                    (gift.variants[first] || []).forEach(opt => {
+                        calcStock(rest, { ...currentCombo, [first]: opt });
+                    });
+                }
+            };
+            calcStock([...orderedKeys], {});
+            return totalStock;
+        }
+
+        function updateGiftVariantStockStatus() {
+            const gift = currentGiftForVariant;
+            if (!gift) return;
+            const orderedKeys = (gift.variantKeyOrder || []).filter(k => gift.variants?.[k]);
+            Object.keys(gift.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+            orderedKeys.forEach(variantName => {
+                (gift.variants[variantName] || []).forEach(option => {
+                    const el = document.querySelector(`#giftVariantGroups .variant-option[data-variant="${variantName}"][data-option="${option}"]`);
+                    if (!el) return;
+                    const stock = getGiftVariantOptionStock(gift, variantName, option);
+                    if (stock <= 0) {
+                        el.classList.add('out-of-stock');
+                        el.onclick = null;
+                    } else {
+                        el.classList.remove('out-of-stock');
+                        el.onclick = () => selectGiftVariant(variantName, option);
+                    }
+                });
+            });
+        }
+
+        function selectGiftVariant(variantName, option) {
+            if (selectedGiftVariants[variantName] === option) {
+                delete selectedGiftVariants[variantName];
+                document.querySelectorAll(`#giftVariantGroups .variant-option[data-variant="${variantName}"]`).forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                updateGiftVariantStockStatus();
+                return;
+            }
+            selectedGiftVariants[variantName] = option;
+            document.querySelectorAll('#giftVariantGroups .variant-group').forEach(group => {
+                const label = group.querySelector('.variant-label').textContent;
+                if (label === variantName) {
+                    group.querySelectorAll('.variant-option').forEach(opt => {
+                        opt.classList.toggle('selected', opt.textContent.trim() === option);
+                    });
+                }
+            });
+            updateGiftVariantStockStatus();
+        }
+
+        function confirmGiftVariantSelection() {
+            const gift = currentGiftForVariant;
+            if (!gift) return;
+
+            const vkeys = (gift.variantKeyOrder || []).filter(k => gift.variants[k]);
+            Object.keys(gift.variants).forEach(k => { if (!vkeys.includes(k)) vkeys.push(k); });
+
+            if (vkeys.length !== Object.keys(selectedGiftVariants).length) {
+                alert('請選擇所有規格');
+                return;
+            }
+
+            const variantKey = vkeys.map(k => selectedGiftVariants[k]).join(',');
+            const stock = (gift.variantStock || {})[variantKey] || 0;
+            if (stock <= 0) {
+                alert('此規格已贈完！');
+                return;
+            }
+
+            const variantSku = (gift.variantSkus || {})[variantKey] || '';
+            const variantLabel = vkeys.map(k => selectedGiftVariants[k]).join('/');
+
+            const giftItem = {
+                name: `${gift.giftName}（${variantLabel}）`,
+                price: 0,
+                quantity: 1,
+                isGift: true,
+                giftId: gift.id,
+                giftRuleId: gift.id,
+                giftRuleName: gift.name,
+                selectedVariants: { ...selectedGiftVariants },
+                variantKeyOrder: [...vkeys]
+            };
+            if (variantSku) giftItem.sku = variantSku;
+
+            orderItems.push(giftItem);
+            closeGiftVariantModal();
+
+            const addedCount = orderItems.filter(item => item.isGift && item.giftId === gift.id).length;
+            showNotification(`✅ 已加入贈品：${gift.giftName}（${variantLabel}）（已選 ${addedCount}/${gift.giftQty}）`);
+            updateOrder();
+        }
+
         function applyGift(giftId) {
             const gift = giftRules.find(g => g.id === giftId);
             if (!gift) return;
-            
-            // 檢查庫存
-            if (gift.giftStock !== undefined && gift.giftStock <= 0) {
-                alert('此贈品已贈完！');
-                return;
+
+            const hasVariants = gift.variants && Object.keys(gift.variants).length > 0;
+
+            // 庫存檢查
+            if (hasVariants) {
+                const totalStock = Object.values(gift.variantStock || {}).reduce((s, v) => s + (v || 0), 0);
+                if (totalStock <= 0) { alert('此贈品已贈完！'); return; }
+            } else {
+                if (gift.giftStock !== undefined && gift.giftStock <= 0) { alert('此贈品已贈完！'); return; }
             }
-            
-            // 計算一般商品金額(排除加購品)
-            const productSubtotal = orderItems
-                .filter(item => !item.isAddon)
-                .reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            // 計算一般商品件數(排除加購品)
-            const productCount = orderItems
-                .filter(item => !item.isAddon)
-                .reduce((sum, item) => sum + item.quantity, 0);
-            
-            // 檢查是否符合條件
+
+            // 條件檢查
+            const productSubtotal = orderItems.filter(item => !item.isAddon).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const productCount = orderItems.filter(item => !item.isAddon).reduce((sum, item) => sum + item.quantity, 0);
             let isEligible = false;
-            if (gift.conditionType === 'minAmount') {
-                isEligible = productSubtotal >= gift.conditionValue;
-            } else if (gift.conditionType === 'minItems') {
-                isEligible = productCount >= gift.conditionValue;
+            if (gift.conditionType === 'minAmount') isEligible = productSubtotal >= gift.conditionValue;
+            else if (gift.conditionType === 'minItems') isEligible = productCount >= gift.conditionValue;
+            if (!isEligible) { alert('尚未達到贈品條件！'); return; }
+
+            // 配額檢查
+            const addedCount = orderItems.filter(item => item.isGift && item.giftId === giftId).length;
+            if (hasVariants) {
+                if (addedCount >= gift.giftQty) { alert('此贈品已達選取上限！'); return; }
+                // 開規格選擇彈窗
+                openGiftVariantModal(giftId);
+            } else {
+                if (addedCount > 0) { alert('此贈品已加入！'); return; }
+                // 無規格：直接加入
+                const giftItem = {
+                    name: gift.giftName,
+                    price: 0,
+                    quantity: gift.giftQty,
+                    isGift: true,
+                    giftId: giftId,
+                    giftRuleId: giftId,
+                    giftRuleName: gift.name
+                };
+                if (gift.giftSku) giftItem.sku = gift.giftSku;
+                if (gift.giftStock !== undefined) giftItem.stock = gift.giftStock;
+                orderItems.push(giftItem);
+                showNotification(`✅ 已加入贈品：${gift.giftName} x${gift.giftQty}`);
+                updateOrder();
             }
-            
-            if (!isEligible) {
-                alert('尚未達到贈品條件！');
-                return;
-            }
-            
-            // 檢查是否已贈送
-            const alreadyGifted = orderItems.some(item => item.isGift && item.giftId === giftId);
-            if (alreadyGifted) {
-                alert('此贈品已加入！');
-                return;
-            }
-            
-            // 加入贈品到訂單
-            const giftItem = {
-                name: gift.giftName,
-                price: 0,
-                quantity: gift.giftQty,
-                isGift: true,
-                giftId: giftId,  // 保留給檢查用
-                giftRuleId: giftId,  // 給庫存扣除用
-                giftRuleName: gift.name
-            };
-            
-            if (gift.giftSku) giftItem.sku = gift.giftSku;
-            if (gift.giftStock !== undefined) giftItem.stock = gift.giftStock;
-            
-            orderItems.push(giftItem);
-            
-            showNotification(`✅ 已加入贈品：${gift.giftName} x${gift.giftQty}`);
-            updateOrder();
         }
 
         // 打開折扣管理
@@ -10591,6 +10759,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         let variantGroupCounter = 0;
         let addonVariantGroupCounter = 0;  // 加購項目規格計數器
         let giftVariantGroupCounter = 0;  // 贈品規格計數器
+        let currentGiftForVariant = null;
+        let selectedGiftVariants = {};
         let currentEditingProduct = null;
         let currentEditingProductPath = null;
         let currentEditingAddonIndex = null;  // 正在編輯的加購項目索引
