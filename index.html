@@ -13554,7 +13554,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 } else if (item.isGift) {
                     // 贈品：用 giftRuleId 查找（giftItem 沒有 id 欄位）
                     const targetGift = giftRules.find(g => g.id === item.giftRuleId);
-                    maxStock = targetGift?.giftStock ?? Infinity;
+                    if (targetGift && item.selectedVariants && targetGift.variantStock) {
+                        const vkeys = (targetGift.variantKeyOrder || []).filter(k => targetGift.variants?.[k]);
+                        Object.keys(targetGift.variants || {}).forEach(k => { if (!vkeys.includes(k)) vkeys.push(k); });
+                        const variantKey = vkeys.map(k => item.selectedVariants[k]).join(',');
+                        maxStock = targetGift.variantStock[variantKey] ?? Infinity;
+                    } else {
+                        maxStock = targetGift?.giftStock ?? Infinity;
+                    }
                 } else {
                     // 一般商品
                     if (item.selectedVariants) {
@@ -14009,15 +14016,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 // 處理贈品的庫存扣除
                 if (item.isGift) {
-                    // 贈品的庫存記錄在 giftRules 中
                     const giftRule = giftRules.find(rule => rule.id === item.giftRuleId);
-                    if (giftRule && giftRule.giftStock !== undefined) {
+                    if (!giftRule) return;
+
+                    if (item.selectedVariants && giftRule.variantStock) {
+                        // 有規格贈品
+                        const vkeys = (giftRule.variantKeyOrder || []).filter(k => giftRule.variants?.[k]);
+                        Object.keys(giftRule.variants || {}).forEach(k => { if (!vkeys.includes(k)) vkeys.push(k); });
+                        const variantKey = vkeys.map(k => item.selectedVariants[k]).join(',');
+                        const beforeStock = giftRule.variantStock[variantKey] || 0;
+                        giftRule.variantStock[variantKey] = Math.max(0, beforeStock - item.quantity);
+                        logStockMovement(
+                            { id: giftRule.id, name: giftRule.giftName || giftRule.name, sku: (giftRule.variantSkus || {})[variantKey] || '', brand: '' },
+                            variantKey, '銷售', -item.quantity, beforeStock, giftRule.variantStock[variantKey], `訂單 ${orderInfo.orderNumber || ''}（贈品）`
+                        );
+                    } else if (giftRule.giftStock !== undefined) {
+                        // 無規格贈品
                         const beforeGiftStock = giftRule.giftStock;
-                        giftRule.giftStock -= item.quantity;
-                        // 確保庫存不會是負數
-                        if (giftRule.giftStock < 0) {
-                            giftRule.giftStock = 0;
-                        }
+                        giftRule.giftStock = Math.max(0, giftRule.giftStock - item.quantity);
                         logStockMovement(
                             { id: giftRule.id, name: giftRule.giftName || giftRule.name, sku: giftRule.giftSku || '', brand: '' },
                             '', '銷售', -item.quantity, beforeGiftStock, giftRule.giftStock, `訂單 ${orderInfo.orderNumber || ''}（贈品）`
@@ -15561,7 +15577,21 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 // 處理贈品的庫存回加
                 if (item.isGift) {
                     const giftRule = giftRules.find(rule => rule.id === item.giftRuleId);
-                    if (giftRule && giftRule.giftStock !== undefined) {
+                    if (!giftRule) return;
+
+                    if (item.selectedVariants && giftRule.variantStock) {
+                        // 有規格贈品
+                        const vkeys = (giftRule.variantKeyOrder || []).filter(k => giftRule.variants?.[k]);
+                        Object.keys(giftRule.variants || {}).forEach(k => { if (!vkeys.includes(k)) vkeys.push(k); });
+                        const variantKey = vkeys.map(k => item.selectedVariants[k]).join(',');
+                        const beforeStock = giftRule.variantStock[variantKey] || 0;
+                        giftRule.variantStock[variantKey] = beforeStock + item.quantity;
+                        logStockMovement(
+                            { id: giftRule.id, name: giftRule.giftName || giftRule.name, sku: (giftRule.variantSkus || {})[variantKey] || '', brand: '' },
+                            variantKey, '退貨', item.quantity, beforeStock, giftRule.variantStock[variantKey], `取消訂單 ${sale.orderNumber || ''}（贈品）`
+                        );
+                    } else if (giftRule.giftStock !== undefined) {
+                        // 無規格贈品
                         const beforeGiftStock = giftRule.giftStock;
                         giftRule.giftStock += item.quantity;
                         logStockMovement(
