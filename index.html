@@ -18272,13 +18272,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         </div>
         <div class="modal-body">
             <div id="paymentMethodList"></div>
-            <div class="pm-add-row">
-                <input type="text" id="newPaymentMethodName" class="pm-add-input" placeholder="新增付款方式名稱...">
+            <div class="add-discount-form">
+                <h4>新增付款方式</h4>
+                <input type="text" id="newPaymentMethodName" placeholder="付款方式名稱..." class="location-input">
                 <button class="add-discount-btn" onclick="addPaymentMethod()">新增</button>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="add-discount-btn btn-bg-green-dark" onclick="savePaymentMethods()">儲存</button>
+        <div class="modal-footer" style="padding:12px 16px;border-top:1px solid var(--border-color);">
+            <button class="add-discount-btn" style="background:var(--primary-color);margin-top:0;" onclick="savePaymentMethods()">儲存</button>
         </div>
     </div>
 </div>
