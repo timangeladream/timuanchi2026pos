@@ -156,10 +156,13 @@
             const btn = event.target;
             btn.disabled = true;
             btn.textContent = '產生中...';
+            const actionBar = document.getElementById('actionBar');
+            actionBar.classList.add('hidden');
             try {
-                const canvas = await html2canvas(document.getElementById('content'), {
+                const canvas = await html2canvas(document.querySelector('.receipt-wrapper'), {
                     scale: 2, backgroundColor: '#ffffff', useCORS: true
                 });
+                actionBar.classList.remove('hidden');
                 canvas.toBlob(async blob => {
                     const file = new File([blob], `收據_${orderNumber}.png`, { type: 'image/png' });
                     // 優先用 Web Share API（iOS 會顯示「儲存影像」選項）
@@ -173,6 +176,7 @@
                     showImageOverlay(canvas.toDataURL('image/png'));
                 }, 'image/png');
             } catch(e) {
+                actionBar.classList.remove('hidden');
                 alert('產生圖片失敗，請重試');
             } finally {
                 btn.disabled = false;
