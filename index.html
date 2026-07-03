@@ -4026,7 +4026,6 @@
                 <div id="printPreviewContent" class="print-preview-content"></div>
                 <div class="modal-actions">
                     <button class="add-discount-btn btn-flex-1" onclick="printReceipt()">列印</button>
-                    <button class="add-discount-btn btn-flex-1 btn-bg-green-dark" onclick="downloadPDF()">轉成PDF</button>
                     <button class="add-discount-btn btn-flex-1 btn-bg-blue" onclick="showReceiptQRCode()">掃描收據</button>
                     <button class="add-discount-btn btn-flex-1 btn-bg-green" onclick="sendToLineOA()">LINE官方帳號傳送</button>
                 </div>
@@ -14499,20 +14498,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             window.print();
         }
         
-        // 產生 PDF Blob（供下載、上傳、分享共用）
-        function generatePDFBlob() {
-            const element = document.getElementById('printPreviewContent');
-            const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '收據';
-            const opt = {
-                margin: 10,
-                filename: `收據_${orderNumber}.pdf`,
-                image: { type: 'jpeg', quality: 0.95 },
-                html2canvas: { scale: 1, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            return html2pdf().set(opt).from(element).toPdf().get('pdf').then(pdf => pdf.output('blob'));
-        }
-
         // 清除 3 天前的收據連結
         async function cleanupOldReceiptLinks() {
             try {
@@ -14625,34 +14610,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         function openLineOAManager() {
             window.open('https://manager.line.biz/', '_blank');
-        }
-
-        // 下載 PDF
-        function downloadPDF() {
-            const element = document.getElementById('printPreviewContent');
-            
-            // 取得訂單編號作為檔名
-            const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '收據';
-            const filename = `收據_${orderNumber}.pdf`;
-            
-            // 設定選項 - 使用最簡單的設定來保持文字大小一致
-            const opt = {
-                margin: 10,
-                filename: filename,
-                image: { type: 'jpeg', quality: 0.95 },
-                html2canvas: { 
-                    scale: 1,  // 使用 1:1 比例
-                    useCORS: true
-                },
-                jsPDF: { 
-                    unit: 'mm', 
-                    format: 'a4', 
-                    orientation: 'portrait'
-                }
-            };
-            
-            // 生成並下載 PDF
-            html2pdf().set(opt).from(element).save();
         }
 
         // === 加購項目功能 ===
