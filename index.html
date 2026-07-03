@@ -14559,17 +14559,36 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
         }
 
-        // LINE OA 傳送：產生收據連結 → 複製到剪貼簿 → 開啟 LINE OA
+        // LINE OA 傳送：產生收據連結後顯示操作彈窗
         async function sendToLineOA() {
-            window.open('https://manager.line.biz/', '_blank');
+            showNotification('產生連結中...');
             try {
                 const receiptUrl = await createReceiptLink();
-                await navigator.clipboard.writeText(receiptUrl);
-                showNotification('✅ 收據連結已複製，請在 LINE OA 貼上傳送給顧客');
+                document.getElementById('lineOAReceiptUrl').value = receiptUrl;
+                const modal = document.getElementById('lineOAModal');
+                modal.classList.add('show');
+                bringModalToFront(modal);
             } catch(e) {
                 console.error(e);
                 showNotification('❌ 產生連結失敗，請重試');
             }
+        }
+
+        function copyLineOAUrl() {
+            const input = document.getElementById('lineOAReceiptUrl');
+            const url = input.value;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(() => showNotification('✅ 連結已複製'))
+                    .catch(() => { input.select(); document.execCommand('copy'); showNotification('✅ 連結已複製'); });
+            } else {
+                input.select();
+                document.execCommand('copy');
+                showNotification('✅ 連結已複製');
+            }
+        }
+
+        function openLineOAManager() {
+            window.open('https://manager.line.biz/', '_blank');
         }
 
         // 下載 PDF
@@ -18078,6 +18097,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
     <button onclick="closeScanner(true)" style="margin-top:20px;padding:12px 32px;background:#dc3545;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;">關閉</button>
 </div>
 
+
+<!-- LINE OA 傳送收據 Modal -->
+<div id="lineOAModal" class="modal" style="z-index:10100;">
+    <div class="modal-content" style="max-width:380px;">
+        <div class="modal-header">
+            <h3>LINE OA 傳送收據</h3>
+            <button class="modal-close" onclick="document.getElementById('lineOAModal').classList.remove('show')">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:13px;color:#555;margin-bottom:12px;">複製連結後，至 LINE OA 選顧客貼上傳送</p>
+            <input type="text" id="lineOAReceiptUrl" readonly style="width:100%;font-size:11px;padding:8px;border:1px solid var(--border-color);border-radius:6px;margin-bottom:12px;color:#333;">
+            <div class="modal-actions-simple">
+                <button onclick="copyLineOAUrl()" class="add-discount-btn btn-flex-1">複製連結</button>
+                <button onclick="openLineOAManager()" class="add-discount-btn btn-flex-1 btn-bg-green">開啟 LINE OA</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- 收據 QR Code Modal -->
 <div id="receiptQRModal" class="modal" style="z-index:10100;">
