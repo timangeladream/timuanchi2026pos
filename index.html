@@ -2784,8 +2784,10 @@
         .cust-form-group-compact { margin-bottom:0; }
         .cust-form-label-sm { font-size:12px; }
         .cust-form-actions { display:flex; gap:8px; margin-top:12px; }
-        .cust-create-btn { flex:1; padding:10px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; }
+        .cust-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
         .cust-cancel-btn { padding:10px 16px; background:#6c757d; color:white; border:none; border-radius:8px; cursor:pointer; font-size:13px; }
+        .user-form-actions { display:flex; gap:8px; margin-top:12px; }
+        .user-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
 
         /* SM filter components */
         .sm-filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -17915,7 +17917,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 <div id="newCustomerModal" class="modal" style="z-index:10100;">
     <div class="modal-content" style="max-width:420px;">
         <div class="modal-header">
-            <h3>➕ 新增顧客</h3>
+            <h3>新增顧客</h3>
             <button class="modal-close" onclick="closeNewCustomerModal()">×</button>
         </div>
         <div class="modal-body">
@@ -17936,7 +17938,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <input type="text" id="newCustomerAccount" placeholder="帳號" />
             </div>
             <div class="cust-form-actions">
-                <button onclick="createNewCustomer()" class="cust-create-btn">建立</button>
+                <button onclick="createNewCustomer()" class="cust-create-btn">建立顧客</button>
             </div>
         </div>
     </div>
@@ -17946,7 +17948,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 <div id="addAccountModal" class="modal" style="z-index:10100;">
     <div class="modal-content" style="max-width:420px;">
         <div class="modal-header">
-            <h3>➕ 新增帳號</h3>
+            <h3>新增帳號</h3>
             <button class="modal-close" onclick="closeAddAccountModal()">×</button>
         </div>
         <div class="modal-body">
@@ -17969,8 +17971,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <option value="admin">👑 管理員</option>
                 </select>
             </div>
-            <div class="cust-form-actions">
-                <button onclick="createNewUser()" class="cust-create-btn">建立帳號</button>
+            <div class="user-form-actions">
+                <button onclick="createNewUser()" class="user-create-btn">建立帳號</button>
             </div>
         </div>
     </div>
