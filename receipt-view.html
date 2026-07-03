@@ -109,10 +109,10 @@
                 }
                 const data = doc.data();
                 const createdAt = data.createdAt?.toDate();
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                if (createdAt && createdAt < sevenDaysAgo) {
-                    document.getElementById('content').innerHTML = '<div class="expired-msg">此收據連結已超過 7 天，已失效</div>';
+                const threeDaysAgo = new Date();
+                threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+                if (createdAt && createdAt < threeDaysAgo) {
+                    document.getElementById('content').innerHTML = '<div class="expired-msg">此收據連結已超過 3 天，已失效</div>';
                     return;
                 }
                 document.title = `收據 ${data.orderNumber || ''}`;

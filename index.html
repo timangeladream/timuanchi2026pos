@@ -14511,13 +14511,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             return html2pdf().set(opt).from(element).toPdf().get('pdf').then(pdf => pdf.output('blob'));
         }
 
-        // 清除 7 天前的收據連結
+        // 清除 3 天前的收據連結
         async function cleanupOldReceiptLinks() {
             try {
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                const threeDaysAgo = new Date();
+                threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
                 const snap = await db.collection('receiptLinks')
-                    .where('createdAt', '<', firebase.firestore.Timestamp.fromDate(sevenDaysAgo))
+                    .where('createdAt', '<', firebase.firestore.Timestamp.fromDate(threeDaysAgo))
                     .get();
                 for (const doc of snap.docs) {
                     await doc.ref.delete();
@@ -14552,7 +14552,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 const { url } = await createReceiptLink();
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
                 qrContainer.innerHTML = `<img src="${qrUrl}" style="width:220px;height:220px;border-radius:8px;">`;
-                statusEl.textContent = '請顧客掃描 QR Code 查看收據（7 天後失效）';
+                statusEl.textContent = '請顧客掃描 QR Code 查看收據（3 天後失效）';
             } catch(e) {
                 statusEl.textContent = '產生失敗，請重試';
                 console.error(e);
@@ -14564,7 +14564,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             showNotification('產生連結中...');
             try {
                 const { url, orderNumber } = await createReceiptLink();
-                const msg = `您好，以下是您的消費收據 🧾${orderNumber ? '\n訂單編號：' + orderNumber : ''}\n${url}`;
+                const msg = `您好，以下是您的消費收據 🧾${orderNumber ? '\n訂單編號：' + orderNumber : ''}\n${url}\n（連結 3 天內有效）`;
                 document.getElementById('lineOAReceiptUrl').value = msg;
                 const modal = document.getElementById('lineOAModal');
                 modal.classList.add('show');
