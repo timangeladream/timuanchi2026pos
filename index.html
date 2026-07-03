@@ -2794,6 +2794,11 @@
         .cust-cancel-btn { padding:10px 16px; background:#6c757d; color:white; border:none; border-radius:8px; cursor:pointer; font-size:13px; }
         .pm-form-actions { display:flex; gap:8px; margin-top:12px; }
         .pm-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+        .pm-item { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border-color); }
+        .pm-item:last-child { border-bottom:none; }
+        .pm-item-name { font-weight:600; font-size:14px; color:var(--text-color); }
+        .pm-edit-btn { padding:4px 10px; background:var(--secondary-color); color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
+        .pm-delete-btn { padding:4px 10px; background:#e74c3c; color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
         .user-form-actions { display:flex; gap:8px; margin-top:12px; }
         .user-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
         .cust-stat-row { display:flex; gap:16px; }
@@ -11057,23 +11062,32 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function renderPaymentMethodManagerList() {
             const container = document.getElementById('paymentMethodList');
             container.innerHTML = paymentMethods.map((m, i) => `
-                <div class="discount-item-manage" style="${m.enabled ? '' : 'opacity:0.6;'}">
-                    <div style="font-weight:600;font-size:14px;">${m.name}</div>
-                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+                <div class="pm-item" style="${m.enabled ? '' : 'opacity:0.5;'}">
+                    <div class="pm-item-name">${m.name}</div>
+                    <div class="item-action-row">
                         <label class="status-toggle" title="${m.enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
                             <input type="checkbox" ${m.enabled ? 'checked' : ''} onchange="togglePaymentMethod(${i}, this.checked)">
                             <span class="status-toggle-slider"></span>
                         </label>
-                        <div class="item-action-row">
-                            ${paymentMethods.length > 1 ? `<button class="delete-addon-btn" onclick="removePaymentMethod(${i})">刪除</button>` : ''}
-                        </div>
+                        <button class="pm-edit-btn" onclick="openEditPaymentMethodModal(${i})">編輯</button>
+                        ${paymentMethods.length > 1 ? `<button class="pm-delete-btn" onclick="removePaymentMethod(${i})">刪除</button>` : ''}
                     </div>
                 </div>
             `).join('');
         }
 
+        async function savePaymentMethodsNow() {
+            try {
+                await db.collection('settings').doc('system').update({ paymentMethods });
+                renderPaymentMethodButtons();
+            } catch(e) {
+                showNotification('❌ 儲存失敗，請重試');
+            }
+        }
+
         function togglePaymentMethod(index, enabled) {
             paymentMethods[index].enabled = enabled;
+            savePaymentMethodsNow();
         }
 
         function openAddPaymentMethodModal() {
@@ -11087,29 +11101,47 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('addPaymentMethodModal').classList.remove('show');
         }
 
-        function addPaymentMethod() {
+        async function addPaymentMethod() {
             const input = document.getElementById('newPaymentMethodName');
             const name = input.value.trim();
             if (!name) return;
             paymentMethods.push({ id: 'custom_' + Date.now(), name, enabled: true });
             closeAddPaymentMethodModal();
             renderPaymentMethodManagerList();
+            await savePaymentMethodsNow();
+            showNotification('✅ 已新增付款方式');
         }
 
-        function removePaymentMethod(index) {
+        async function removePaymentMethod(index) {
             paymentMethods.splice(index, 1);
             renderPaymentMethodManagerList();
+            await savePaymentMethodsNow();
+            showNotification('✅ 已刪除付款方式');
         }
 
-        async function savePaymentMethods() {
-            try {
-                await db.collection('settings').doc('system').update({ paymentMethods });
-                renderPaymentMethodButtons();
-                closePaymentMethodManager();
-                showNotification('✅ 付款方式已儲存');
-            } catch(e) {
-                showNotification('❌ 儲存失敗，請重試');
-            }
+        let editingPaymentMethodIndex = null;
+
+        function openEditPaymentMethodModal(index) {
+            editingPaymentMethodIndex = index;
+            document.getElementById('editPaymentMethodName').value = paymentMethods[index].name;
+            bringModalToFront('editPaymentMethodModal');
+            document.getElementById('editPaymentMethodModal').classList.add('show');
+            setTimeout(() => document.getElementById('editPaymentMethodName').focus(), 100);
+        }
+
+        function closeEditPaymentMethodModal() {
+            document.getElementById('editPaymentMethodModal').classList.remove('show');
+            editingPaymentMethodIndex = null;
+        }
+
+        async function saveEditPaymentMethod() {
+            const name = document.getElementById('editPaymentMethodName').value.trim();
+            if (!name || editingPaymentMethodIndex === null) return;
+            paymentMethods[editingPaymentMethodIndex].name = name;
+            closeEditPaymentMethodModal();
+            renderPaymentMethodManagerList();
+            await savePaymentMethodsNow();
+            showNotification('✅ 已更新付款方式');
         }
 
         // 清空訂單資訊
@@ -18289,9 +18321,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         <div class="modal-body">
             <div id="paymentMethodList"></div>
         </div>
-        <div class="modal-footer" style="padding:12px 16px;border-top:1px solid var(--border-color);">
-            <button class="add-discount-btn" style="background:var(--primary-color);margin-top:0;" onclick="savePaymentMethods()">儲存</button>
-        </div>
     </div>
 </div>
 
@@ -18309,6 +18338,25 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             </div>
             <div class="pm-form-actions">
                 <button class="pm-create-btn" onclick="addPaymentMethod()">確認新增</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 編輯付款方式彈窗 -->
+<div id="editPaymentMethodModal" class="modal" style="z-index:10001;">
+    <div class="modal-content" style="max-width:360px;">
+        <div class="modal-header">
+            <h3>編輯付款方式</h3>
+            <button class="modal-close" onclick="closeEditPaymentMethodModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label style="font-size:12px;">付款方式名稱</label>
+                <input type="text" id="editPaymentMethodName" placeholder="例如：Apple Pay">
+            </div>
+            <div class="pm-form-actions">
+                <button class="pm-create-btn" onclick="saveEditPaymentMethod()">確認修改</button>
             </div>
         </div>
     </div>
