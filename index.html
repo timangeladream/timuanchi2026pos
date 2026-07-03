@@ -25,6 +25,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -2655,6 +2656,7 @@
         .btn-bg-orange { background: #FFAA33; }
         .btn-bg-red-orange { background: #FF7744; }
         .btn-bg-red { background: #d32f2f; }
+        .btn-bg-green { background: #06C755; }
         .btn-bg-green-dark { background: #2E8B57; }
         .btn-bg-gray { background: #666; }
         .btn-bg-gray-light { background: #999; }
@@ -4025,7 +4027,8 @@
                 <div class="modal-actions">
                     <button class="add-discount-btn btn-flex-1" onclick="printReceipt()">列印</button>
                     <button class="add-discount-btn btn-flex-1 btn-bg-green-dark" onclick="downloadPDF()">轉成PDF</button>
-                    <button class="add-discount-btn btn-flex-1 btn-bg-gray" onclick="closePrintPreview()">取消</button>
+                    <button class="add-discount-btn btn-flex-1 btn-bg-blue" onclick="showReceiptQRCode()">掃碼收據</button>
+                    <button class="add-discount-btn btn-flex-1 btn-bg-green" onclick="sendToLineOA()">LINE 傳送</button>
                 </div>
             </div>
         </div>
@@ -14495,6 +14498,103 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             window.print();
         }
         
+        // 產生 PDF Blob（供下載、上傳、分享共用）
+        function generatePDFBlob() {
+            const element = document.getElementById('printPreviewContent');
+            const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '收據';
+            const opt = {
+                margin: 10,
+                filename: `收據_${orderNumber}.pdf`,
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: { scale: 1, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            return html2pdf().set(opt).from(element).toPdf().get('pdf').then(pdf => pdf.output('blob'));
+        }
+
+        // 清除 7 天前的收據檔案
+        async function cleanupOldReceipts() {
+            try {
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                const snap = await db.collection('receiptFiles')
+                    .where('createdAt', '<', firebase.firestore.Timestamp.fromDate(sevenDaysAgo))
+                    .get();
+                for (const doc of snap.docs) {
+                    try { await firebase.storage().ref(doc.data().path).delete(); } catch(e) {}
+                    await doc.ref.delete();
+                }
+            } catch(e) {}
+        }
+
+        // 上傳 PDF 到 Firebase Storage，回傳公開網址
+        async function uploadReceiptPDF(blob, orderNumber) {
+            const path = `receipts/${Date.now()}_${orderNumber}.pdf`;
+            const ref = firebase.storage().ref(path);
+            await ref.put(blob, { contentType: 'application/pdf' });
+            const url = await ref.getDownloadURL();
+            await db.collection('receiptFiles').add({
+                path,
+                url,
+                createdAt: firebase.firestore.Timestamp.now()
+            });
+            cleanupOldReceipts();
+            return url;
+        }
+
+        // QR Code 收據：上傳後顯示 QR Code 給顧客掃碼
+        async function showReceiptQRCode() {
+            const element = document.getElementById('printPreviewContent');
+            const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '收據';
+            const modal = document.getElementById('receiptQRModal');
+            const qrContainer = document.getElementById('receiptQRCode');
+            const statusEl = document.getElementById('receiptQRStatus');
+
+            modal.classList.add('show');
+            bringModalToFront(modal);
+            qrContainer.innerHTML = '';
+            statusEl.textContent = '上傳中...';
+
+            try {
+                const blob = await generatePDFBlob();
+                const url = await uploadReceiptPDF(blob, orderNumber);
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+                qrContainer.innerHTML = `<img src="${qrUrl}" style="width:220px;height:220px;border-radius:8px;">`;
+                statusEl.textContent = '請顧客掃描 QR Code 下載收據（7 天後失效）';
+            } catch(e) {
+                statusEl.textContent = '上傳失敗，請重試';
+                console.error(e);
+            }
+        }
+
+        // LINE OA 傳送：下載 PDF 後跳轉至 LINE 官方帳號管理
+        async function sendToLineOA() {
+            const element = document.getElementById('printPreviewContent');
+            const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '收據';
+            try {
+                const blob = await generatePDFBlob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `收據_${orderNumber}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = 'https://manager.line.biz/';
+                    link.target = '_blank';
+                    link.rel = 'noopener';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }, 800);
+            } catch(e) {
+                alert('產生 PDF 失敗，請重試');
+            }
+        }
+
         // 下載 PDF
         function downloadPDF() {
             const element = document.getElementById('printPreviewContent');
@@ -18001,6 +18101,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
     <button onclick="closeScanner(true)" style="margin-top:20px;padding:12px 32px;background:#dc3545;color:white;border:none;border-radius:10px;font-size:16px;cursor:pointer;">關閉</button>
 </div>
 
+
+<!-- 收據 QR Code Modal -->
+<div id="receiptQRModal" class="modal" style="z-index:10100;">
+    <div class="modal-content" style="max-width:360px;text-align:center;">
+        <div class="modal-header">
+            <h3>📱 掃碼取收據</h3>
+            <button class="modal-close" onclick="document.getElementById('receiptQRModal').classList.remove('show')">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="receiptQRCode" style="margin:0 auto 16px;min-height:220px;display:flex;align-items:center;justify-content:center;"></div>
+            <div id="receiptQRStatus" style="font-size:13px;color:#555;"></div>
+        </div>
+    </div>
+</div>
 
 <!-- 顧客顯示 QR Code Modal -->
 <div id="customerQRModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;">
