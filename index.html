@@ -17935,9 +17935,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <label style="font-size:12px;">官網會員帳號</label>
                 <input type="text" id="newCustomerAccount" placeholder="帳號" />
             </div>
-            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
-                <button onclick="closeNewCustomerModal()" style="padding:8px 20px;background:var(--bg-light);border:1px solid var(--border-color);border-radius:8px;cursor:pointer;font-size:13px;">取消</button>
-                <button onclick="createNewCustomer()" style="padding:8px 20px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">建立</button>
+            <div class="cust-form-actions">
+                <button onclick="createNewCustomer()" class="cust-create-btn">建立</button>
             </div>
         </div>
     </div>
@@ -17970,9 +17969,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <option value="admin">👑 管理員</option>
                 </select>
             </div>
-            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
-                <button onclick="closeAddAccountModal()" style="padding:8px 20px;background:var(--bg-light);border:1px solid var(--border-color);border-radius:8px;cursor:pointer;font-size:13px;">取消</button>
-                <button onclick="createNewUser()" style="padding:8px 20px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">建立帳號</button>
+            <div class="cust-form-actions">
+                <button onclick="createNewUser()" class="cust-create-btn">建立帳號</button>
             </div>
         </div>
     </div>
