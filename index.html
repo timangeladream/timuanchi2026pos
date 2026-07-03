@@ -14411,12 +14411,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         <span>小計</span>
                         <span>NT$ ${subtotal}</span>
                     </div>
-                    ${discountAmount > 0 ? `
-                    <div class="receipt-total-row" style="font-size: 12px;">
-                        <span>${discountList.length > 0 ? discountList.map(d => d.name + ((d.times && d.times > 1) ? ` ×${d.times}` : '')).join(', ') : '折扣'}</span>
-                        <span>- NT$ ${discountAmount}</span>
+                    ${discountAmount > 0 ? discountList.map(d => `
+                    <div class="receipt-item" style="font-size: 12px;">
+                        <div class="receipt-item-name">${d.name}</div>
+                        <div class="receipt-item-qty">${(d.times && d.times > 1) ? `×${d.times}` : ''}</div>
+                        <div class="receipt-item-price">- NT$ ${d.amount || 0}</div>
                     </div>
-                    ` : ''}
+                    `).join('') : ''}
                     <div class="receipt-total-row final">
                         <span>總計</span>
                         <span>NT$ ${total}</span>
