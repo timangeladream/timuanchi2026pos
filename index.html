@@ -14525,57 +14525,50 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             } catch(e) {}
         }
 
-        // QR Code 收據：存入 Firestore 後顯示 QR Code 給顧客掃碼
-        async function showReceiptQRCode() {
+        // 共用：將收據存入 Firestore，回傳可分享的連結
+        async function createReceiptLink() {
             const element = document.getElementById('printPreviewContent');
             const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '收據';
+            const docRef = await db.collection('receiptLinks').add({
+                html: element.innerHTML,
+                orderNumber,
+                createdAt: firebase.firestore.Timestamp.now()
+            });
+            const baseUrl = window.location.href.split('?')[0].replace('index.html', '');
+            cleanupOldReceiptLinks();
+            return `${baseUrl}receipt-view.html?id=${docRef.id}`;
+        }
+
+        // QR Code 收據：產生連結後顯示 QR Code 給顧客掃碼
+        async function showReceiptQRCode() {
             const modal = document.getElementById('receiptQRModal');
             const qrContainer = document.getElementById('receiptQRCode');
             const statusEl = document.getElementById('receiptQRStatus');
-
             modal.classList.add('show');
             bringModalToFront(modal);
             qrContainer.innerHTML = '';
             statusEl.textContent = '產生中...';
-
             try {
-                const receiptHtml = element.innerHTML;
-                const docRef = await db.collection('receiptLinks').add({
-                    html: receiptHtml,
-                    orderNumber,
-                    createdAt: firebase.firestore.Timestamp.now()
-                });
-                const baseUrl = window.location.href.split('?')[0].replace('index.html', '');
-                const receiptUrl = `${baseUrl}receipt-view.html?id=${docRef.id}`;
+                const receiptUrl = await createReceiptLink();
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(receiptUrl)}`;
                 qrContainer.innerHTML = `<img src="${qrUrl}" style="width:220px;height:220px;border-radius:8px;">`;
                 statusEl.textContent = '請顧客掃描 QR Code 查看收據（7 天後失效）';
-                cleanupOldReceiptLinks();
             } catch(e) {
                 statusEl.textContent = '產生失敗，請重試';
                 console.error(e);
             }
         }
 
-        // LINE OA 傳送：下載 PDF 後跳轉至 LINE 官方帳號管理
+        // LINE OA 傳送：產生收據連結 → 複製到剪貼簿 → 開啟 LINE OA
         async function sendToLineOA() {
-            // 先開啟 LINE OA（必須在 await 之前，否則 iOS 會攔截）
             window.open('https://manager.line.biz/', '_blank');
-
-            const element = document.getElementById('printPreviewContent');
-            const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '收據';
             try {
-                const blob = await generatePDFBlob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `收據_${orderNumber}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                const receiptUrl = await createReceiptLink();
+                await navigator.clipboard.writeText(receiptUrl);
+                showNotification('✅ 收據連結已複製，請在 LINE OA 貼上傳送給顧客');
             } catch(e) {
-                alert('產生 PDF 失敗，請重試');
+                console.error(e);
+                showNotification('❌ 產生連結失敗，請重試');
             }
         }
 
