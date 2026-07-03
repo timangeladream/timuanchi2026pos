@@ -11024,7 +11024,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 memberName: document.getElementById('memberName').value,
                 memberPhone: document.getElementById('memberPhone').value,
                 memberEmail: document.getElementById('memberEmail').value,
-                orderNote: document.getElementById('orderNote').value
+                orderNote: document.getElementById('orderNote').value,
+                paymentMethodName: selectedPaymentMethod?.name || ''
             };
         }
 
@@ -14457,7 +14458,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 memberName: sale.memberName || '',
                 memberPhone: sale.memberPhone || '',
                 memberEmail: sale.memberEmail || '',
-                orderNote: sale.orderNote || ''
+                orderNote: sale.orderNote || '',
+                paymentMethodName: sale.paymentMethodName || ''
             };
             
             // 分類：商品在前，加購項目在後，贈品最後
