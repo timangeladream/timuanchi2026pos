@@ -17899,13 +17899,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
     <div class="modal-content modal-w-600">
         <div class="modal-header">
             <h3>👥 帳號管理</h3>
-            <button class="modal-close" onclick="closeAccountManager()">×</button>
+            <div class="flex-row flex-center" style="gap:8px;">
+                <button onclick="openAddAccountModal()" class="modal-add-btn">新增帳號</button>
+                <button class="modal-close" onclick="closeAccountManager()">×</button>
+            </div>
         </div>
         <div class="modal-body">
-            <div id="userList" style="margin-bottom:24px;max-height:300px;overflow-y:auto;"></div>
-            <div style="border-top:2px solid var(--border-color);padding-top:16px;text-align:right;">
-                <button class="add-discount-btn" onclick="openAddAccountModal()">➕ 新增帳號</button>
-            </div>
+            <div id="userList" style="max-height:400px;overflow-y:auto;"></div>
         </div>
     </div>
 </div>
@@ -18009,7 +18009,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
     <div class="modal-content" style="max-width:600px;max-height:90vh;display:flex;flex-direction:column;">
         <div class="modal-header">
             <h3>👤 顧客管理</h3>
-            <button class="modal-close" onclick="closeCustomerManager()">×</button>
+            <div class="flex-row flex-center" style="gap:8px;">
+                <button onclick="openNewCustomerModal()" class="modal-add-btn">新增顧客</button>
+                <button class="modal-close" onclick="closeCustomerManager()">×</button>
+            </div>
         </div>
         <div class="modal-body" style="overflow-y:auto;flex:1;">
             <!-- 列表頁 -->
@@ -18018,9 +18021,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <input type="text" id="customerSearchInput" placeholder="搜尋姓名、電話、Email..."
                         class="cust-search-input"
                         oninput="clearTimeout(customerSearchTimeout); customerSearchTimeout = setTimeout(() => { customerCurrentPage = 1; renderCustomerList(); }, 300)">
-                    <button onclick="openNewCustomerModal()" id="toggleNewCustomerBtn" class="cust-add-btn">
-                        新增
-                    </button>
                 </div>
 
                 <div id="customerPaginationContainer" class="pagination-container cust-pagination-wrapper" style="display:none;">
