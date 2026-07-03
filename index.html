@@ -2844,6 +2844,18 @@
         /* Checkout buttons row */
         .checkout-row { display: flex; gap: 8px; }
 
+        /* 付款方式 */
+        .payment-section { padding: 10px 12px; border-top: 1px solid var(--border-color); }
+        .payment-section-label { font-size: 12px; font-weight: 600; color: var(--text-light); margin-bottom: 8px; }
+        .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .payment-btn { padding: 9px 6px; border: 2px solid var(--border-color); border-radius: 8px; background: white; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; color: var(--text-color); transition: all 0.15s; }
+        .payment-btn.selected { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        /* 付款方式管理 */
+        .pm-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+        .pm-item-name { font-size: 14px; font-weight: 500; }
+        .pm-add-row { display: flex; gap: 8px; margin-top: 12px; }
+        .pm-add-input { flex: 1; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; }
+
         /* Empty order icon */
         .empty-order-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
 
@@ -3037,6 +3049,10 @@
             <button class="menu-item admin-only" onclick="openDiscountManager(); toggleMenu();">
                 <span class="menu-icon-text">🎁</span>
                 <span>優惠折扣管理</span>
+            </button>
+            <button class="menu-item admin-only" onclick="openPaymentMethodManager(); toggleMenu();">
+                <span class="menu-icon-text">💳</span>
+                <span>付款方式管理</span>
             </button>
             <button class="menu-item" onclick="openRestockModal(); toggleMenu();">
                 <span class="menu-icon-text">📦</span>
@@ -3378,6 +3394,12 @@
             <div class="discount-title">🎁 滿額贈品</div>
         </div>
         <div class="discount-grid" id="giftButtons"></div>
+    </div>
+
+    <!-- 付款方式 -->
+    <div class="payment-section">
+        <div class="payment-section-label">💳 付款方式 <span style="color:#e74c3c">*</span></div>
+        <div class="payment-grid" id="paymentMethodGrid"></div>
     </div>
 
     <!-- 小計總計 -->
@@ -4769,6 +4791,7 @@ async function _doSaveDataToFirestore() {
             addOnItems,
             systemSettings,
             systemConfig,
+            paymentMethods,
             lastSaved: firebase.firestore.FieldValue.serverTimestamp(),
             version: 3
         });
@@ -4806,8 +4829,18 @@ async function loadDataFromFirestore() {
             saleLocations = data.saleLocations || [];
             addOnItems = data.addOnItems || [];
             systemSettings = data.systemSettings || {};
+            paymentMethods = data.paymentMethods || [
+                { id: 'cash', name: '現金', enabled: true },
+                { id: 'credit_card', name: '信用卡', enabled: true },
+                { id: 'line_pay', name: 'LINE Pay', enabled: true },
+                { id: 'pi_pay', name: 'Pi錢包', enabled: true },
+                { id: 'jkos', name: '街口', enabled: true },
+                { id: 'easycard', name: '悠遊付', enabled: true },
+                { id: 'culture_coin', name: '文化幣', enabled: true }
+            ];
             migrateSystemSettings();
             systemConfig = data.systemConfig || { systemName: '', theme: 'blue' };
+            renderPaymentMethodButtons();
             console.log('✅ 資料已從 Firebase 載入');
             return true;
         }
@@ -5425,6 +5458,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         let discounts = [];
         let salesHistory = [];
         let discountButtons = [];
+        let paymentMethods = [];
+        let selectedPaymentMethod = null;
         
         // 滿額贈品規則
         let giftRules = [];
@@ -10990,6 +11025,80 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             showNotification('✅ 顧客資訊已清空');
         }
 
+        // 付款方式按鈕
+        function renderPaymentMethodButtons() {
+            const grid = document.getElementById('paymentMethodGrid');
+            if (!grid) return;
+            const enabled = paymentMethods.filter(m => m.enabled);
+            grid.innerHTML = enabled.map(m => `
+                <button class="payment-btn${selectedPaymentMethod?.id === m.id ? ' selected' : ''}"
+                    onclick="selectPaymentMethod('${m.id}', '${m.name.replace(/'/g, "\\'")}')">
+                    ${m.name}
+                </button>
+            `).join('');
+        }
+
+        function selectPaymentMethod(id, name) {
+            selectedPaymentMethod = { id, name };
+            renderPaymentMethodButtons();
+        }
+
+        function openPaymentMethodManager() {
+            renderPaymentMethodManagerList();
+            const modal = document.getElementById('paymentMethodManagerModal');
+            modal.classList.add('show');
+            bringModalToFront('paymentMethodManagerModal');
+        }
+
+        function closePaymentMethodManager() {
+            document.getElementById('paymentMethodManagerModal').classList.remove('show');
+        }
+
+        function renderPaymentMethodManagerList() {
+            const container = document.getElementById('paymentMethodList');
+            container.innerHTML = paymentMethods.map((m, i) => `
+                <div class="pm-item">
+                    <span class="pm-item-name">${m.name}</span>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+                            <input type="checkbox" ${m.enabled ? 'checked' : ''} onchange="togglePaymentMethod(${i}, this.checked)">
+                            啟用
+                        </label>
+                        ${paymentMethods.length > 1 ? `<button class="cancel-order-btn" onclick="removePaymentMethod(${i})">刪除</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function togglePaymentMethod(index, enabled) {
+            paymentMethods[index].enabled = enabled;
+        }
+
+        function addPaymentMethod() {
+            const input = document.getElementById('newPaymentMethodName');
+            const name = input.value.trim();
+            if (!name) return;
+            paymentMethods.push({ id: 'custom_' + Date.now(), name, enabled: true });
+            input.value = '';
+            renderPaymentMethodManagerList();
+        }
+
+        function removePaymentMethod(index) {
+            paymentMethods.splice(index, 1);
+            renderPaymentMethodManagerList();
+        }
+
+        async function savePaymentMethods() {
+            try {
+                await db.collection('settings').doc('system').update({ paymentMethods });
+                renderPaymentMethodButtons();
+                closePaymentMethodManager();
+                showNotification('✅ 付款方式已儲存');
+            } catch(e) {
+                showNotification('❌ 儲存失敗，請重試');
+            }
+        }
+
         // 清空訂單資訊
         function clearOrderInfo() {
             document.getElementById('saleLocation').value = '';
@@ -11001,6 +11110,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('orderNote').value = '';
             generateOrderNumber();
             updateOrderDate();
+            selectedPaymentMethod = null;
+            renderPaymentMethodButtons();
         }
 
         // === 自動保存功能 ===
@@ -14046,6 +14157,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 document.getElementById('saleLocation').focus();
                 return;
             }
+
+            // 檢查是否已選擇付款方式
+            if (!selectedPaymentMethod) {
+                showNotification('❌ 請選擇付款方式');
+                document.getElementById('paymentMethodGrid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
             
             const totalElement = document.getElementById('total');
             if (!totalElement) return;
@@ -14185,7 +14303,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 subtotal: subtotal,
                 total: total,
                 status: 'completed',
-                shopInfo: shopSnapshot
+                shopInfo: shopSnapshot,
+                paymentMethod: selectedPaymentMethod?.id || '',
+                paymentMethodName: selectedPaymentMethod?.name || ''
             };
             
             // 加入 salesHistory 本地陣列（供本次 session 使用）
@@ -14376,6 +14496,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div class="receipt-info-row">
                         <span class="receipt-info-label">服務人員：</span>
                         <span class="receipt-info-value">${orderInfo.salesPerson}</span>
+                    </div>
+                    ` : ''}
+                    ${orderInfo.paymentMethodName ? `
+                    <div class="receipt-info-row">
+                        <span class="receipt-info-label">付款方式：</span>
+                        <span class="receipt-info-value">${orderInfo.paymentMethodName}</span>
                     </div>
                     ` : ''}
                 </div>
@@ -18133,6 +18259,26 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <button onclick="copyLineOAUrl()" class="add-discount-btn btn-flex-1">複製連結</button>
                 <button onclick="openLineOAManager()" class="add-discount-btn btn-flex-1 btn-bg-green">開啟LINE官方帳號APP</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- 付款方式管理 Modal -->
+<div id="paymentMethodManagerModal" class="modal">
+    <div class="modal-content" style="max-width:420px;">
+        <div class="modal-header">
+            <h3>💳 付款方式管理</h3>
+            <button class="modal-close" onclick="closePaymentMethodManager()">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="paymentMethodList"></div>
+            <div class="pm-add-row">
+                <input type="text" id="newPaymentMethodName" class="pm-add-input" placeholder="新增付款方式名稱...">
+                <button class="add-discount-btn" onclick="addPaymentMethod()">新增</button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="add-discount-btn btn-bg-green-dark" onclick="savePaymentMethods()">儲存</button>
         </div>
     </div>
 </div>
