@@ -81,10 +81,10 @@
         .menu-toggle {
             background: rgba(255, 255, 255, 0.15);
             border: 2px solid var(--accent-color);
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 7px 12px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 12px;
             color: var(--accent-color);
             transition: all 0.3s;
         }
@@ -947,7 +947,7 @@
         }
 
         .order-info-field label {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
             color: var(--text-dark);
             margin-bottom: 6px;
@@ -1000,7 +1000,7 @@
         }
 
         .order-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--primary-color);
         }
@@ -1129,7 +1129,7 @@
         }
 
         .addon-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--highlight-color);
         }
@@ -1144,7 +1144,7 @@
             background: var(--bg-light);
             border: 2px solid var(--border-color);
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
@@ -1172,7 +1172,7 @@
         }
 
         .discount-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--primary-color);
         }
@@ -1184,12 +1184,12 @@
         }
 
         .discount-btn {
-            padding: 12px;
+            padding: 10px;
             background: linear-gradient(135deg, #E89BA3 0%, #DA7C88 100%);
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(232, 155, 163, 0.25);
@@ -1276,7 +1276,7 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 12px;
-            font-size: 15px;
+            font-size: 14px;
         }
 
         .total-label {
@@ -1304,14 +1304,14 @@
         }
 
         .final-total-value {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--accent-color);
         }
 
         .checkout-btn {
             width: 100%;
-            padding: 16px;
+            padding: 14px;
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
             border: none;
@@ -2444,10 +2444,10 @@
         }
         .search-input {
             flex: 1;
-            padding: 12px 70px 12px 16px;
+            padding: 8px 16px;
             border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 15px;
+            border-radius: 4px;
+            font-size: 14px;
             transition: all 0.3s;
         }
         .search-input:focus {
@@ -2674,7 +2674,7 @@
             padding: 0 12px 8px 12px;
         }
         .section-label { font-size: 14px; font-weight: 600; color: var(--primary-color); }
-        .section-label-lg { font-size: 15px; font-weight: 600; color: var(--primary-color); }
+        .section-label-lg { font-size: 14px; font-weight: 600; color: var(--primary-color); }
 
         /* Products section header */
         .products-header {
@@ -2713,8 +2713,8 @@
 
         /* Scan button */
         .scan-btn {
-            padding: 10px 16px; background: var(--primary-color); color: white;
-            border: none; border-radius: 10px; font-size: 18px;
+            padding: 5px 8px; background: var(--primary-color); color: white;
+            border: none; border-radius: 4px; font-size: 14px;
             cursor: pointer; margin-left: 8px; flex-shrink: 0;
         }
 
@@ -3222,7 +3222,7 @@
     <div class="category-section">
         <div class="category-header">
             <div class="section-label">大分類</div>
-            <button class="file-btn" onclick="openCategoryManager()">⚙️ 管理</button>
+            <button class="file-btn" onclick="openCategoryManager()">管理</button>
         </div>
         <div class="category-scroll">
             <div class="category-buttons" id="categoryButtons"></div>
@@ -3296,7 +3296,7 @@
             <div class="order-info-divider" style="display:flex;justify-content:space-between;align-items:center;">
                 <span>👤 顧客資訊</span>
                 <div style="display:flex;gap:6px;">
-                    <button type="button" onclick="openCustomerSearchModal()" class="customer-info-btn btn-bg-secondary">🔍 查詢顧客</button>
+                    <button type="button" onclick="openCustomerSearchModal()" class="customer-info-btn btn-bg-secondary">查詢顧客</button>
                     <button type="button" onclick="clearCustomerInfo()" class="customer-info-btn" style="background:#95a5a6;">✕ 清空</button>
                 </div>
             </div>
