@@ -163,18 +163,7 @@
                     scale: 2, backgroundColor: '#ffffff', useCORS: true
                 });
                 actionBar.classList.remove('hidden');
-                canvas.toBlob(async blob => {
-                    const file = new File([blob], `收據_${orderNumber}.png`, { type: 'image/png' });
-                    // 優先用 Web Share API（iOS 會顯示「儲存影像」選項）
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({ files: [file] });
-                            return;
-                        } catch(e) { /* 用戶取消或不支援，改用長按方式 */ }
-                    }
-                    // 退而求其次：顯示圖片讓用戶長按儲存
-                    showImageOverlay(canvas.toDataURL('image/png'));
-                }, 'image/png');
+                showImageOverlay(canvas.toDataURL('image/png'));
             } catch(e) {
                 actionBar.classList.remove('hidden');
                 alert('產生圖片失敗，請重試');
