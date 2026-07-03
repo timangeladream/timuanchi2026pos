@@ -5025,12 +5025,27 @@ async function createNewUser() {
         document.getElementById('newUserPassword').value = '';
         document.getElementById('newUserName').value = '';
         
+        closeAddAccountModal();
         showNotification('✅ 帳號已建立');
         await loadUserList();
     } catch (e) {
         console.error(e);
         alert('建立帳號失敗: ' + e.message);
     }
+}
+
+function openAddAccountModal() {
+    document.getElementById('newUserName').value = '';
+    document.getElementById('newUserEmail').value = '';
+    document.getElementById('newUserPassword').value = '';
+    document.getElementById('newUserRole').value = 'cashier';
+    const modal = document.getElementById('addAccountModal');
+    modal.style.display = 'flex';
+    bringModalToFront(modal);
+    setTimeout(() => document.getElementById('newUserName').focus(), 100);
+}
+function closeAddAccountModal() {
+    document.getElementById('addAccountModal').style.display = 'none';
 }
 
 async function toggleUserRole(uid, currentRole) {
@@ -17467,12 +17482,18 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
         }
 
-        function toggleNewCustomerForm() {
-            const form = document.getElementById('newCustomerForm');
-            const isVisible = form.style.display !== 'none';
-            form.style.display = isVisible ? 'none' : 'block';
-            document.getElementById('toggleNewCustomerBtn').textContent = isVisible ? '➕ 新增' : '✕ 關閉';
-            if (!isVisible) document.getElementById('newCustomerName').focus();
+        function openNewCustomerModal() {
+            document.getElementById('newCustomerName').value = '';
+            document.getElementById('newCustomerPhone').value = '';
+            document.getElementById('newCustomerEmail').value = '';
+            document.getElementById('newCustomerAccount').value = '';
+            const modal = document.getElementById('newCustomerModal');
+            modal.style.display = 'flex';
+            bringModalToFront(modal);
+            setTimeout(() => document.getElementById('newCustomerName').focus(), 100);
+        }
+        function closeNewCustomerModal() {
+            document.getElementById('newCustomerModal').style.display = 'none';
         }
 
         async function openEditCustomer(customerId) {
@@ -17550,6 +17571,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 document.getElementById('newCustomerEmail').value = '';
                 document.getElementById('newCustomerAccount').value = '';
 
+                closeNewCustomerModal();
                 showNotification('✅ 顧客已建立');
                 await loadCustomerList();
             } catch (e) {
@@ -17881,33 +17903,80 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         </div>
         <div class="modal-body">
             <div id="userList" style="margin-bottom:24px;max-height:300px;overflow-y:auto;"></div>
-            <div style="border-top:2px solid var(--border-color);padding-top:20px;">
-                <h4 style="margin-bottom:16px;color:var(--primary-color);font-size:14px;">➕ 新增帳號</h4>
-                <div class="form-group">
-                    <label style="font-size:12px;">顧客姓名 *</label>
-                    <input type="text" id="newUserName" placeholder="例如：小安" style="font-size:12px;" />
-                </div>
-                <div class="form-group">
-                    <label style="font-size:12px;">電子郵件 *</label>
-                    <input type="email" id="newUserEmail" placeholder="example@email.com" style="font-size:12px;" />
-                </div>
-                <div class="form-group">
-                    <label style="font-size:12px;">密碼 *</label>
-                    <input type="password" id="newUserPassword" placeholder="請輸入密碼(至少6個字元)"  style="font-size:12px;" />
-                </div>
-                <div class="form-group" style="display:flex;align-items:center;gap:8px;">
-                    <label style="font-size:12px;white-space:nowrap;margin:0;">角色 *</label>
-                    <select id="newUserRole" style="flex:1;padding:2px;border:2px solid var(--border-color);border-radius:5px;font-size:12px;">
-                        <option value="cashier">💰 銷售員</option>
-                        <option value="admin">👑 管理員</option>
-                    </select>
-                </div>
-                <button class="add-discount-btn" onclick="createNewUser()">建立帳號</button>
+            <div style="border-top:2px solid var(--border-color);padding-top:16px;text-align:right;">
+                <button class="add-discount-btn" onclick="openAddAccountModal()">➕ 新增帳號</button>
             </div>
         </div>
     </div>
 </div>
 
+
+<!-- 新增顧客 Modal -->
+<div id="newCustomerModal" class="modal" style="z-index:10100;display:none;">
+    <div class="modal-content" style="max-width:420px;">
+        <div class="modal-header">
+            <h3>➕ 新增顧客</h3>
+            <button class="modal-close" onclick="closeNewCustomerModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label style="font-size:12px;">顧客姓名</label>
+                <input type="text" id="newCustomerName" placeholder="顧客姓名" />
+            </div>
+            <div class="form-group">
+                <label style="font-size:12px;">電話</label>
+                <input type="tel" id="newCustomerPhone" placeholder="09XX-XXX-XXX" />
+            </div>
+            <div class="form-group">
+                <label style="font-size:12px;">Email</label>
+                <input type="email" id="newCustomerEmail" placeholder="example@email.com" />
+            </div>
+            <div class="form-group">
+                <label style="font-size:12px;">官網會員帳號</label>
+                <input type="text" id="newCustomerAccount" placeholder="帳號" />
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+                <button onclick="closeNewCustomerModal()" style="padding:8px 20px;background:var(--bg-light);border:1px solid var(--border-color);border-radius:8px;cursor:pointer;font-size:13px;">取消</button>
+                <button onclick="createNewCustomer()" style="padding:8px 20px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">建立</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增帳號 Modal -->
+<div id="addAccountModal" class="modal" style="z-index:10100;display:none;">
+    <div class="modal-content" style="max-width:420px;">
+        <div class="modal-header">
+            <h3>➕ 新增帳號</h3>
+            <button class="modal-close" onclick="closeAddAccountModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label style="font-size:12px;">姓名 *</label>
+                <input type="text" id="newUserName" placeholder="例如：小安" />
+            </div>
+            <div class="form-group">
+                <label style="font-size:12px;">電子郵件 *</label>
+                <input type="email" id="newUserEmail" placeholder="example@email.com" />
+            </div>
+            <div class="form-group">
+                <label style="font-size:12px;">密碼 *</label>
+                <input type="password" id="newUserPassword" placeholder="請輸入密碼（至少 6 個字元）" />
+            </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+                <label style="font-size:12px;white-space:nowrap;margin:0;">角色 *</label>
+                <select id="newUserRole" style="flex:1;padding:6px;border:2px solid var(--border-color);border-radius:5px;font-size:12px;">
+                    <option value="cashier">💰 銷售員</option>
+                    <option value="admin">👑 管理員</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+                <button onclick="closeAddAccountModal()" style="padding:8px 20px;background:var(--bg-light);border:1px solid var(--border-color);border-radius:8px;cursor:pointer;font-size:13px;">取消</button>
+                <button onclick="createNewUser()" style="padding:8px 20px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">建立帳號</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- QR Code 掃描器 -->
 <div id="scannerModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:10000;flex-direction:column;align-items:center;justify-content:center;">
@@ -17949,7 +18018,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <input type="text" id="customerSearchInput" placeholder="搜尋姓名、電話、Email..."
                         class="cust-search-input"
                         oninput="clearTimeout(customerSearchTimeout); customerSearchTimeout = setTimeout(() => { customerCurrentPage = 1; renderCustomerList(); }, 300)">
-                    <button onclick="toggleNewCustomerForm()" id="toggleNewCustomerBtn" class="cust-add-btn">
+                    <button onclick="openNewCustomerModal()" id="toggleNewCustomerBtn" class="cust-add-btn">
                         新增
                     </button>
                 </div>
@@ -17963,32 +18032,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         <span class="cust-pagination-jump-label">跳至</span>
                         <input type="number" id="customerPageJumpInput" min="1" class="cust-page-jump-input" onkeypress="if(event.key==='Enter')jumpToCustomerPage()">
                         <button onclick="jumpToCustomerPage()" class="cust-page-jump-btn">GO</button>
-                    </div>
-                </div>
-
-                <!-- 新增顧客表單（預設隱藏） -->
-                <div id="newCustomerForm" class="cust-new-form" style="display:none;">
-                    <div class="cust-new-form-grid">
-                        <div class="form-group cust-form-group-compact">
-                            <label class="cust-form-label-sm">顧客姓名</label>
-                            <input type="text" id="newCustomerName" placeholder="顧客姓名" />
-                        </div>
-                        <div class="form-group cust-form-group-compact">
-                            <label class="cust-form-label-sm">電話</label>
-                            <input type="tel" id="newCustomerPhone" placeholder="09XX-XXX-XXX" />
-                        </div>
-                        <div class="form-group cust-form-group-compact">
-                            <label class="cust-form-label-sm">Email</label>
-                            <input type="email" id="newCustomerEmail" placeholder="example@email.com" />
-                        </div>
-                        <div class="form-group cust-form-group-compact">
-                            <label class="cust-form-label-sm">官網會員帳號</label>
-                            <input type="text" id="newCustomerAccount" placeholder="帳號" />
-                        </div>
-                    </div>
-                    <div class="cust-form-actions">
-                        <button onclick="createNewCustomer()" class="cust-create-btn">建立</button>
-                        <button onclick="toggleNewCustomerForm()" class="cust-cancel-btn">取消</button>
                     </div>
                 </div>
 
