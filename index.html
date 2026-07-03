@@ -14559,6 +14559,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // LINE OA 傳送：下載 PDF 後跳轉至 LINE 官方帳號管理
         async function sendToLineOA() {
+            // 先開啟 LINE OA（必須在 await 之前，否則 iOS 會攔截）
+            window.open('https://manager.line.biz/', '_blank');
+
             const element = document.getElementById('printPreviewContent');
             const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '收據';
             try {
@@ -14571,15 +14574,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                setTimeout(() => {
-                    const link = document.createElement('a');
-                    link.href = 'https://manager.line.biz/';
-                    link.target = '_blank';
-                    link.rel = 'noopener';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }, 800);
             } catch(e) {
                 alert('產生 PDF 失敗，請重試');
             }
