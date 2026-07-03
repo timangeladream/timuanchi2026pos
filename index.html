@@ -14309,9 +14309,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const receiptHTML = generateReceiptHTML(orderInfo, sortedItems, discountList, subtotal, discountAmount, totalAmount, sale.shopInfo);
 
             document.getElementById('printPreviewContent').innerHTML = receiptHTML;
-            const printModal = document.getElementById('printPreviewModal');
-            printModal.classList.add('show');
-            bringModalToFront(printModal);
+            document.getElementById('printPreviewModal').classList.add('show');
+            bringModalToFront('printPreviewModal');
         }
 
 
