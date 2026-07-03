@@ -2794,7 +2794,14 @@
         .cust-cancel-btn { padding:10px 16px; background:#6c757d; color:white; border:none; border-radius:8px; cursor:pointer; font-size:13px; }
         .pm-form-actions { display:flex; gap:8px; margin-top:12px; }
         .pm-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
-        .pm-item { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border-color); }
+        .pm-item { display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 12px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            margin-bottom: 10px; 
+        }
         .pm-item:last-child { border-bottom:none; }
         .pm-item-name { font-weight:600; font-size:14px; color:var(--text-color); }
         .pm-edit-btn { padding:4px 10px; background:var(--secondary-color); color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
@@ -11113,6 +11120,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         async function removePaymentMethod(index) {
+            if (!confirm(`確定要刪除「${paymentMethods[index].name}」嗎？`)) return;
             paymentMethods.splice(index, 1);
             renderPaymentMethodManagerList();
             await savePaymentMethodsNow();
