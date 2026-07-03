@@ -6,6 +6,8 @@
     <title>收據</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -15,7 +17,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 24px 16px;
+            padding: 24px 16px 40px;
         }
         .receipt-wrapper {
             background: white;
@@ -25,6 +27,24 @@
             width: 100%;
             max-width: 400px;
         }
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-image { background: #1a5276; color: white; }
+        .btn-pdf   { background: #2E8B57; color: white; }
+        .action-btn:disabled { opacity: 0.5; }
+        .hidden { display: none; }
         .status {
             text-align: center;
             padding: 60px 20px;
@@ -80,6 +100,10 @@
 </head>
 <body>
     <div class="receipt-wrapper">
+        <div id="actionBar" class="action-bar hidden">
+            <button type="button" class="action-btn btn-image" onclick="saveAsImage()">儲存為圖片</button>
+            <button type="button" class="action-btn btn-pdf" onclick="saveAsPDF()">下載 PDF</button>
+        </div>
         <div id="content" class="status">載入中...</div>
     </div>
 
@@ -95,6 +119,8 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+
+        let orderNumber = '';
 
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
@@ -115,13 +141,62 @@
                     document.getElementById('content').innerHTML = '<div class="expired-msg">此收據連結已超過 3 天，已失效</div>';
                     return;
                 }
-                document.title = `收據 ${data.orderNumber || ''}`;
+                orderNumber = data.orderNumber || '收據';
+                document.title = `收據 ${orderNumber}`;
                 const wrapper = document.getElementById('content');
                 wrapper.className = 'print-preview-content';
                 wrapper.innerHTML = data.html || '';
+                document.getElementById('actionBar').classList.remove('hidden');
             }).catch(() => {
                 document.getElementById('content').innerHTML = '<div class="expired-msg">載入失敗，請重試</div>';
             });
+        }
+
+        async function saveAsImage() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '產生中...';
+            try {
+                const canvas = await html2canvas(document.getElementById('content'), {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    useCORS: true
+                });
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `收據_${orderNumber}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+            } catch(e) {
+                alert('產生圖片失敗，請重試');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '儲存為圖片';
+            }
+        }
+
+        async function saveAsPDF() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '產生中...';
+            try {
+                const opt = {
+                    margin: 10,
+                    filename: `收據_${orderNumber}.pdf`,
+                    image: { type: 'jpeg', quality: 0.95 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                await html2pdf().set(opt).from(document.getElementById('content')).save();
+            } catch(e) {
+                alert('產生 PDF 失敗，請重試');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '下載 PDF';
+            }
         }
     </script>
 </body>
