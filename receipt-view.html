@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收據</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 16px;
+        }
+        .receipt-wrapper {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .status {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 15px;
+        }
+        .expired-msg {
+            text-align: center;
+            padding: 60px 20px;
+            color: #e74c3c;
+            font-size: 15px;
+        }
+
+        /* Receipt styles */
+        .print-preview-content {
+            background: white;
+            font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            color: #000;
+        }
+        .receipt-header { text-align: center; border-bottom: 1px solid #000; }
+        .receipt-title { font-size: 16px; font-weight: bold; color: #000; }
+        .receipt-shop-info { font-size: 10px; color: #000; line-height: 1.6; }
+        .receipt-section { margin-bottom: 10px; }
+        .receipt-section-title {
+            font-size: 12px; font-weight: bold; margin-bottom: 8px;
+            padding: 6px 0; border-top: 1px solid #000;
+            border-bottom: 1px solid #000; color: #000;
+        }
+        .receipt-info-row { display: flex; justify-content: flex-start; font-size: 10px; color: #000; }
+        .receipt-info-label { color: #000; }
+        .receipt-info-value { font-weight: 500; color: #000; }
+        .receipt-items { border-top: 1px solid #000; border-bottom: 1px dashed #000; }
+        .receipt-item {
+            display: flex; justify-content: space-between;
+            padding: 6px 0; font-size: 10px; color: #000;
+        }
+        .receipt-item-name { flex: 1; font-size: 12px; color: #000; }
+        .receipt-item-qty { width: 35px; text-align: center; font-size: 12px; color: #000; }
+        .receipt-item-price { width: 65px; text-align: right; font-size: 12px; color: #000; }
+        .receipt-total-row {
+            display: flex; justify-content: space-between;
+            padding: 6px 0; font-size: 10px; color: #000;
+        }
+        .receipt-total-row.final {
+            font-size: 12px; font-weight: bold;
+            border-top: 1px dashed #000; color: #000;
+        }
+        .receipt-footer {
+            text-align: center; margin-top: 10px; padding-top: 10px;
+            border-top: 2px solid #000; font-size: 10px; color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-wrapper">
+        <div id="content" class="status">載入中...</div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdUjtB_b2ArOnFhDlZLG_EsIVeE-3NG1M",
+            authDomain: "timuanchi2026pos.firebaseapp.com",
+            projectId: "timuanchi2026pos",
+            storageBucket: "timuanchi2026pos.firebasestorage.app",
+            messagingSenderId: "816721531919",
+            appId: "1:816721531919:web:05c3fcd1a0f4c4a053bf7a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+
+        if (!id) {
+            document.getElementById('content').innerHTML = '<div class="expired-msg">無效的連結</div>';
+        } else {
+            db.collection('receiptLinks').doc(id).get().then(doc => {
+                if (!doc.exists) {
+                    document.getElementById('content').innerHTML = '<div class="expired-msg">此收據連結已失效或不存在</div>';
+                    return;
+                }
+                const data = doc.data();
+                const createdAt = data.createdAt?.toDate();
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                if (createdAt && createdAt < sevenDaysAgo) {
+                    document.getElementById('content').innerHTML = '<div class="expired-msg">此收據連結已超過 7 天，已失效</div>';
+                    return;
+                }
+                document.title = `收據 ${data.orderNumber || ''}`;
+                const wrapper = document.getElementById('content');
+                wrapper.className = 'print-preview-content';
+                wrapper.innerHTML = data.html || '';
+            }).catch(() => {
+                document.getElementById('content').innerHTML = '<div class="expired-msg">載入失敗，請重試</div>';
+            });
+        }
+    </script>
+</body>
+</html>

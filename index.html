@@ -25,7 +25,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -14512,37 +14511,21 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             return html2pdf().set(opt).from(element).toPdf().get('pdf').then(pdf => pdf.output('blob'));
         }
 
-        // 清除 7 天前的收據檔案
-        async function cleanupOldReceipts() {
+        // 清除 7 天前的收據連結
+        async function cleanupOldReceiptLinks() {
             try {
                 const sevenDaysAgo = new Date();
                 sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                const snap = await db.collection('receiptFiles')
+                const snap = await db.collection('receiptLinks')
                     .where('createdAt', '<', firebase.firestore.Timestamp.fromDate(sevenDaysAgo))
                     .get();
                 for (const doc of snap.docs) {
-                    try { await firebase.storage().ref(doc.data().path).delete(); } catch(e) {}
                     await doc.ref.delete();
                 }
             } catch(e) {}
         }
 
-        // 上傳 PDF 到 Firebase Storage，回傳公開網址
-        async function uploadReceiptPDF(blob, orderNumber) {
-            const path = `receipts/${Date.now()}_${orderNumber}.pdf`;
-            const ref = firebase.storage().ref(path);
-            await ref.put(blob, { contentType: 'application/pdf' });
-            const url = await ref.getDownloadURL();
-            await db.collection('receiptFiles').add({
-                path,
-                url,
-                createdAt: firebase.firestore.Timestamp.now()
-            });
-            cleanupOldReceipts();
-            return url;
-        }
-
-        // QR Code 收據：上傳後顯示 QR Code 給顧客掃碼
+        // QR Code 收據：存入 Firestore 後顯示 QR Code 給顧客掃碼
         async function showReceiptQRCode() {
             const element = document.getElementById('printPreviewContent');
             const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '收據';
@@ -14553,16 +14536,23 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             modal.classList.add('show');
             bringModalToFront(modal);
             qrContainer.innerHTML = '';
-            statusEl.textContent = '上傳中...';
+            statusEl.textContent = '產生中...';
 
             try {
-                const blob = await generatePDFBlob();
-                const url = await uploadReceiptPDF(blob, orderNumber);
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+                const receiptHtml = element.innerHTML;
+                const docRef = await db.collection('receiptLinks').add({
+                    html: receiptHtml,
+                    orderNumber,
+                    createdAt: firebase.firestore.Timestamp.now()
+                });
+                const baseUrl = window.location.href.split('?')[0].replace('index.html', '');
+                const receiptUrl = `${baseUrl}receipt-view.html?id=${docRef.id}`;
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(receiptUrl)}`;
                 qrContainer.innerHTML = `<img src="${qrUrl}" style="width:220px;height:220px;border-radius:8px;">`;
-                statusEl.textContent = '請顧客掃描 QR Code 下載收據（7 天後失效）';
+                statusEl.textContent = '請顧客掃描 QR Code 查看收據（7 天後失效）';
+                cleanupOldReceiptLinks();
             } catch(e) {
-                statusEl.textContent = '上傳失敗，請重試';
+                statusEl.textContent = '產生失敗，請重試';
                 console.error(e);
             }
         }
