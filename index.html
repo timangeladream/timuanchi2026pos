@@ -14525,10 +14525,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             } catch(e) {}
         }
 
-        // 共用：將收據存入 Firestore，回傳可分享的連結
+        // 共用：將收據存入 Firestore，回傳 { url, orderNumber }
         async function createReceiptLink() {
             const element = document.getElementById('printPreviewContent');
-            const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '收據';
+            const orderNumber = element.querySelector('.receipt-info-value')?.textContent || '';
             const docRef = await db.collection('receiptLinks').add({
                 html: element.innerHTML,
                 orderNumber,
@@ -14536,7 +14536,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             });
             const baseUrl = window.location.href.split('?')[0].replace('index.html', '');
             cleanupOldReceiptLinks();
-            return `${baseUrl}receipt-view.html?id=${docRef.id}`;
+            return { url: `${baseUrl}receipt-view.html?id=${docRef.id}`, orderNumber };
         }
 
         // QR Code 收據：產生連結後顯示 QR Code 給顧客掃碼
@@ -14549,8 +14549,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             qrContainer.innerHTML = '';
             statusEl.textContent = '產生中...';
             try {
-                const receiptUrl = await createReceiptLink();
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(receiptUrl)}`;
+                const { url } = await createReceiptLink();
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
                 qrContainer.innerHTML = `<img src="${qrUrl}" style="width:220px;height:220px;border-radius:8px;">`;
                 statusEl.textContent = '請顧客掃描 QR Code 查看收據（7 天後失效）';
             } catch(e) {
@@ -14563,8 +14563,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         async function sendToLineOA() {
             showNotification('產生連結中...');
             try {
-                const receiptUrl = await createReceiptLink();
-                document.getElementById('lineOAReceiptUrl').value = receiptUrl;
+                const { url, orderNumber } = await createReceiptLink();
+                const msg = `您好，以下是您的消費收據 🧾${orderNumber ? '\n訂單編號：' + orderNumber : ''}\n${url}`;
+                document.getElementById('lineOAReceiptUrl').value = msg;
                 const modal = document.getElementById('lineOAModal');
                 modal.classList.add('show');
                 bringModalToFront(modal);
@@ -18107,7 +18108,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         </div>
         <div class="modal-body">
             <p style="font-size:13px;color:#555;margin-bottom:12px;">複製連結後，至 LINE OA 選顧客貼上傳送</p>
-            <input type="text" id="lineOAReceiptUrl" readonly style="width:100%;font-size:11px;padding:8px;border:1px solid var(--border-color);border-radius:6px;margin-bottom:12px;color:#333;">
+            <textarea id="lineOAReceiptUrl" readonly rows="4" style="width:100%;font-size:11px;padding:8px;border:1px solid var(--border-color);border-radius:6px;margin-bottom:12px;color:#333;resize:none;line-height:1.6;"></textarea>
             <div class="modal-actions-simple">
                 <button onclick="copyLineOAUrl()" class="add-discount-btn btn-flex-1">複製連結</button>
                 <button onclick="openLineOAManager()" class="add-discount-btn btn-flex-1 btn-bg-green">開啟 LINE OA</button>
