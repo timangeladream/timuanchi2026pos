@@ -17673,7 +17673,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 ${o.status === 'cancelled' ? `<div class="order-cancelled-notice">❌ 此訂單已取消${o.cancelledAtDisplay ? `<span style="font-size:11px;font-weight:400;margin-left:8px;opacity:0.8;">（${o.cancelledAtDisplay}）</span>` : ''}</div>` : ''}
                 <div class="sales-record-info" style="margin-bottom:8px;">
                     ${o.orderNumber || ''}<br>
-                    ${o.timestampDisplay || ''} ${o.saleLocation ? '｜' + o.saleLocation : ''}
+                    ${o.timestampDisplay || ''} ${o.saleLocation ? '｜' + o.saleLocation : ''}<br>
+                    ${o.salesPersonName ? `服務人員：${o.salesPersonName}` : ''}
                 </div>
                 <div class="sales-record-items">
                     ${itemsHTML}
