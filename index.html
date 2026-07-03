@@ -2792,6 +2792,8 @@
         .cust-form-actions { display:flex; gap:8px; margin-top:12px; }
         .cust-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
         .cust-cancel-btn { padding:10px 16px; background:#6c757d; color:white; border:none; border-radius:8px; cursor:pointer; font-size:13px; }
+        .pm-form-actions { display:flex; gap:8px; margin-top:12px; }
+        .pm-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
         .user-form-actions { display:flex; gap:8px; margin-top:12px; }
         .user-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
         .cust-stat-row { display:flex; gap:16px; }
@@ -18301,10 +18303,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             <button class="modal-close" onclick="closeAddPaymentMethodModal()">×</button>
         </div>
         <div class="modal-body">
-            <input type="text" id="newPaymentMethodName" placeholder="付款方式名稱..." class="discount-search-input" style="width:100%;margin-bottom:12px;">
-            <div class="modal-actions-simple">
-                <button class="add-discount-btn" onclick="closeAddPaymentMethodModal()" style="background:#999;">取消</button>
-                <button class="add-discount-btn btn-flex-1" style="background:var(--primary-color);" onclick="addPaymentMethod()">新增</button>
+            <div class="form-group">
+                <label style="font-size:12px;">付款方式名稱</label>
+                <input type="text" id="newPaymentMethodName" placeholder="例如：Apple Pay">
+            </div>
+            <div class="pm-form-actions">
+                <button class="pm-create-btn" onclick="addPaymentMethod()">確認新增</button>
             </div>
         </div>
     </div>
