@@ -2788,6 +2788,17 @@
         .cust-cancel-btn { padding:10px 16px; background:#6c757d; color:white; border:none; border-radius:8px; cursor:pointer; font-size:13px; }
         .user-form-actions { display:flex; gap:8px; margin-top:12px; }
         .user-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+        .cust-stat-row { display:flex; gap:16px; }
+        .cust-stat-item { text-align:center; flex:1; }
+        .cust-stat-value { font-size:18px; font-weight:700; color:var(--primary-color); }
+        .cust-stat-label { font-size:11px; color:#999; }
+        .cust-order-row { background:white; border:1px solid #e9ecef; border-radius:8px; padding:12px; margin-bottom:8px; cursor:pointer; }
+        .cust-order-row-inner { display:flex; justify-content:space-between; align-items:center; }
+        .cust-order-number { font-size:12px; font-weight:600; color:var(--primary-color); text-decoration:underline; }
+        .cust-order-date { font-size:11px; color:#888; }
+        .cust-order-right { text-align:right; }
+        .cust-order-total { font-weight:600; color:var(--primary-color); }
+        .cust-order-cancelled { font-size:11px; color:#e74c3c; }
 
         /* SM filter components */
         .sm-filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -17636,33 +17647,33 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     
                     <div style="border-top:1px solid #ffffff;margin:12px 0;"></div>
                     
-                    <div style="display:flex;gap:16px;">
-                        <div style="text-align:center;flex:1;">
-                            <div style="font-size:18px;font-weight:700;color:var(--primary-color);">NT$ ${(c.totalSpent || 0).toLocaleString()}</div>
-                            <div style="font-size:11px;color:#999;">累計消費</div>
+                    <div class="cust-stat-row">
+                        <div class="cust-stat-item">
+                            <div class="cust-stat-value">NT$ ${(c.totalSpent || 0).toLocaleString()}</div>
+                            <div class="cust-stat-label">累計消費</div>
                         </div>
-                        <div style="text-align:center;flex:1;">
-                            <div style="font-size:18px;font-weight:700;color:var(--primary-color);">${c.totalOrders || 0}</div>
-                            <div style="font-size:11px;color:#999;">訂單數</div>
+                        <div class="cust-stat-item">
+                            <div class="cust-stat-value">${c.totalOrders || 0}</div>
+                            <div class="cust-stat-label">訂單數</div>
                         </div>
-                        <div style="text-align:center;flex:1;">
-                            <div style="font-size:18px;font-weight:700;color:var(--primary-color);">NT$ ${Math.round((c.totalSpent || 0) / (c.totalOrders || 1)).toLocaleString()}</div>
-                            <div style="font-size:11px;color:#999;">平均客單價</div>
+                        <div class="cust-stat-item">
+                            <div class="cust-stat-value">NT$ ${Math.round((c.totalSpent || 0) / (c.totalOrders || 1)).toLocaleString()}</div>
+                            <div class="cust-stat-label">平均客單價</div>
                         </div>
                     </div>
                 </div>
                 <div style="font-weight:600;font-size:14px;margin-bottom:12px;">📋 消費記錄</div>
                 ${orders.length === 0 ? '<div style="color:#999;text-align:center;padding:16px;">暫無記錄</div>' : 
                     orders.map((o, idx) => `
-                        <div onclick="openCustomerOrderDetail(${idx})" style="background:white;border:1px solid #e9ecef;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div onclick="openCustomerOrderDetail(${idx})" class="cust-order-row">
+                            <div class="cust-order-row-inner">
                                 <div>
-                                    <div style="font-size:12px;font-weight:600;color:var(--primary-color);text-decoration:underline;">${o.orderNumber || ''}</div>
-                                    <div style="font-size:11px;color:#888;">${o.timestampDisplay || ''} ${o.saleLocation ? '｜' + o.saleLocation : ''}</div>
+                                    <div class="cust-order-number">${o.orderNumber || ''}</div>
+                                    <div class="cust-order-date">${o.timestampDisplay || ''} ${o.saleLocation ? '｜' + o.saleLocation : ''}</div>
                                 </div>
-                                <div style="text-align:right;">
-                                    <div style="font-weight:600;color:var(--primary-color);">NT$ ${(o.total || 0).toLocaleString()}</div>
-                                    ${o.status === 'cancelled' ? '<div style="font-size:11px;color:#e74c3c;">已取消</div>' : ''}
+                                <div class="cust-order-right">
+                                    <div class="cust-order-total">NT$ ${(o.total || 0).toLocaleString()}</div>
+                                    ${o.status === 'cancelled' ? '<div class="cust-order-cancelled">已取消</div>' : ''}
                                 </div>
                             </div>
                         </div>
