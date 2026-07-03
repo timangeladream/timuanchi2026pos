@@ -5040,12 +5040,12 @@ function openAddAccountModal() {
     document.getElementById('newUserPassword').value = '';
     document.getElementById('newUserRole').value = 'cashier';
     const modal = document.getElementById('addAccountModal');
-    modal.style.display = 'flex';
+    modal.classList.add('show');
     bringModalToFront(modal);
     setTimeout(() => document.getElementById('newUserName').focus(), 100);
 }
 function closeAddAccountModal() {
-    document.getElementById('addAccountModal').style.display = 'none';
+    document.getElementById('addAccountModal').classList.remove('show');
 }
 
 async function toggleUserRole(uid, currentRole) {
@@ -17488,12 +17488,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('newCustomerEmail').value = '';
             document.getElementById('newCustomerAccount').value = '';
             const modal = document.getElementById('newCustomerModal');
-            modal.style.display = 'flex';
+            modal.classList.add('show');
             bringModalToFront(modal);
             setTimeout(() => document.getElementById('newCustomerName').focus(), 100);
         }
         function closeNewCustomerModal() {
-            document.getElementById('newCustomerModal').style.display = 'none';
+            document.getElementById('newCustomerModal').classList.remove('show');
         }
 
         async function openEditCustomer(customerId) {
@@ -17912,7 +17912,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
 
 <!-- 新增顧客 Modal -->
-<div id="newCustomerModal" class="modal" style="z-index:10100;display:none;">
+<div id="newCustomerModal" class="modal" style="z-index:10100;">
     <div class="modal-content" style="max-width:420px;">
         <div class="modal-header">
             <h3>➕ 新增顧客</h3>
@@ -17944,7 +17944,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 </div>
 
 <!-- 新增帳號 Modal -->
-<div id="addAccountModal" class="modal" style="z-index:10100;display:none;">
+<div id="addAccountModal" class="modal" style="z-index:10100;">
     <div class="modal-content" style="max-width:420px;">
         <div class="modal-header">
             <h3>➕ 新增帳號</h3>
