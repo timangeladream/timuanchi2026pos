@@ -338,11 +338,6 @@
             html += addonItems.map(renderItem).join('');
         }
 
-        if (giftItems.length > 0) {
-            html += `<div class="section-title" style="margin-top:16px;">🎁 贈品</div>`;
-            html += giftItems.map(renderItem).join('');
-        }
-
         if (discounts.length > 0) {
             html += `<div class="section-title" style="margin-top:16px;">🎟️ 優惠折扣</div>`;
             html += discounts.map(d => {
@@ -374,6 +369,30 @@
                     <span>NT$ ${total.toLocaleString()}</span>
                 </div>
             </div>`;
+
+        if (giftItems.length > 0) {
+            html += `<div class="section-title" style="margin-top:16px;">🎁 贈品</div>`;
+            html += giftItems.map(item => {
+                let variantText = '';
+                if (item.selectedVariants) {
+                    const keys = (item.variantKeyOrder || Object.keys(item.selectedVariants))
+                        .filter(k => item.selectedVariants[k]);
+                    variantText = keys.map(k => `${k}: ${item.selectedVariants[k]}`).join(' | ');
+                }
+                return `
+                <div class="order-item" style="background:#ebf5fb;">
+                    <div class="item-left">
+                        <div class="item-name"><span class="item-tag tag-gift">贈品</span>${item.name}</div>
+                        ${variantText ? `<div class="item-variant">${variantText}</div>` : ''}
+                        ${item.sku ? `<div class="item-sku">貨號: ${item.sku}</div>` : ''}
+                    </div>
+                    <div class="item-right">
+                        <div class="item-price" style="color:#e74c3c;">贈品</div>
+                        <div class="item-qty">× ${item.quantity}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
 
         document.getElementById('mainContent').innerHTML = html;
     }
