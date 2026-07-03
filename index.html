@@ -4024,7 +4024,7 @@
             </div>
             <div class="modal-body">
                 <div id="printPreviewContent" class="print-preview-content"></div>
-                <div class="modal-actions">
+                <div id="printPreviewActions" class="modal-actions">
                     <button class="add-discount-btn btn-flex-1" onclick="printReceipt()">列印</button>
                     <button class="add-discount-btn btn-flex-1 btn-bg-blue" onclick="showReceiptQRCode()">掃描收據</button>
                     <button class="add-discount-btn btn-flex-1 btn-bg-green" onclick="sendToLineOA()">LINE官方帳號傳送</button>
@@ -14261,9 +14261,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const receiptHTML = generateReceiptHTML(orderInfo, sortedItems, discountsWithLatestNames, subtotal, discountAmount, totalAmount);
             
             document.getElementById('printPreviewContent').innerHTML = receiptHTML;
+            document.getElementById('printPreviewActions').style.display = 'none';
             document.getElementById('printPreviewModal').classList.add('show');
         }
-        
+
         // 查看歷史訂單的收據
         function viewReceipt(saleIndex) {
             const sale = salesHistory[saleIndex];
@@ -14309,6 +14310,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const receiptHTML = generateReceiptHTML(orderInfo, sortedItems, discountList, subtotal, discountAmount, totalAmount, sale.shopInfo);
 
             document.getElementById('printPreviewContent').innerHTML = receiptHTML;
+            document.getElementById('printPreviewActions').style.display = '';
             document.getElementById('printPreviewModal').classList.add('show');
             bringModalToFront('printPreviewModal');
         }
