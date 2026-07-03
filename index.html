@@ -14413,7 +14413,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     </div>
                     ${discountAmount > 0 ? `
                     <div class="receipt-total-row" style="font-size: 12px;">
-                        <span>${discountList.length > 0 ? discountList.map(d => d.name).join(', ') : '折扣'}</span>
+                        <span>${discountList.length > 0 ? discountList.map(d => d.name + ((d.times && d.times > 1) ? ` ×${d.times}` : '')).join(', ') : '折扣'}</span>
                         <span>- NT$ ${discountAmount}</span>
                     </div>
                     ` : ''}
