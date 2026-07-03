@@ -11074,12 +11074,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             paymentMethods[index].enabled = enabled;
         }
 
+        function toggleAddPaymentMethodForm() {
+            const form = document.getElementById('addPaymentMethodForm');
+            const isVisible = form.style.display !== 'none';
+            form.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) document.getElementById('newPaymentMethodName').focus();
+        }
+
         function addPaymentMethod() {
             const input = document.getElementById('newPaymentMethodName');
             const name = input.value.trim();
             if (!name) return;
             paymentMethods.push({ id: 'custom_' + Date.now(), name, enabled: true });
             input.value = '';
+            document.getElementById('addPaymentMethodForm').style.display = 'none';
             renderPaymentMethodManagerList();
         }
 
@@ -18268,15 +18276,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
     <div class="modal-content" style="max-width:420px;">
         <div class="modal-header">
             <h3>💳 付款方式管理</h3>
+            <button onclick="toggleAddPaymentMethodForm()" class="modal-add-btn">新增付款方式</button>
             <button class="modal-close" onclick="closePaymentMethodManager()">×</button>
         </div>
         <div class="modal-body">
-            <div id="paymentMethodList"></div>
-            <div class="add-discount-form">
-                <h4>新增付款方式</h4>
-                <input type="text" id="newPaymentMethodName" placeholder="付款方式名稱..." class="location-input">
-                <button class="add-discount-btn" onclick="addPaymentMethod()">新增</button>
+            <div id="addPaymentMethodForm" style="display:none;margin-bottom:12px;padding:12px;background:#f8f9fa;border-radius:8px;">
+                <input type="text" id="newPaymentMethodName" placeholder="付款方式名稱..." class="location-input" style="margin-bottom:8px;">
+                <button class="add-discount-btn" onclick="addPaymentMethod()">確認新增</button>
             </div>
+            <div id="paymentMethodList"></div>
         </div>
         <div class="modal-footer" style="padding:12px 16px;border-top:1px solid var(--border-color);">
             <button class="add-discount-btn" style="background:var(--primary-color);margin-top:0;" onclick="savePaymentMethods()">儲存</button>
