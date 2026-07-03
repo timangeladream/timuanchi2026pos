@@ -2455,13 +2455,6 @@
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(11, 79, 124, 0.1);
         }
-        .search-icon {
-            position: absolute;
-            right: 12px;
-            font-size: 18px;
-            color: var(--text-light);
-            pointer-events: none;
-        }
         .search-clear {
             position: absolute;
             right: 40px;
@@ -3211,12 +3204,11 @@
                 type="text" 
                 id="productSearch" 
                 class="search-input" 
-                placeholder="搜尋商品名稱或貨號..."
+                placeholder="🔍搜尋商品名稱或貨號..."
                 oninput="searchProducts(this.value)"
                 onkeydown="handleSearchKeydown(event)"
             >
             <button class="search-clear" id="searchClear" onclick="clearSearch()">×</button>
-            <span class="search-icon">🔍</span>
         </div>
         <button id="scanBtn" onclick="openScanner()" class="scan-btn" title="掃描 QR Code"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9V3h6"/><path d="M15 3h6v6"/><path d="M3 15v6h6"/><path d="M21 15v6h-6"/><line x1="7" y1="8" x2="7" y2="16"/><line x1="9.5" y1="8" x2="9.5" y2="16" stroke-width="1"/><line x1="12" y1="8" x2="12" y2="16" stroke-width="3"/><line x1="14.5" y1="8" x2="14.5" y2="16" stroke-width="1"/><line x1="17" y1="8" x2="17" y2="16"/></svg></button>
         <div class="search-results-count" id="searchResultsCount"></div>
@@ -4395,7 +4387,7 @@
                         </div>
                     </div>
                     <div>
-                        <input type="text" id="searchProduct" placeholder="🔍 搜尋商品名稱或貨號..." onkeyup="filterProductList()" class="modal-search-input">
+                        <input type="text" id="searchProduct" placeholder="🔍搜尋商品名稱或貨號..." onkeyup="filterProductList()" class="modal-search-input">
                     </div>
 
                     <!-- 商品列表分頁控制（移到搜尋欄下方） -->
