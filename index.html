@@ -14542,22 +14542,55 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         // QR Code 收據：產生連結後顯示 QR Code 給顧客掃碼
+        let _currentReceiptUrl = '';
         async function showReceiptQRCode() {
             const modal = document.getElementById('receiptQRModal');
             const qrContainer = document.getElementById('receiptQRCode');
             const statusEl = document.getElementById('receiptQRStatus');
+            const pushBtn = document.getElementById('receiptQRPushBtn');
+            _currentReceiptUrl = '';
             modal.classList.add('show');
-            bringModalToFront(modal);
+            bringModalToFront('receiptQRModal');
             qrContainer.innerHTML = '';
             statusEl.textContent = '產生中...';
+            if (pushBtn) { pushBtn.disabled = true; pushBtn.textContent = '推送到顧客螢幕'; }
             try {
                 const { url } = await createReceiptLink();
+                _currentReceiptUrl = url;
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
                 qrContainer.innerHTML = `<img src="${qrUrl}" style="width:220px;height:220px;border-radius:8px;">`;
                 statusEl.textContent = '請顧客掃描 QR Code 查看收據（3 天後失效）';
+                if (pushBtn) pushBtn.disabled = false;
             } catch(e) {
                 statusEl.textContent = '產生失敗，請重試';
                 console.error(e);
+            }
+        }
+
+        async function pushReceiptToCustomerScreen() {
+            const btn = document.getElementById('receiptQRPushBtn');
+            if (!_currentReceiptUrl || !currentUser || !db) return;
+            btn.disabled = true;
+            btn.textContent = '推送中...';
+            try {
+                await db.collection('activeOrders').doc(currentUser.uid).update({ receiptUrl: _currentReceiptUrl });
+                btn.textContent = '✅ 已推送';
+            } catch(e) {
+                btn.disabled = false;
+                btn.textContent = '推送到顧客螢幕';
+                showNotification('❌ 推送失敗，請重試');
+            }
+        }
+
+        async function closeReceiptQRModal() {
+            document.getElementById('receiptQRModal').classList.remove('show');
+            _currentReceiptUrl = '';
+            if (currentUser && db) {
+                try {
+                    await db.collection('activeOrders').doc(currentUser.uid).update({
+                        receiptUrl: firebase.firestore.FieldValue.delete()
+                    });
+                } catch(e) {}
             }
         }
 
@@ -18086,6 +18119,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             </div>
         </div>
     </div>
+    
 </div>
 
 <!-- QR Code 掃描器 -->
@@ -18105,15 +18139,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 <div id="lineOAModal" class="modal" style="z-index:10100;">
     <div class="modal-content" style="max-width:380px;">
         <div class="modal-header">
-            <h3>LINE OA 傳送收據</h3>
+            <h3>LINE官方帳號傳送收據</h3>
             <button class="modal-close" onclick="document.getElementById('lineOAModal').classList.remove('show')">×</button>
         </div>
         <div class="modal-body">
-            <p style="font-size:13px;color:#555;margin-bottom:12px;">複製連結後，至 LINE OA 選顧客貼上傳送</p>
+            <p style="font-size:13px;color:#555;margin-bottom:12px;">複製連結後，至LINE官方帳號選擇顧客貼上傳送</p>
             <textarea id="lineOAReceiptUrl" readonly rows="4" style="width:100%;font-size:11px;padding:8px;border:1px solid var(--border-color);border-radius:6px;margin-bottom:12px;color:#333;resize:none;line-height:1.6;"></textarea>
             <div class="modal-actions-simple">
                 <button onclick="copyLineOAUrl()" class="add-discount-btn btn-flex-1">複製連結</button>
-                <button onclick="openLineOAManager()" class="add-discount-btn btn-flex-1 btn-bg-green">開啟 LINE OA</button>
+                <button onclick="openLineOAManager()" class="add-discount-btn btn-flex-1 btn-bg-green">開啟LINE官方帳號APP</button>
             </div>
         </div>
     </div>
@@ -18123,12 +18157,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 <div id="receiptQRModal" class="modal" style="z-index:10100;">
     <div class="modal-content" style="max-width:360px;text-align:center;">
         <div class="modal-header">
-            <h3>📱 掃碼取收據</h3>
-            <button class="modal-close" onclick="document.getElementById('receiptQRModal').classList.remove('show')">×</button>
+            <h3>請掃描QRcode領取收據</h3>
+            <button class="modal-close" onclick="closeReceiptQRModal()">×</button>
         </div>
         <div class="modal-body">
             <div id="receiptQRCode" style="margin:0 auto 16px;min-height:220px;display:flex;align-items:center;justify-content:center;"></div>
-            <div id="receiptQRStatus" style="font-size:13px;color:#555;"></div>
+            <div id="receiptQRStatus" style="font-size:13px;color:#555;margin-bottom:12px;"></div>
+            <button id="receiptQRPushBtn" class="add-discount-btn btn-flex-1 btn-bg-blue" onclick="pushReceiptToCustomerScreen()" disabled>推送到顧客螢幕</button>
         </div>
     </div>
 </div>

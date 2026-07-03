@@ -249,7 +249,9 @@
                 const data = doc.data();
 
                 
-                if (data.status === 'completed') {
+                if (data.receiptUrl) {
+                    renderReceiptQR(data.receiptUrl);
+                } else if (data.status === 'completed') {
                     renderThankYou();
                 } else if (!data.items || data.items.length === 0) {
                     renderEmpty();
@@ -273,6 +275,17 @@
                 <div class="empty-icon">🛍️</div>
                 <div class="empty-text">等待結帳中</div>
                 <div class="empty-sub">商品加入後將顯示在此處</div>
+            </div>`;
+    }
+
+    function renderReceiptQR(url) {
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+        document.getElementById('mainContent').innerHTML = `
+            <div class="thankyou-state">
+                <div class="thankyou-text">感謝您的購買！</div>
+                <div class="thankyou-sub" style="margin-bottom:20px;">掃描下方 QR Code 取得收據</div>
+                <img src="${qrUrl}" style="width:220px;height:220px;border-radius:8px;">
+                <div style="font-size:12px;color:#aaa;margin-top:12px;">連結 3 天內有效</div>
             </div>`;
     }
 
