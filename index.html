@@ -14309,7 +14309,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const receiptHTML = generateReceiptHTML(orderInfo, sortedItems, discountList, subtotal, discountAmount, totalAmount, sale.shopInfo);
 
             document.getElementById('printPreviewContent').innerHTML = receiptHTML;
-            document.getElementById('printPreviewModal').classList.add('show');
+            const printModal = document.getElementById('printPreviewModal');
+            printModal.classList.add('show');
+            bringModalToFront(printModal);
         }
 
 
