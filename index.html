@@ -990,7 +990,12 @@
             border-bottom: 2px solid var(--border-color);
         }
 
-        .order-header {
+        .order-header,
+        .order-info-section-header,
+        .order-section-header,
+        .addon-section-header,
+        .discount-section-header,
+        .gift-section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -999,7 +1004,9 @@
             border-bottom: 2px solid var(--border-color);
         }
 
-        .order-title {
+        .order-title,
+        .order-info-title,
+        .order-section-title {
             font-size: 14px;
             font-weight: 600;
             color: var(--primary-color);
@@ -1112,7 +1119,8 @@
             color: var(--text-light);
         }
 
-        .discount-section {
+        .discount-section,
+        .gift-section {
             background: white;
             margin: 10px;
             border-radius: 12px;
@@ -1171,7 +1179,8 @@
             color: var(--highlight-color);
         }
 
-        .discount-title {
+        .discount-title,
+        .gift-title {
             font-size: 14px;
             font-weight: 600;
             color: var(--primary-color);
@@ -2691,7 +2700,8 @@
         .section-label-lg { font-size: 14px; font-weight: 600; color: var(--primary-color); }
 
         /* Products section header */
-        .products-header {
+        .products-header,
+        .products-section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -2699,6 +2709,7 @@
             flex-wrap: wrap;
             gap: 8px;
         }
+        .products-title { font-size: 14px; font-weight: 600; color: var(--primary-color); }
 
         /* Scrollable list containers */
         .scroll-list-sm { max-height: 440px; overflow-y: auto; }
@@ -3294,8 +3305,8 @@
     </div>
 
     <div class="products-section">
-        <div class="products-header">
-            <div class="section-label-lg">◼ 商品列表</div>
+        <div class="products-section-header">
+            <div class="products-title">◼ 商品列表</div>
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <!-- 主畫面商品分頁控制（縮小版） -->
                 <div id="mainProductPaginationContainer" class="pagination-container main-pagination">
@@ -3318,8 +3329,8 @@
 
     <!-- 訂單資訊區 -->
     <div class="order-info-section">
-        <div class="order-header">
-            <div class="order-title">◼ 訂單資訊</div>
+        <div class="order-info-section-header">
+            <div class="order-info-title">◼ 訂單資訊</div>
             <button class="clear-btn btn-bg-secondary" onclick="toggleOrderInfoForm()">
                 <span id="orderInfoToggleIcon">▼</span> 顯示
             </button>
@@ -3382,8 +3393,8 @@
     </div>
 
     <div class="order-section">
-        <div class="order-header">
-            <div class="order-title">
+        <div class="order-section-header">
+            <div class="order-section-title">
                 ◼ 訂單明細
                 <span id="orderItemCountSummary" class="order-count-text"></span>
             </div>
@@ -3399,23 +3410,23 @@
 
     <!-- 加購項目 -->
     <div class="addon-section">
-        <div class="order-header">
+        <div class="addon-section-header">
             <div class="addon-title">◼ 加購項目</div>
         </div>
         <div class="addon-grid" id="addonGrid"></div>
     </div>
 
     <div class="discount-section">
-        <div class="order-header">
+        <div class="discount-section-header">
             <div class="discount-title">◼ 優惠折扣</div>
         </div>
         <div class="discount-grid" id="discountButtons"></div>
     </div>
 
     <!-- 滿額贈品 -->
-    <div class="discount-section">
-        <div class="order-header">
-            <div class="discount-title">◼ 滿額贈品</div>
+    <div class="gift-section">
+        <div class="gift-section-header">
+            <div class="gift-title">◼ 滿額贈品</div>
         </div>
         <div class="discount-grid" id="giftButtons"></div>
     </div>
