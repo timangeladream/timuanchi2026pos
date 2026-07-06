@@ -4222,6 +4222,7 @@
         <div class="variant-content">
             <div class="variant-header">
                 <div class="variant-product-name" id="giftVariantName"></div>
+                <div class="variant-product-sku" id="giftVariantSku"></div>
                 <div class="variant-product-sku" id="giftVariantProgress"></div>
             </div>
             <div id="giftVariantGroups"></div>
@@ -6605,6 +6606,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             const addedCount = orderItems.filter(item => item.isGift && item.giftId === gift.id).length;
             document.getElementById('giftVariantName').textContent = `🎁 ${gift.giftName}`;
+            document.getElementById('giftVariantSku').textContent = gift.variantSkus ? (gift.giftSku ? `主貨號: ${gift.giftSku}` : '請選擇規格') : (gift.giftSku ? `貨號: ${gift.giftSku}` : '');
             document.getElementById('giftVariantProgress').textContent = `已選 ${addedCount} / ${gift.giftQty}`;
 
             const vkeys = (gift.variantKeyOrder || []).filter(k => gift.variants[k]);
@@ -6685,6 +6687,25 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             });
         }
 
+        function updateGiftVariantSku() {
+            const gift = currentGiftForVariant;
+            if (!gift) return;
+            const skuEl = document.getElementById('giftVariantSku');
+            if (!skuEl) return;
+            const vkeys = (gift.variantKeyOrder || []).filter(k => gift.variants[k]);
+            Object.keys(gift.variants).forEach(k => { if (!vkeys.includes(k)) vkeys.push(k); });
+            const allSelected = vkeys.every(k => selectedGiftVariants[k]);
+            if (allSelected && gift.variantSkus) {
+                const variantKey = vkeys.map(k => selectedGiftVariants[k]).join(',');
+                const sku = gift.variantSkus[variantKey] || '';
+                skuEl.textContent = sku ? `貨號: ${sku}` : '此規格組合無貨號';
+            } else if (gift.variantSkus) {
+                skuEl.textContent = gift.giftSku ? `主貨號: ${gift.giftSku}` : '請選擇規格';
+            } else {
+                skuEl.textContent = gift.giftSku ? `貨號: ${gift.giftSku}` : '';
+            }
+        }
+
         function selectGiftVariant(variantName, option) {
             if (selectedGiftVariants[variantName] === option) {
                 delete selectedGiftVariants[variantName];
@@ -6692,6 +6713,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     opt.classList.remove('selected');
                 });
                 updateGiftVariantStockStatus();
+                updateGiftVariantSku();
                 return;
             }
             selectedGiftVariants[variantName] = option;
@@ -6704,6 +6726,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
             });
             updateGiftVariantStockStatus();
+            updateGiftVariantSku();
         }
 
         function confirmGiftVariantSelection() {
@@ -9636,7 +9659,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : (data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000).toISOString() : data.timestamp)
                     };
                 });
-                allSales.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+                allSales.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
                 exportSales(allSales);
             } catch (e) {
                 console.error('讀取完整銷售記錄失敗:', e);
@@ -9651,7 +9674,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            const ws_data = [['訂單編號', '訂單日期', '結帳時間', '銷售地點', '銷售人員', '官網會員帳號', '會員姓名', '會員電話', '會員Email', '訂單狀態', '取消時間', '項目類型', '商品名稱', '貨號', '規格', '數量', '單價', '小計', '折扣名稱', '折扣類型', '折扣描述', '折扣比例', '折扣金額', '訂單總額', '訂單備註']];
+            const ws_data = [['訂單編號', '訂單日期', '結帳時間', '銷售地點', '銷售人員', '官網會員帳號', '會員姓名', '會員電話', '會員Email', '訂單狀態', '取消時間', '項目類型', '商品名稱', '貨號', '規格', '數量', '單價', '小計', '折扣名稱', '折扣類型', '折扣描述', '折扣比例', '折扣金額', '訂單總額', '付款方式', '訂單備註']];
 
             salesData.forEach(sale => {
                 let isFirstRow = true;
@@ -9708,6 +9731,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         discountRate,
                         isFirstRow ? discountAmount : '',
                         isFirstRow ? sale.total : '',
+                        isFirstRow ? (sale.paymentMethodName || '') : '',
                         isFirstRow ? (sale.orderNote || '') : ''
                     ]);
                     
@@ -9725,7 +9749,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         addon.quantity,
                         addon.price,
                         addon.price * addon.quantity,
-                        '', '', '', '', '', '', ''
+                        '', '', '', '', '', '', '', ''
                     ]);
                 });
                 
@@ -9741,7 +9765,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         gift.price,
                         gift.price * gift.quantity,
                         gift.giftRuleName || '',  // 在折扣名稱欄位顯示贈品規則
-                        '', '', '', '', '', ''
+                        '', '', '', '', '', '', ''
                     ]);
                 });
             });
@@ -9754,7 +9778,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 15}, {wch: 12}, {wch: 18}, {wch: 12}, {wch: 10}, {wch: 12},
                 {wch: 10}, {wch: 12}, {wch: 20}, {wch: 10}, {wch: 18}, {wch: 25}, {wch: 15},
                 {wch: 20}, {wch: 8}, {wch: 10}, {wch: 10}, {wch: 18}, {wch: 12},
-                {wch: 20}, {wch: 10}, {wch: 10}, {wch: 12}, {wch: 30}
+                {wch: 20}, {wch: 10}, {wch: 10}, {wch: 12}, {wch: 12}, {wch: 30}
             ];
             
             XLSX.utils.book_append_sheet(wb, ws, '銷售記錄');
