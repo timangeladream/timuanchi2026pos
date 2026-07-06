@@ -7048,7 +7048,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                     <div class="discount-item-manage" style="${enabled ? '' : 'opacity:0.5;'}">
                         <div class="discount-item-info-manage">
-                            <div class="discount-item-name-manage">${btn.name}</div>
+                            <div class="discount-item-name-manage">${btn.name}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
                             <div class="discount-item-desc">${description}</div>
                         </div>
                         <div class="item-action-row">
@@ -10918,7 +10918,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                 <div class="location-item" id="location-row-${index}" style="flex-direction:column;align-items:stretch;gap:8px;${enabled ? '' : 'opacity:0.5;'}">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <div class="location-item-name" id="location-name-${index}">${location.name}</div>
+                        <div class="location-item-name" id="location-name-${index}">${location.name}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
                         <div style="display:flex;gap:6px;align-items:center;">
                             <label class="status-toggle" title="${enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
                                 <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleLocation(${index}, this.checked)">
@@ -11103,7 +11103,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const container = document.getElementById('paymentMethodList');
             container.innerHTML = paymentMethods.map((m, i) => `
                 <div class="pm-item" style="${m.enabled ? '' : 'opacity:0.5;'}">
-                    <div class="pm-item-name">${m.name}</div>
+                    <div class="pm-item-name">${m.name}${!m.enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
                     <div class="item-action-row">
                         <label class="status-toggle" title="${m.enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
                             <input type="checkbox" ${m.enabled ? 'checked' : ''} onchange="togglePaymentMethod(${i}, this.checked)">
