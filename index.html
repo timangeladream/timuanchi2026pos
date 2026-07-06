@@ -1175,13 +1175,13 @@
         .discount-section-title {
             font-size: 14px;
             font-weight: 600;
-            color: var(--primary-color);
+            color: var(--highlight-color);
         }
 
          .gift-section-title {
             font-size: 14px;
             font-weight: 600;
-            color: var(--highlight-color);
+            color: var(--primary-color);
         }
 
         .discount-section-grid,
@@ -4833,7 +4833,7 @@ async function loadDataFromFirestore() {
             brandOrder = data.brandOrder || Object.keys(data.productData || {});
             discountButtons = data.discountButtons || [];
             giftRules = data.giftRules || [];
-            saleLocations = data.saleLocations || [];
+            saleLocations = (data.saleLocations || []).map(l => typeof l === 'string' ? {name: l, enabled: true} : l);
             addOnItems = data.addOnItems || [];
             systemSettings = data.systemSettings || {};
             paymentMethods = data.paymentMethods || [
@@ -6215,7 +6215,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 .reduce((sum, item) => sum + item.quantity, 0);
             const hasDiscount = discounts.length > 0;
             
-            container.innerHTML = discountButtons.map((btn) => {
+            container.innerHTML = discountButtons.filter(btn => btn.enabled !== false).map((btn) => {
                 let onclick = '';
                 let isEligible = true;
                 let statusText = '';
@@ -6821,6 +6821,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('discountModal').classList.remove('show');
         }
 
+        function toggleDiscount(index, enabled) {
+            discountButtons[index].enabled = enabled;
+            showNotification(enabled ? '✅ 已啟用折扣' : '✅ 已停用折扣');
+            saveDataToLocalStorage();
+            loadDiscountButtons();
+            loadDiscountList();
+        }
+
         // 打開新增折扣彈窗
         function openAddDiscountModal() {
             bringModalToFront('addDiscountModal');
@@ -7028,6 +7036,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             container.innerHTML = discountButtons.map((btn, index) => {
+                const enabled = btn.enabled !== false;
                 let description = '';
                 if (btn.type === 'percent') {
                     description = `全單${(btn.value * 100).toFixed(0)}折`;
@@ -7037,12 +7046,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     description = `購買${btn.count}件折${btn.discount}元`;
                 }
                 return `
-                    <div class="discount-item-manage">
+                    <div class="discount-item-manage" style="${enabled ? '' : 'opacity:0.5;'}">
                         <div class="discount-item-info-manage">
                             <div class="discount-item-name-manage">${btn.name}</div>
                             <div class="discount-item-desc">${description}</div>
                         </div>
                         <div class="item-action-row">
+                            <label class="status-toggle" title="${enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
+                                <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleDiscount(${index}, this.checked)">
+                                <span class="status-toggle-slider"></span>
+                            </label>
                             <button class="edit-discount-btn" onclick="editDiscount(${index})">編輯</button>
                             <button class="delete-discount-btn" onclick="deleteDiscountButton(${index})">刪除</button>
                         </div>
@@ -10849,14 +10862,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function loadSaleLocationOptions() {
             const select = document.getElementById('saleLocation');
             const currentValue = select.value;
-            
-            select.innerHTML = '<option value="">請選擇</option>' + 
-                saleLocations.map(location => 
-                    `<option value="${location}">${location}</option>`
+
+            select.innerHTML = '<option value="">請選擇</option>' +
+                saleLocations.filter(l => l.enabled !== false).map(l =>
+                    `<option value="${l.name}">${l.name}</option>`
                 ).join('');
-            
-            // 恢復之前的選擇
-            if (currentValue && saleLocations.includes(currentValue)) {
+
+            if (currentValue && saleLocations.some(l => l.name === currentValue)) {
                 select.value = currentValue;
             }
         }
@@ -10884,6 +10896,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('addLocationModal').classList.remove('show');
         }
 
+        function toggleLocation(index, enabled) {
+            saleLocations[index].enabled = enabled;
+            showNotification(enabled ? '✅ 已啟用銷售地點' : '✅ 已停用銷售地點');
+            saveDataToLocalStorage();
+            loadLocationList();
+            loadSaleLocationOptions();
+        }
+
         // 載入地點列表
         function loadLocationList() {
             const container = document.getElementById('locationList');
@@ -10893,18 +10913,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
-            container.innerHTML = saleLocations.map((location, index) => `
-                <div class="location-item" id="location-row-${index}" style="flex-direction:column;align-items:stretch;gap:8px;">
+            container.innerHTML = saleLocations.map((location, index) => {
+                const enabled = location.enabled !== false;
+                return `
+                <div class="location-item" id="location-row-${index}" style="flex-direction:column;align-items:stretch;gap:8px;${enabled ? '' : 'opacity:0.5;'}">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <div class="location-item-name" id="location-name-${index}">${location}</div>
-                        <div style="display:flex;gap:6px;">
+                        <div class="location-item-name" id="location-name-${index}">${location.name}</div>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                            <label class="status-toggle" title="${enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
+                                <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleLocation(${index}, this.checked)">
+                                <span class="status-toggle-slider"></span>
+                            </label>
                             <button onclick="startEditLocation(${index})" style="padding:4px 8px;background:#6c757d;color:white;border:none;border-radius:6px;cursor:pointer;font-size:10px;">編輯</button>
                             <button class="delete-location-btn" onclick="deleteLocation(${index})">刪除</button>
                         </div>
                     </div>
                     <div id="location-edit-${index}" style="display:none;">
                         <div style="display:flex;gap:8px;align-items:center;">
-                            <input type="text" id="location-input-${index}" value="${location}"
+                            <input type="text" id="location-input-${index}" value="${location.name}"
                                 style="flex:1;padding:8px;border:2px solid var(--primary-color);border-radius:8px;font-size:14px;"
                                 onkeypress="if(event.key==='Enter')confirmEditLocation(${index})">
                             <button onclick="confirmEditLocation(${index})" style="padding:8px 14px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">儲存</button>
@@ -10912,7 +10938,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // 新增銷售地點
@@ -10924,12 +10950,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
 
-            if (saleLocations.includes(name)) {
+            if (saleLocations.some(l => l.name === name)) {
                 alert('此地點已存在');
                 return;
             }
 
-            saleLocations.push(name);
+            saleLocations.push({name, enabled: true});
             closeAddLocationModal();
             showNotification('✅ 地點新增成功！');
             saveDataToLocalStorage();
@@ -10939,7 +10965,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 刪除銷售地點
         function deleteLocation(index) {
-            if (confirm(`確定要刪除「${saleLocations[index]}」嗎？`)) {
+            if (confirm(`確定要刪除「${saleLocations[index].name}」嗎？`)) {
                 saleLocations.splice(index, 1);
                 showNotification('✅ 地點已刪除');
                 saveDataToLocalStorage();
@@ -10969,10 +10995,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (!input) return;
             const newName = input.value.trim();
             if (!newName) { alert('地點名稱不能為空白'); return; }
-            if (saleLocations.includes(newName) && saleLocations[index] !== newName) {
+            if (saleLocations.some((l, i) => l.name === newName && i !== index)) {
                 alert('此地點名稱已存在'); return;
             }
-            saleLocations[index] = newName;
+            saleLocations[index].name = newName;
             saveDataToLocalStorage();
             loadLocationList();
             loadSaleLocationOptions();
@@ -11101,6 +11127,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         function togglePaymentMethod(index, enabled) {
             paymentMethods[index].enabled = enabled;
+            showNotification(enabled ? '✅ 已啟用付款方式' : '✅ 已停用付款方式');
             savePaymentMethodsNow();
         }
 
@@ -11206,7 +11233,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     nextProductId = data.nextProductId || 1;
                     discountButtons = data.discountButtons || [];
                     giftRules = data.giftRules || [];
-                    saleLocations = data.saleLocations || [];
+                    saleLocations = (data.saleLocations || []).map(l => typeof l === 'string' ? {name: l, enabled: true} : l);
                     addOnItems = data.addOnItems || [];
                     systemSettings = data.systemSettings || {};
                     migrateSystemSettings();
