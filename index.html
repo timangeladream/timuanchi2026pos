@@ -11031,13 +11031,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             editingLocationIndex = index;
             const input = document.getElementById('editLocationName');
             input.value = saleLocations[index].name;
-            document.getElementById('editLocationModal').style.display = 'flex';
             bringModalToFront('editLocationModal');
+            document.getElementById('editLocationModal').classList.add('show');
             setTimeout(() => { input.focus(); input.select(); }, 100);
         }
 
         function closeEditLocationModal() {
-            document.getElementById('editLocationModal').style.display = 'none';
+            document.getElementById('editLocationModal').classList.remove('show');
             editingLocationIndex = -1;
         }
 
