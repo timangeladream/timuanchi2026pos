@@ -4829,6 +4829,7 @@ async function _doSaveDataToFirestore() {
             categories: encodeCategories(categories),
             brandFullNames,
             brandOrder,
+            disabledBrands,
             nextProductId,
             discountButtons,
             giftRules,
@@ -4869,6 +4870,7 @@ async function loadDataFromFirestore() {
             nextProductId = data.nextProductId || 1;
             // 載入品牌順序，若無則用 productData 的 key 順序
             brandOrder = data.brandOrder || Object.keys(data.productData || {});
+            disabledBrands = data.disabledBrands || [];
             discountButtons = data.discountButtons || [];
             giftRules = data.giftRules || [];
             saleLocations = (data.saleLocations || []).map(l => typeof l === 'string' ? {name: l, enabled: true} : l);
@@ -5485,6 +5487,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 品牌對照表（簡稱 → 全稱）
         let brandFullNames = {};
         let brandOrder = []; // 品牌排序陣列（線上版新增，解決 Firestore 不保證順序問題）
+        let disabledBrands = []; // 停用的品牌名稱陣列
         
         // 分類資訊（僅用於篩選）
         let categories = {
@@ -10039,9 +10042,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
             
             container.innerHTML = brands.map((brand, index) => {
-                // 直接顯示品牌名稱，不做轉換
+                const enabled = !disabledBrands.includes(brand);
+                const escapedBrand = brand.replace(/'/g, "\\'");
                 return `
-                <div class="brand-item-manage">
+                <div class="brand-item-manage" style="${enabled ? '' : 'opacity:0.5;'}">
                     <div class="brand-item-left">
                         <div class="brand-order-col">
                             <button
@@ -10055,24 +10059,37 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 class="brand-order-btn"
                             >▼</button>
                         </div>
-                        <div class="brand-name-manage">${brand}</div>
+                        <div class="brand-name-manage">${brand}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
                     </div>
                     <div class="manage-action-row">
+                        <label class="status-toggle" title="${enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
+                            <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleBrand('${escapedBrand}', this.checked)">
+                            <span class="status-toggle-slider"></span>
+                        </label>
                         <button
-                            class="brand-edit-btn" 
-                            onclick="editBrand('${brand.replace(/'/g, "\\'")}', ${index})"                            
-                        >
-                            編輯
-                        </button>
-                        <button 
-                            class="brand-delete-btn" 
-                            onclick="removeBrand('${brand.replace(/'/g, "\\'")}')"
-                        >
-                            刪除
-                        </button>
+                            class="brand-edit-btn"
+                            onclick="editBrand('${escapedBrand}', ${index})"
+                        >編輯</button>
+                        <button
+                            class="brand-delete-btn"
+                            onclick="removeBrand('${escapedBrand}')"
+                        >刪除</button>
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        // 切換品牌啟用/停用
+        function toggleBrand(brandName, enabled) {
+            if (enabled) {
+                disabledBrands = disabledBrands.filter(b => b !== brandName);
+            } else {
+                if (!disabledBrands.includes(brandName)) disabledBrands.push(brandName);
+            }
+            showNotification(enabled ? '✅ 已啟用品牌' : '✅ 已停用品牌');
+            saveDataToLocalStorage();
+            loadBrandManageList();
+            renderBrandTabs();
         }
 
         // 編輯品牌名稱
@@ -10108,6 +10125,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 更新 brandOrder 中的品牌名稱
             const orderIdx = brandOrder.indexOf(oldName);
             if (orderIdx !== -1) brandOrder[orderIdx] = newName;
+
+            // 更新 disabledBrands 中的品牌名稱
+            const disabledIdx = disabledBrands.indexOf(oldName);
+            if (disabledIdx !== -1) disabledBrands[disabledIdx] = newName;
             
             saveDataToLocalStorage();
             loadBrandManageList();
@@ -10182,6 +10203,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             delete productData[brandKey];
             // 清理 brandOrder
             brandOrder = brandOrder.filter(b => b !== brandKey);
+            // 清理 disabledBrands
+            disabledBrands = disabledBrands.filter(b => b !== brandKey);
             // 清理 categories
             if (categories.brands) {
                 categories.brands = categories.brands.filter(b => b !== brandKey);
@@ -10399,8 +10422,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const allBrands = Object.keys(productData);
             brandOrder = brandOrder.filter(b => allBrands.includes(b));
             allBrands.forEach(b => { if (!brandOrder.includes(b)) brandOrder.push(b); });
-            const brands = brandOrder;
-            
+            const brands = brandOrder.filter(b => !disabledBrands.includes(b));
+
             container.innerHTML = brands.map((brandKey, index) => {
                 const isActive = index === 0 ? 'active' : '';
                 return `<button class="brand-tab ${isActive}" data-brand="${brandKey}">${brandKey}</button>`;
