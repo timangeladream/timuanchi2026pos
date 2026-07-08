@@ -3766,6 +3766,24 @@
         </div>
     </div>
 
+    <div id="editLocationModal" class="modal" style="z-index:10002;">
+        <div class="modal-content" style="max-width:360px;">
+            <div class="modal-header">
+                <h3>編輯銷售地點</h3>
+                <button class="modal-close" onclick="closeEditLocationModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label style="font-size:12px;">地點名稱</label>
+                    <input type="text" id="editLocationName" placeholder="請輸入地點名稱">
+                </div>
+                <div class="location-form-actions">
+                    <button class="location-create-btn" onclick="confirmEditLocation()">儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 銷售記錄頁面 -->
     <div id="historyTab" class="tab-content">
         <div class="history-page-container">
@@ -10950,35 +10968,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 載入地點列表
         function loadLocationList() {
             const container = document.getElementById('locationList');
-            
+
             if (saleLocations.length === 0) {
                 container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">尚未設定銷售地點</div>';
                 return;
             }
-            
+
             container.innerHTML = saleLocations.map((location, index) => {
                 const enabled = location.enabled !== false;
                 return `
-                <div class="location-item" id="location-row-${index}" style="flex-direction:column;align-items:stretch;gap:8px;${enabled ? '' : 'opacity:0.5;'}">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <div class="location-item-name" id="location-name-${index}">${location.name}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
-                        <div class="manage-action-row">
-                            <label class="status-toggle" title="${enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
-                                <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleLocation(${index}, this.checked)">
-                                <span class="status-toggle-slider"></span>
-                            </label>
-                            <button onclick="startEditLocation(${index})" class="location-edit-btn">編輯</button>
-                            <button class="location-delete-btn" onclick="deleteLocation(${index})">刪除</button>
-                        </div>
-                    </div>
-                    <div id="location-edit-${index}" style="display:none;">
-                        <div style="display:flex;gap:8px;align-items:center;">
-                            <input type="text" id="location-input-${index}" value="${location.name}"
-                                style="flex:1;padding:8px;border:2px solid var(--primary-color);border-radius:8px;font-size:14px;"
-                                onkeypress="if(event.key==='Enter')confirmEditLocation(${index})">
-                            <button onclick="confirmEditLocation(${index})" style="padding:8px 14px;background:var(--primary-color);color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">儲存</button>
-                            <button onclick="cancelEditLocation(${index})" style="padding:8px 14px;background:#6c757d;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;">取消</button>
-                        </div>
+                <div class="location-item" id="location-row-${index}" style="${enabled ? '' : 'opacity:0.5;'}">
+                    <div class="location-item-name">${location.name}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
+                    <div class="manage-action-row">
+                        <label class="status-toggle" title="${enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
+                            <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleLocation(${index}, this.checked)">
+                            <span class="status-toggle-slider"></span>
+                        </label>
+                        <button onclick="openEditLocationModal(${index})" class="location-edit-btn">編輯</button>
+                        <button class="location-delete-btn" onclick="deleteLocation(${index})">刪除</button>
                     </div>
                 </div>
             `}).join('');
@@ -11017,31 +11024,32 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
         }
         
-        // 編輯銷售地點
-        function startEditLocation(index) {
-            document.querySelectorAll('[id^="location-edit-"]').forEach(el => el.style.display = 'none');
-            const editArea = document.getElementById(`location-edit-${index}`);
-            if (editArea) {
-                editArea.style.display = 'block';
-                const input = document.getElementById(`location-input-${index}`);
-                if (input) { input.focus(); input.select(); }
-            }
+        // 編輯銷售地點（彈窗）
+        let editingLocationIndex = -1;
+
+        function openEditLocationModal(index) {
+            editingLocationIndex = index;
+            const input = document.getElementById('editLocationName');
+            input.value = saleLocations[index].name;
+            document.getElementById('editLocationModal').style.display = 'flex';
+            bringModalToFront('editLocationModal');
+            setTimeout(() => { input.focus(); input.select(); }, 100);
         }
 
-        function cancelEditLocation(index) {
-            const editArea = document.getElementById(`location-edit-${index}`);
-            if (editArea) editArea.style.display = 'none';
+        function closeEditLocationModal() {
+            document.getElementById('editLocationModal').style.display = 'none';
+            editingLocationIndex = -1;
         }
 
-        function confirmEditLocation(index) {
-            const input = document.getElementById(`location-input-${index}`);
-            if (!input) return;
-            const newName = input.value.trim();
+        function confirmEditLocation() {
+            if (editingLocationIndex < 0) return;
+            const newName = document.getElementById('editLocationName').value.trim();
             if (!newName) { alert('地點名稱不能為空白'); return; }
-            if (saleLocations.some((l, i) => l.name === newName && i !== index)) {
+            if (saleLocations.some((l, i) => l.name === newName && i !== editingLocationIndex)) {
                 alert('此地點名稱已存在'); return;
             }
-            saleLocations[index].name = newName;
+            saleLocations[editingLocationIndex].name = newName;
+            closeEditLocationModal();
             saveDataToLocalStorage();
             loadLocationList();
             loadSaleLocationOptions();
@@ -11171,6 +11179,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function togglePaymentMethod(index, enabled) {
             paymentMethods[index].enabled = enabled;
             showNotification(enabled ? '✅ 已啟用付款方式' : '✅ 已停用付款方式');
+            renderPaymentMethodManagerList();
             savePaymentMethodsNow();
         }
 
