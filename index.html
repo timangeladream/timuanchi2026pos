@@ -1467,6 +1467,16 @@
             color: var(--text-dark);
         }
 
+        .location-edit-btn {
+            padding: 4px 8px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
         .location-delete-btn {
             padding: 4px 8px;
             background: #d32f2f;
@@ -1859,7 +1869,10 @@
             color: var(--text-light);
         }
 
-        .delete-discount-btn {
+        .discount-delete-btn,
+        .gift-delete-btn,
+        .category-delete-btn,
+        .subcategory-delete-btn {
             padding: 4px 8px;
             background: var(--danger-color);
             color: white;
@@ -2306,13 +2319,13 @@
         }
 
         .product-action-row,
-        .item-action-row {
+        .manage-action-row {
             display: flex;
             gap: 6px;
             align-items: center;
         }
         .product-action-row button,
-        .item-action-row button {
+        .manage-action-row button {
             display: flex;
             align-items: center;
         }
@@ -2814,20 +2827,22 @@
         .cust-form-actions { display:flex; gap:8px; margin-top:12px; }
         .cust-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
         .cust-cancel-btn { padding:10px 16px; background:#6c757d; color:white; border:none; border-radius:8px; cursor:pointer; font-size:13px; }
-        .pm-form-actions { display:flex; gap:8px; margin-top:12px; }
-        .pm-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
-        .pm-item { display: flex;
+        .payment-form-actions,
+        .location-form-actions { display:flex; gap:8px; margin-top:12px; }
+        .payment-create-btn,
+        .location-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+        .payment-item { display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 5px 12px;
             background: var(--bg-light);
             border-radius: 8px;
-            margin-bottom: 10px; 
+            margin-bottom: 10px;
         }
-        .pm-item:last-child { border-bottom:none; }
-        .pm-item-name { font-weight:600; font-size:14px; color:var(--text-color); }
-        .pm-edit-btn { padding:4px 10px; background:var(--secondary-color); color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
-        .pm-delete-btn { padding:4px 10px; background:#e74c3c; color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
+        .payment-item:last-child { border-bottom:none; }
+        .payment-item-name { font-weight:600; font-size:14px; color:var(--text-color); }
+        .payment-edit-btn { padding:4px 10px; background:var(--secondary-color); color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
+        .payment-delete-btn { padding:4px 10px; background:#e74c3c; color:white; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; }
         .user-form-actions { display:flex; gap:8px; margin-top:12px; }
         .user-create-btn { flex:1; padding:8px; background:var(--primary-color); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
         .cust-stat-row { display:flex; gap:16px; }
@@ -3744,8 +3759,8 @@
                     <label style="font-size:12px;">地點名稱</label>
                     <input type="text" id="newLocationName" placeholder="例如：新竹門市">
                 </div>
-                <div class="pm-form-actions">
-                    <button class="pm-create-btn" onclick="addNewLocation()">確認新增</button>
+                <div class="location-form-actions">
+                    <button class="location-create-btn" onclick="addNewLocation()">確認新增</button>
                 </div>
             </div>
         </div>
@@ -6423,10 +6438,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleGiftStatus('${gift.id}')">
                                 <span class="status-toggle-slider"></span>
                             </label>
-                            <div class="item-action-row">
+                            <div class="manage-action-row">
                                 <button class="gift-edit-btn" onclick="editGift(${originalIndex})">編輯</button>
                                 <button class="stock-log-btn" onclick="openProductStockLog('${gift.id}', '${(gift.giftName || gift.name).replace(/'/g, "\\'")}')" >📋</button>
-                                <button class="delete-discount-btn" onclick="deleteGift(${originalIndex})">刪除</button>
+                                <button class="gift-delete-btn" onclick="deleteGift(${originalIndex})">刪除</button>
                             </div>
                         </div>
                     </div>
@@ -7078,13 +7093,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <div class="discount-item-name-manage">${btn.name}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
                             <div class="discount-item-desc">${description}</div>
                         </div>
-                        <div class="item-action-row">
+                        <div class="manage-action-row">
                             <label class="status-toggle" title="${enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
                                 <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleDiscount(${index}, this.checked)">
                                 <span class="status-toggle-slider"></span>
                             </label>
                             <button class="discount-edit-btn" onclick="editDiscount(${index})">編輯</button>
-                            <button class="delete-discount-btn" onclick="deleteDiscountButton(${index})">刪除</button>
+                            <button class="discount-delete-btn" onclick="deleteDiscountButton(${index})">刪除</button>
                         </div>
                     </div>
                 `;
@@ -10024,8 +10039,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         </div>
                         <div class="brand-name-manage">${brand}</div>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button 
+                    <div class="manage-action-row">
+                        <button
                             class="brand-edit-btn" 
                             onclick="editBrand('${brand.replace(/'/g, "\\'")}', ${index})"                            
                         >
@@ -10947,12 +10962,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <div class="location-item" id="location-row-${index}" style="flex-direction:column;align-items:stretch;gap:8px;${enabled ? '' : 'opacity:0.5;'}">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <div class="location-item-name" id="location-name-${index}">${location.name}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
-                        <div style="display:flex;gap:6px;align-items:center;">
+                        <div class="manage-action-row">
                             <label class="status-toggle" title="${enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
                                 <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleLocation(${index}, this.checked)">
                                 <span class="status-toggle-slider"></span>
                             </label>
-                            <button onclick="startEditLocation(${index})" style="padding:4px 8px;background:#6c757d;color:white;border:none;border-radius:6px;cursor:pointer;font-size:10px;">編輯</button>
+                            <button onclick="startEditLocation(${index})" class="location-edit-btn">編輯</button>
                             <button class="location-delete-btn" onclick="deleteLocation(${index})">刪除</button>
                         </div>
                     </div>
@@ -11130,15 +11145,15 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function renderPaymentMethodManagerList() {
             const container = document.getElementById('paymentMethodList');
             container.innerHTML = paymentMethods.map((m, i) => `
-                <div class="pm-item" style="${m.enabled ? '' : 'opacity:0.5;'}">
-                    <div class="pm-item-name">${m.name}${!m.enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
-                    <div class="item-action-row">
+                <div class="payment-item" style="${m.enabled ? '' : 'opacity:0.5;'}">
+                    <div class="payment-item-name">${m.name}${!m.enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
+                    <div class="manage-action-row">
                         <label class="status-toggle" title="${m.enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
                             <input type="checkbox" ${m.enabled ? 'checked' : ''} onchange="togglePaymentMethod(${i}, this.checked)">
                             <span class="status-toggle-slider"></span>
                         </label>
-                        <button class="pm-edit-btn" onclick="openEditPaymentMethodModal(${i})">編輯</button>
-                        ${paymentMethods.length > 1 ? `<button class="pm-delete-btn" onclick="removePaymentMethod(${i})">刪除</button>` : ''}
+                        <button class="payment-edit-btn" onclick="openEditPaymentMethodModal(${i})">編輯</button>
+                        ${paymentMethods.length > 1 ? `<button class="payment-delete-btn" onclick="removePaymentMethod(${i})">刪除</button>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -11689,7 +11704,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 mainCategoryList.innerHTML = mainCategories.map(cat => `
                     <div class="category-item">
                         <div class="category-item-name">${cat}</div>
-                        <button class="delete-discount-btn" onclick="deleteMainCategory('${cat}')">刪除</button>
+                        <button class="category-delete-btn" onclick="deleteMainCategory('${cat}')">刪除</button>
                     </div>
                 `).join('');
             }
@@ -11727,7 +11742,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 subCategoryList.innerHTML = subCategories.map(cat => `
                     <div class="category-item">
                         <div class="category-item-name">${cat}</div>
-                        <button class="delete-discount-btn" onclick="deleteSubCategory('${mainCategory}', '${cat}')">刪除</button>
+                        <button class="subcategory-delete-btn" onclick="deleteSubCategory('${mainCategory}', '${cat}')">刪除</button>
                     </div>
                 `).join('');
             }
@@ -15924,7 +15939,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleAddonStatus('${item.id}')">
                                 <span class="status-toggle-slider"></span>
                             </label>
-                            <div class="item-action-row">
+                            <div class="manage-action-row">
                                 <button class="addon-edit-btn" onclick="editAddon(${originalIndex})">編輯</button>
                                 <button class="stock-log-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\\'")}')" >📋</button>
                                 <button class="addon-delete-btn" onclick="removeAddon(${originalIndex})">刪除</button>
@@ -18407,8 +18422,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <label style="font-size:12px;">付款方式名稱</label>
                 <input type="text" id="newPaymentMethodName" placeholder="例如：Apple Pay">
             </div>
-            <div class="pm-form-actions">
-                <button class="pm-create-btn" onclick="addPaymentMethod()">確認新增</button>
+            <div class="payment-form-actions">
+                <button class="payment-create-btn" onclick="addPaymentMethod()">確認新增</button>
             </div>
         </div>
     </div>
@@ -18426,8 +18441,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <label style="font-size:12px;">付款方式名稱</label>
                 <input type="text" id="editPaymentMethodName" placeholder="例如：Apple Pay">
             </div>
-            <div class="pm-form-actions">
-                <button class="pm-create-btn" onclick="saveEditPaymentMethod()">確認修改</button>
+            <div class="payment-form-actions">
+                <button class="payment-create-btn" onclick="saveEditPaymentMethod()">確認修改</button>
             </div>
         </div>
     </div>
