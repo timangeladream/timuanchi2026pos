@@ -660,7 +660,7 @@
             align-items: center;
             gap: 4px;
         }
-        .edit-discount-btn {
+        .discount-edit-btn {
             padding: 4px 8px;
             background: var(--secondary-color);
             color: white;
@@ -670,7 +670,7 @@
             cursor: pointer;
             font-weight: 500;
         }
-        .edit-gift-btn {
+        .gift-edit-btn {
             padding: 4px 8px;
             background: var(--secondary-color);
             color: white;
@@ -680,7 +680,7 @@
             cursor: pointer;
             font-weight: 500;
         }
-        .edit-addon-btn {
+        .addon-edit-btn {
             padding: 4px 8px;
             background: var(--secondary-color);
             color: white;
@@ -690,7 +690,7 @@
             cursor: pointer;
             font-weight: 500;
         }
-        .delete-addon-btn{
+        .addon-delete-btn{
             padding: 4px 8px;
             background: var(--danger-color);
             color: white;
@@ -1467,7 +1467,7 @@
             color: var(--text-dark);
         }
 
-        .delete-location-btn {
+        .location-delete-btn {
             padding: 4px 8px;
             background: #d32f2f;
             color: white;
@@ -1478,7 +1478,7 @@
             transition: background 0.3s;
         }
 
-        .delete-location-btn:hover {
+        .location-delete-btn:hover {
             background: #b71c1c;
         }
 
@@ -1725,7 +1725,7 @@
             transition: background 0.3s;
         }
 
-        .delete-order-btn {
+        .order-delete-btn {
             background: none;
             border: none;
             font-size: 10px;
@@ -1734,7 +1734,7 @@
             transition: opacity 0.2s;
         }
 
-        .delete-order-btn:hover {
+        .order-delete-btn:hover {
             opacity: 1;
         }
 
@@ -1763,7 +1763,7 @@
             opacity: 0.8;
         }
 
-        .cancel-order-btn {
+        .order-cancel-btn {
             background: #ff9800;
             color: white;
             border: none;
@@ -1775,7 +1775,7 @@
             transition: background 0.2s;
         }
 
-        .cancel-order-btn:hover {
+        .order-cancel-btn:hover {
             background: #f57c00;
         }
 
@@ -1902,7 +1902,7 @@
             color: var(--text-dark);
         }
 
-        .add-discount-btn {
+        .action-btn {
             width: 100%;
             padding: 6px;
             background: var(--success-color);
@@ -2170,7 +2170,9 @@
             width: 100%;
         }
 
-        .remove-option-btn {
+        .product-variant-remove-btn,
+        .addon-variant-remove-btn,
+        .gift-variant-remove-btn {
             background: none;
             border: none;
             color: var(--danger-color);
@@ -2184,7 +2186,9 @@
             justify-content: center;
         }
 
-        .add-option-btn {
+        .product-variant-add-btn,
+        .addon-variant-add-btn,
+        .gift-variant-add-btn {
             padding: 4px 8px;
             background: var(--secondary-color);
             color: white;
@@ -2312,7 +2316,7 @@
             display: flex;
             align-items: center;
         }
-        .edit-product-btn {
+        .product-edit-btn {
             padding: 4px 8px;
             background: var(--secondary-color);
             color: white;
@@ -2323,7 +2327,7 @@
             font-weight: 500;
         }
 
-        .delete-product-btn {
+        .product-delete-btn {
             padding: 4px 8px;
             background: var(--danger-color);
             color: white;
@@ -2533,7 +2537,7 @@
         .brand-item-left { display:flex; gap:8px; align-items:center; flex:1; }
         .brand-order-col { display:flex; flex-direction:column; gap:4px; }
         .brand-order-btn { background:var(--primary-color); color:white; border:none; padding:2px 8px; border-radius:3px; cursor:pointer; font-size:10px; }
-        .edit-brand-btn {
+        .brand-edit-btn {
             background: var(--primary-color);
             color: white;
             border: none;
@@ -2542,7 +2546,7 @@
             font-size: 10px;
             cursor: pointer;
         }
-        .delete-brand-btn{
+        .brand-delete-btn{
             background: var(--danger-color);
             color: white;
             border: none;
@@ -2553,7 +2557,7 @@
         }
         .brand-input-row { display:flex; gap:8px; margin-top:16px; }
         .brand-name-input { flex:1; padding:4px 8px; border:2px solid var(--border-color); border-radius:7px; font-size:12px; }
-        .add-brand-btn { background:var(--primary-color); color:white; border:none; padding:8px 8px; border-radius:7px; cursor:pointer; font-size:12px; font-weight:500; }
+        .brand-add-btn { background:var(--primary-color); color:white; border:none; padding:8px 8px; border-radius:7px; cursor:pointer; font-size:12px; font-weight:500; }
 
         /* === 手機響應式樣式 === */
         @media (max-width: 768px) {
@@ -3176,7 +3180,7 @@
                 </div>
                 <div id="stockMovementList" class="scroll-list"></div>
                 <div class="export-footer admin-only">
-                    <button onclick="exportStockMovements()" class="add-discount-btn btn-bg-purple">
+                    <button onclick="exportStockMovements()" class="action-btn btn-bg-purple">
                         📥 匯出異動記錄
                     </button>
                 </div>
@@ -3458,7 +3462,7 @@
                         <option value="buyNFixed">任選N件固定金額折扣</option>
                     </select>
                     <div id="addDiscountFormFields"></div>
-                    <button class="add-discount-btn" onclick="addNewDiscountFromModal()">確認新增折扣</button>
+                    <button class="action-btn" onclick="addNewDiscountFromModal()">確認新增折扣</button>
                 </div>
             </div>
         </div>
@@ -3482,7 +3486,7 @@
                         <option value="buyNFixed">任選N件固定金額折扣</option>
                     </select>
                     <div id="editDiscountFormFields"></div>
-                    <button class="add-discount-btn" onclick="updateDiscount()">確認更新折扣</button>
+                    <button class="action-btn" onclick="updateDiscount()">確認更新折扣</button>
                 </div>
             </div>
         </div>
@@ -3854,13 +3858,13 @@
             </div>
             <div class="modal-body">
                 <p class="modal-desc">請選擇要匯入的資料類型：</p>
-                <button class="add-discount-btn" onclick="openProductImportOptionsModal()" class="btn-mb">
+                <button class="action-btn" onclick="openProductImportOptionsModal()" class="btn-mb">
                     匯入商品資料
                 </button>
-                <button class="add-discount-btn" onclick="openAddonImportOptionsModal()" class="btn-mb">
+                <button class="action-btn" onclick="openAddonImportOptionsModal()" class="btn-mb">
                     匯入加購項目
                 </button>
-                <button class="add-discount-btn" onclick="openGiftImportOptionsModal()" class="btn-mb">
+                <button class="action-btn" onclick="openGiftImportOptionsModal()" class="btn-mb">
                     匯入贈品資料
                 </button>
             </div>
@@ -3877,20 +3881,20 @@
             <div class="modal-body">
                 <input type="file" id="importProductFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 
-                <button class="add-discount-btn" onclick="downloadProductExample()" class="btn-mb btn-text-sm">
+                <button class="action-btn" onclick="downloadProductExample()" class="btn-mb btn-text-sm">
                     下載商品資料欄位說明(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="downloadProductTemplate()" class="btn-mb btn-text-sm">
+                <button class="action-btn" onclick="downloadProductTemplate()" class="btn-mb btn-text-sm">
                     下載商品資料空白檔(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="document.getElementById('importProductFile').click()" class="btn-mb btn-text-sm">
+                <button class="action-btn" onclick="document.getElementById('importProductFile').click()" class="btn-mb btn-text-sm">
                     完整匯入(新增/更新全部欄位)
                 </button>
 
                 <input type="file" id="importProductPriceStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <button class="add-discount-btn" onclick="document.getElementById('importProductPriceStockFile').click()" class="btn-text-sm">
+                <button class="action-btn" onclick="document.getElementById('importProductPriceStockFile').click()" class="btn-text-sm">
                     只更新價格和庫存
                 </button>
             </div>
@@ -3907,20 +3911,20 @@
             <div class="modal-body">
                 <input type="file" id="importAddonFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 
-                <button class="add-discount-btn" onclick="downloadAddonExample()" class="btn-mb btn-text-sm">
+                <button class="action-btn" onclick="downloadAddonExample()" class="btn-mb btn-text-sm">
                     下載加購項目資料欄位說明(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="downloadAddonTemplate()" class="btn-mb btn-text-sm">
+                <button class="action-btn" onclick="downloadAddonTemplate()" class="btn-mb btn-text-sm">
                     下載加購項目資料空白檔(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="document.getElementById('importAddonFile').click()" class="btn-mb btn-text-sm">
+                <button class="action-btn" onclick="document.getElementById('importAddonFile').click()" class="btn-mb btn-text-sm">
                     完整匯入加購項目資料(新增/更新全部欄位)
                 </button>
 
                 <input type="file" id="importAddonPriceStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <button class="add-discount-btn" onclick="document.getElementById('importAddonPriceStockFile').click()" class="btn-text-sm">
+                <button class="action-btn" onclick="document.getElementById('importAddonPriceStockFile').click()" class="btn-text-sm">
                     只更新價格和庫存
                 </button>
             </div>
@@ -3937,20 +3941,20 @@
             <div class="modal-body">
                 <input type="file" id="importGiftFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
                 
-                <button class="add-discount-btn" onclick="downloadGiftExample()" class="btn-mb btn-text-sm">
+                <button class="action-btn" onclick="downloadGiftExample()" class="btn-mb btn-text-sm">
                     下載贈品資料欄位說明(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="downloadGiftTemplate()" class="btn-mb btn-text-sm">
+                <button class="action-btn" onclick="downloadGiftTemplate()" class="btn-mb btn-text-sm">
                     下載贈品資料空白檔(副檔名為.xlsx)
                 </button>
 
-                <button class="add-discount-btn" onclick="document.getElementById('importGiftFile').click()" class="btn-mb btn-text-sm">
+                <button class="action-btn" onclick="document.getElementById('importGiftFile').click()" class="btn-mb btn-text-sm">
                     完整匯入贈品項目資料（新增／更新全部欄位）
                 </button>
 
                 <input type="file" id="importGiftStockFile" class="file-input" accept=".xlsx,.xls" style="display: none;">
-                <button class="add-discount-btn" onclick="document.getElementById('importGiftStockFile').click()" class="btn-text-sm">
+                <button class="action-btn" onclick="document.getElementById('importGiftStockFile').click()" class="btn-text-sm">
                     只更新庫存
                 </button>
             </div>
@@ -3966,22 +3970,22 @@
             </div>
             <div class="modal-body">
                 <p class="modal-desc">請選擇要匯出的資料類型：</p>
-                <button class="add-discount-btn" onclick="confirmExportProducts()" class="btn-mb">
+                <button class="action-btn" onclick="confirmExportProducts()" class="btn-mb">
                     匯出商品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmExportAddons()" class="btn-mb">
+                <button class="action-btn" onclick="confirmExportAddons()" class="btn-mb">
                     匯出加購項目資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmExportGifts()" class="btn-mb">
+                <button class="action-btn" onclick="confirmExportGifts()" class="btn-mb">
                     匯出贈品項目資料
                 </button>
-                <button class="add-discount-btn" onclick="exportCustomers()" class="btn-mb">
+                <button class="action-btn" onclick="exportCustomers()" class="btn-mb">
                     匯出顧客資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmExportSales()" class="btn-mb btn-bg-blue">
+                <button class="action-btn" onclick="confirmExportSales()" class="btn-mb btn-bg-blue">
                     匯出銷售紀錄
                 </button>
-                <button class="add-discount-btn" onclick="exportStockMovementsFromMenu()" class="btn-bg-blue">
+                <button class="action-btn" onclick="exportStockMovementsFromMenu()" class="btn-bg-blue">
                     匯出庫存異動紀錄
                 </button>
             </div>
@@ -4003,10 +4007,10 @@
                 </div>
                 
                 <div class="modal-actions-simple">
-                    <button class="add-discount-btn btn-flex-1" onclick="executeBrandExport()">
+                    <button class="action-btn btn-flex-1" onclick="executeBrandExport()">
                         確認匯出
                     </button>
-                    <button class="add-discount-btn btn-flex-1 btn-bg-gray-light" onclick="closeBrandSelectModal()">
+                    <button class="action-btn btn-flex-1 btn-bg-gray-light" onclick="closeBrandSelectModal()">
                         取消
                     </button>
                 </div>
@@ -4023,22 +4027,22 @@
             </div>
             <div class="modal-body">
                 <p class="modal-desc-danger">此操作無法復原，請謹慎選擇！</p>
-                <button class="add-discount-btn" onclick="confirmClearProducts()" class="btn-mb btn-bg-orange">
+                <button class="action-btn" onclick="confirmClearProducts()" class="btn-mb btn-bg-orange">
                     清除所有商品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearAddons()" class="btn-mb btn-bg-orange">
+                <button class="action-btn" onclick="confirmClearAddons()" class="btn-mb btn-bg-orange">
                     清除所有加購品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearGifts()" class="btn-mb btn-bg-orange">
+                <button class="action-btn" onclick="confirmClearGifts()" class="btn-mb btn-bg-orange">
                     清除所有贈品資料
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearDiscounts()" class="btn-mb btn-bg-orange">
+                <button class="action-btn" onclick="confirmClearDiscounts()" class="btn-mb btn-bg-orange">
                     清除所有折扣設定
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearSales()" class="btn-mb btn-bg-red-orange">
+                <button class="action-btn" onclick="confirmClearSales()" class="btn-mb btn-bg-red-orange">
                     清除所有銷售紀錄
                 </button>
-                <button class="add-discount-btn" onclick="confirmClearStockMovements()" class="btn-mb btn-bg-red-orange">
+                <button class="action-btn" onclick="confirmClearStockMovements()" class="btn-mb btn-bg-red-orange">
                     清除所有庫存異動紀錄
                 </button>
             </div>
@@ -4055,9 +4059,9 @@
             <div class="modal-body">
                 <div id="printPreviewContent" class="print-preview-content"></div>
                 <div id="printPreviewActions" class="modal-actions">
-                    <button class="add-discount-btn btn-flex-1" onclick="printReceipt()">列印</button>
-                    <button class="add-discount-btn btn-flex-1 btn-bg-blue" onclick="showReceiptQRCode()">掃描收據</button>
-                    <button class="add-discount-btn btn-flex-1 btn-bg-green" onclick="sendToLineOA()">LINE官方帳號傳送</button>
+                    <button class="action-btn btn-flex-1" onclick="printReceipt()">列印</button>
+                    <button class="action-btn btn-flex-1 btn-bg-blue" onclick="showReceiptQRCode()">掃描收據</button>
+                    <button class="action-btn btn-flex-1 btn-bg-green" onclick="sendToLineOA()">LINE官方帳號傳送</button>
                 </div>
             </div>
         </div>
@@ -4090,8 +4094,8 @@
                 </div>
 
                 <div style="display: flex; gap: 12px; margin-top: 24px;">
-                    <button class="add-discount-btn btn-flex-1" onclick="saveSystemConfig()">儲存設定</button>
-                    <button class="add-discount-btn btn-flex-1 btn-bg-gray" onclick="closeSystemConfig()">取消</button>
+                    <button class="action-btn btn-flex-1" onclick="saveSystemConfig()">儲存設定</button>
+                    <button class="action-btn btn-flex-1 btn-bg-gray" onclick="closeSystemConfig()">取消</button>
                 </div>
             </div>
         </div>
@@ -4207,11 +4211,11 @@
 
                 <!-- 儲存按鈕 -->
                 <div class="modal-actions admin-only">
-                    <button class="add-discount-btn btn-flex-1" onclick="saveSystemSettings()">儲存設定</button>
-                    <button class="add-discount-btn btn-flex-1 btn-bg-gray" onclick="closeSystemSettings()">取消</button>
+                    <button class="action-btn btn-flex-1" onclick="saveSystemSettings()">儲存設定</button>
+                    <button class="action-btn btn-flex-1 btn-bg-gray" onclick="closeSystemSettings()">取消</button>
                 </div>
                 <div class="modal-actions" id="cashierSettingsCloseRow" style="display:none;">
-                    <button class="add-discount-btn btn-flex-1 btn-bg-gray" onclick="closeSystemSettings()">關閉</button>
+                    <button class="action-btn btn-flex-1 btn-bg-gray" onclick="closeSystemSettings()">關閉</button>
                 </div>
             </div>
         </div>
@@ -4387,7 +4391,7 @@
                         class="brand-name-input"
                     >
                     <button
-                        class="add-brand-btn"
+                        class="brand-add-btn"
                         onclick="addNewBrand()"
                     >
                         新增
@@ -6071,10 +6075,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <div class="sales-record-total">NT$ ${(sale.total || 0).toLocaleString()}</div>
                                 ${sale.status === 'cancelled'
                                     ? '<button class="cancelled-order-btn">已取消</button>'
-                                    : (currentUserRole === 'admin' ? `<button class="cancel-order-btn" onclick="cancelSalesOrder(${actualIndex})" title="取消訂單">取消</button>` : '')
+                                    : (currentUserRole === 'admin' ? `<button class="order-cancel-btn" onclick="cancelSalesOrder(${actualIndex})" title="取消訂單">取消</button>` : '')
                                 }
                                 <button class="view-receipt-btn" onclick="viewReceipt(${actualIndex})" title="查看單據">🖨️</button>
-                                ${currentUserRole === 'admin' ? `<button class="delete-order-btn" onclick="deleteSalesRecord(${actualIndex})" title="刪除記錄">🗑️</button>` : ''}
+                                ${currentUserRole === 'admin' ? `<button class="order-delete-btn" onclick="deleteSalesRecord(${actualIndex})" title="刪除記錄">🗑️</button>` : ''}
                             </div>
                         </div>
                         
@@ -6420,7 +6424,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <span class="status-toggle-slider"></span>
                             </label>
                             <div class="item-action-row">
-                                <button class="edit-gift-btn" onclick="editGift(${originalIndex})">編輯</button>
+                                <button class="gift-edit-btn" onclick="editGift(${originalIndex})">編輯</button>
                                 <button class="stock-log-btn" onclick="openProductStockLog('${gift.id}', '${(gift.giftName || gift.name).replace(/'/g, "\\'")}')" >📋</button>
                                 <button class="delete-discount-btn" onclick="deleteGift(${originalIndex})">刪除</button>
                             </div>
@@ -7079,7 +7083,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleDiscount(${index}, this.checked)">
                                 <span class="status-toggle-slider"></span>
                             </label>
-                            <button class="edit-discount-btn" onclick="editDiscount(${index})">編輯</button>
+                            <button class="discount-edit-btn" onclick="editDiscount(${index})">編輯</button>
                             <button class="delete-discount-btn" onclick="deleteDiscountButton(${index})">刪除</button>
                         </div>
                     </div>
@@ -7255,11 +7259,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                     ${options.map(opt => `
                                         <div class="variant-option-builder">
                                             <input type="text" value="${opt}" />
-                                            <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                                            <button class="gift-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                                         </div>
                                     `).join('')}
                                 </div>
-                                <button class="add-option-btn" onclick="addEditGiftVariantOption(${groupId})">新增選項</button>
+                                <button class="gift-variant-add-btn" onclick="addEditGiftVariantOption(${groupId})">新增選項</button>
                             </div>
                         `;
                         document.getElementById('editGiftVariantGroupsContainer').insertAdjacentHTML('beforeend', groupHtml);
@@ -10022,13 +10026,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button 
-                            class="edit-brand-btn" 
+                            class="brand-edit-btn" 
                             onclick="editBrand('${brand.replace(/'/g, "\\'")}', ${index})"                            
                         >
                             編輯
                         </button>
                         <button 
-                            class="delete-brand-btn" 
+                            class="brand-delete-btn" 
                             onclick="removeBrand('${brand.replace(/'/g, "\\'")}')"
                         >
                             刪除
@@ -10949,7 +10953,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <span class="status-toggle-slider"></span>
                             </label>
                             <button onclick="startEditLocation(${index})" style="padding:4px 8px;background:#6c757d;color:white;border:none;border-radius:6px;cursor:pointer;font-size:10px;">編輯</button>
-                            <button class="delete-location-btn" onclick="deleteLocation(${index})">刪除</button>
+                            <button class="location-delete-btn" onclick="deleteLocation(${index})">刪除</button>
                         </div>
                     </div>
                     <div id="location-edit-${index}" style="display:none;">
@@ -12101,9 +12105,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                     <span class="status-toggle-slider"></span>
                                 </label>
                                 <div class="product-action-row">
-                                    <button class="edit-product-btn" onclick="editProductById('${product.id}')">編輯</button>
+                                    <button class="product-edit-btn" onclick="editProductById('${product.id}')">編輯</button>
                                     <button class="stock-log-btn" onclick="openProductStockLog('${product.id}', '${product.name.replace(/'/g, "\\'")}')" >📋</button>
-                                    <button class="delete-product-btn" onclick="deleteProductById('${product.id}')">刪除</button>
+                                    <button class="product-delete-btn" onclick="deleteProductById('${product.id}')">刪除</button>
                                 </div>
                             </div>
                         </div>
@@ -12323,16 +12327,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 ${options.map(opt => `
                                     <div class="variant-option-builder">
                                         <input type="text" value="${opt}" />
-                                        <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                                        <button class="product-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                                     </div>
                                 `).join('')}
                             </div>
-                            <button class="add-option-btn" onclick="addVariantOption(${groupId})">新增選項</button>
+                            <button class="product-variant-add-btn" onclick="addVariantOption(${groupId})">新增選項</button>
                         </div>
                     `;
                     container.insertAdjacentHTML('beforeend', groupHtml);
                 });
-                
+
                 // 生成規格貨號區域
                 setTimeout(() => {
                     generateVariantCombinations();
@@ -12505,16 +12509,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 ${options.map(opt => `
                                     <div class="variant-option-builder">
                                         <input type="text" value="${opt}" />
-                                        <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                                        <button class="product-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                                     </div>
                                 `).join('')}
                             </div>
-                            <button class="add-option-btn" onclick="addVariantOption(${groupId})">新增選項</button>
+                            <button class="product-variant-add-btn" onclick="addVariantOption(${groupId})">新增選項</button>
                         </div>
                     `;
                     container.insertAdjacentHTML('beforeend', groupHtml);
                 });
-                
+
                 // 使用 callback 替代 setTimeout
                 generateVariantCombinations(() => {
                     // 載入已有的規格貨號
@@ -12757,10 +12761,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div class="variant-options-builder" id="variantOptions${groupId}">
                         <div class="variant-option-builder">
                             <input type="text" placeholder="選項1" />
-                            <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                            <button class="product-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                         </div>
                     </div>
-                    <button class="add-option-btn" onclick="addVariantOption(${groupId})">新增選項</button>
+                    <button class="product-variant-add-btn" onclick="addVariantOption(${groupId})">新增選項</button>
                 </div>
             `;
             
@@ -12787,7 +12791,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const optionHtml = `
                 <div class="variant-option-builder">
                     <input type="text" placeholder="選項" />
-                    <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                    <button class="product-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', optionHtml);
@@ -15249,11 +15253,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 ${options.map(option => `
                                     <div class="variant-option-builder">
                                         <input type="text" placeholder="選項" value="${option}" />
-                                        <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                                        <button class="addon-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                                     </div>
                                 `).join('')}
                             </div>
-                            <button class="add-option-btn" onclick="addAddonVariantOption(${groupId})">新增選項</button>
+                            <button class="addon-variant-add-btn" onclick="addAddonVariantOption(${groupId})">新增選項</button>
                         </div>
                     `;
                     
@@ -15313,10 +15317,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div class="variant-options-builder" id="addonVariantOptions${groupId}">
                         <div class="variant-option-builder">
                             <input type="text" placeholder="選項1" />
-                            <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                            <button class="addon-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                         </div>
                     </div>
-                    <button class="add-option-btn" onclick="addAddonVariantOption(${groupId})">新增選項</button>
+                    <button class="addon-variant-add-btn" onclick="addAddonVariantOption(${groupId})">新增選項</button>
                 </div>
             `;
             
@@ -15341,7 +15345,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const optionHtml = `
                 <div class="variant-option-builder">
                     <input type="text" placeholder="選項" />
-                    <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                    <button class="addon-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', optionHtml);
@@ -15491,10 +15495,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div class="variant-options-builder" id="addGiftVariantOptions${groupId}">
                         <div class="variant-option-builder">
                             <input type="text" placeholder="選項1" />
-                            <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                            <button class="gift-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                         </div>
                     </div>
-                    <button class="add-option-btn" onclick="addGiftVariantOption(${groupId})">新增選項</button>
+                    <button class="gift-variant-add-btn" onclick="addGiftVariantOption(${groupId})">新增選項</button>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', groupHtml);
@@ -15514,7 +15518,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const optionHtml = `
                 <div class="variant-option-builder">
                     <input type="text" placeholder="選項" />
-                    <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                    <button class="gift-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', optionHtml);
@@ -15591,10 +15595,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div class="variant-options-builder" id="editGiftVariantOptions${groupId}">
                         <div class="variant-option-builder">
                             <input type="text" placeholder="選項1" />
-                            <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                            <button class="gift-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                         </div>
                     </div>
-                    <button class="add-option-btn" onclick="addEditGiftVariantOption(${groupId})">新增選項</button>
+                    <button class="gift-variant-add-btn" onclick="addEditGiftVariantOption(${groupId})">新增選項</button>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', groupHtml);
@@ -15614,7 +15618,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const optionHtml = `
                 <div class="variant-option-builder">
                     <input type="text" placeholder="選項" />
-                    <button class="remove-option-btn" onclick="this.parentElement.remove()">×</button>
+                    <button class="gift-variant-remove-btn" onclick="this.parentElement.remove()">×</button>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', optionHtml);
@@ -15921,9 +15925,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <span class="status-toggle-slider"></span>
                             </label>
                             <div class="item-action-row">
-                                <button class="edit-addon-btn" onclick="editAddon(${originalIndex})">編輯</button>
+                                <button class="addon-edit-btn" onclick="editAddon(${originalIndex})">編輯</button>
                                 <button class="stock-log-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\\'")}')" >📋</button>
-                                <button class="delete-addon-btn" onclick="removeAddon(${originalIndex})">刪除</button>
+                                <button class="addon-delete-btn" onclick="removeAddon(${originalIndex})">刪除</button>
                             </div>
                         </div>
                     </div>
@@ -17649,10 +17653,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <div class="sales-record-total">NT$ ${(sale.total || 0).toLocaleString()}</div>
                                 ${sale.status === 'cancelled'
                                     ? '<button class="cancelled-order-btn">已取消</button>'
-                                    : (currentUserRole === 'admin' ? `<button class="cancel-order-btn" onclick="cancelSalesOrder(${actualIndex})" title="取消訂單">取消</button>` : '')
+                                    : (currentUserRole === 'admin' ? `<button class="order-cancel-btn" onclick="cancelSalesOrder(${actualIndex})" title="取消訂單">取消</button>` : '')
                                 }
                                 <button class="view-receipt-btn" onclick="viewReceipt(${actualIndex})" title="查看單據">🖨️</button>
-                                ${currentUserRole === 'admin' ? `<button class="delete-order-btn" onclick="deleteSalesRecord(${actualIndex})" title="刪除記錄">🗑️</button>` : ''}
+                                ${currentUserRole === 'admin' ? `<button class="order-delete-btn" onclick="deleteSalesRecord(${actualIndex})" title="刪除記錄">🗑️</button>` : ''}
                             </div>
                         </div>
                         <div id="omDetail_${actualIndex}" class="sales-detail" style="display: none;">
@@ -18368,8 +18372,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             <p style="font-size:13px;color:#555;margin-bottom:12px;">複製連結後，至LINE官方帳號選擇顧客貼上傳送</p>
             <textarea id="lineOAReceiptUrl" readonly rows="4" style="width:100%;font-size:11px;padding:8px;border:1px solid var(--border-color);border-radius:6px;margin-bottom:12px;color:#333;resize:none;line-height:1.6;"></textarea>
             <div class="modal-actions-simple">
-                <button onclick="copyLineOAUrl()" class="add-discount-btn btn-flex-1">複製連結</button>
-                <button onclick="openLineOAManager()" class="add-discount-btn btn-flex-1 btn-bg-green">開啟LINE官方帳號APP</button>
+                <button onclick="copyLineOAUrl()" class="action-btn btn-flex-1">複製連結</button>
+                <button onclick="openLineOAManager()" class="action-btn btn-flex-1 btn-bg-green">開啟LINE官方帳號APP</button>
             </div>
         </div>
     </div>
@@ -18439,7 +18443,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         <div class="modal-body">
             <div id="receiptQRCode" style="margin:0 auto 16px;min-height:220px;display:flex;align-items:center;justify-content:center;"></div>
             <div id="receiptQRStatus" style="font-size:13px;color:#555;margin-bottom:12px;"></div>
-            <button id="receiptQRPushBtn" class="add-discount-btn btn-flex-1 btn-bg-blue" onclick="pushReceiptToCustomerScreen()" disabled>推送到顧客螢幕</button>
+            <button id="receiptQRPushBtn" class="action-btn btn-flex-1 btn-bg-blue" onclick="pushReceiptToCustomerScreen()" disabled>推送到顧客螢幕</button>
         </div>
     </div>
 </div>
@@ -18583,7 +18587,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <label style="font-size:12px;">官網會員帳號</label>
                 <input type="text" id="editCustomerAccount" placeholder="帳號" />
             </div>
-            <button class="add-discount-btn" onclick="saveEditCustomer()">儲存</button>
+            <button class="action-btn" onclick="saveEditCustomer()">儲存</button>
         </div>
     </div>
 </div>
