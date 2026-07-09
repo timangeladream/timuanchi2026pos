@@ -3051,7 +3051,7 @@
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
                 <button class="header-action-btn" onclick="showCustomerQR()">👁️</button>
-                <button class="header-action-btn" onclick="location.reload()">🔄</button>
+                <button class="header-action-btn" onclick="showNotification('🔄 重新整理中...'); setTimeout(() => location.reload(), 600)">🔄</button>
                 <button class="header-action-btn" onclick="doLogout()">登出</button>
                 <button class="menu-toggle" onclick="toggleMenu();">
                     <span class="menu-icon">☰</span>
