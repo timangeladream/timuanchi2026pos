@@ -25,6 +25,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -842,6 +843,61 @@
             cursor: not-allowed;
             background: #f5f5f5;
             position: relative;
+        }
+
+        .product-card-img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .product-image-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .product-image-upload-area:hover {
+            border-color: var(--primary-color);
+        }
+
+        .product-image-preview-img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .product-image-remove-btn {
+            margin-top: 6px;
+            padding: 4px 12px;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .product-edit-thumb {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
         }
 
         .product-card.sold-out:hover {
@@ -4323,6 +4379,19 @@
                         <input type="text" id="newProductSku" placeholder="例如：ZALD00001" />
                     </div>
 
+                    <div class="form-group">
+                        <label>商品圖片</label>
+                        <div class="product-image-upload-area" onclick="document.getElementById('productImageInput').click()">
+                            <img id="productImagePreview" class="product-image-preview-img" style="display:none;">
+                            <div id="productImagePlaceholder">
+                                <div style="font-size:28px;">📷</div>
+                                <div style="font-size:12px;color:#999;margin-top:4px;">點擊上傳商品圖片</div>
+                            </div>
+                        </div>
+                        <input type="file" id="productImageInput" accept="image/*" style="display:none" onchange="handleProductImageSelect(event)">
+                        <button type="button" id="productImageRemoveBtn" class="product-image-remove-btn" style="display:none" onclick="removeProductImagePreview()">移除圖片</button>
+                    </div>
+
                     <div class="form-group" id="totalPriceDisplay" style="display: none;">
                         <label>價格區間（由各規格價格自動計算）</label>
                         <input type="text" id="displayTotalPrice" readonly class="input-readonly" />
@@ -4512,13 +4581,14 @@ let currentUserRole = null; // 'admin' | 'cashier'
 let currentUserName = '';
 
 // Firebase 實例 (全域)
-let db, auth;
+let db, auth, storage;
 
 // 初始化 Firebase
 function initFirebase() {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     auth = firebase.auth();
+    storage = firebase.storage();
     
     // 監聽登入狀態
     auth.onAuthStateChanged(async (user) => {
@@ -5488,6 +5558,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         let brandFullNames = {};
         let brandOrder = []; // 品牌排序陣列（線上版新增，解決 Firestore 不保證順序問題）
         let disabledBrands = []; // 停用的品牌名稱陣列
+        let pendingProductImageFile = null; // 待上傳的商品圖片
+        let productImageRemoved = false;    // 編輯時是否移除了原有圖片
         
         // 分類資訊（僅用於篩選）
         let categories = {
@@ -9939,6 +10011,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
                 return `
                     <div class="${cardClass}" ${clickEvent}>
+                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : ''}
                         <div class="product-name">${product.name}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
@@ -10091,6 +10164,96 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             loadBrandManageList();
             renderBrandTabs();
         }
+
+        // ============ 商品圖片功能 ============
+
+        async function compressImage(file, maxWidth = 1000, quality = 0.8) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let { width, height } = img;
+                        if (width > maxWidth) {
+                            height = Math.round(height * maxWidth / width);
+                            width = maxWidth;
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                        canvas.toBlob(resolve, 'image/jpeg', quality);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function uploadProductImage(productId, file) {
+            const compressed = await compressImage(file);
+            const ref = storage.ref(`products/${productId}.jpg`);
+            await ref.put(compressed);
+            return await ref.getDownloadURL();
+        }
+
+        async function deleteProductImage(productId) {
+            try {
+                await storage.ref(`products/${productId}.jpg`).delete();
+            } catch (e) { /* 圖片不存在時忽略 */ }
+        }
+
+        function handleProductImageSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            pendingProductImageFile = file;
+            productImageRemoved = false;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('productImagePreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                document.getElementById('productImagePlaceholder').style.display = 'none';
+                document.getElementById('productImageRemoveBtn').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeProductImagePreview() {
+            pendingProductImageFile = null;
+            productImageRemoved = true;
+            document.getElementById('productImagePreview').style.display = 'none';
+            document.getElementById('productImagePlaceholder').style.display = 'flex';
+            document.getElementById('productImageRemoveBtn').style.display = 'none';
+            document.getElementById('productImageInput').value = '';
+        }
+
+        function resetProductImageForm() {
+            pendingProductImageFile = null;
+            productImageRemoved = false;
+            const preview = document.getElementById('productImagePreview');
+            if (preview) {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+            const placeholder = document.getElementById('productImagePlaceholder');
+            if (placeholder) placeholder.style.display = 'flex';
+            const removeBtn = document.getElementById('productImageRemoveBtn');
+            if (removeBtn) removeBtn.style.display = 'none';
+            const input = document.getElementById('productImageInput');
+            if (input) input.value = '';
+        }
+
+        function showProductImageInForm(imageUrl) {
+            if (!imageUrl) return;
+            const preview = document.getElementById('productImagePreview');
+            preview.src = imageUrl;
+            preview.style.display = 'block';
+            document.getElementById('productImagePlaceholder').style.display = 'none';
+            document.getElementById('productImageRemoveBtn').style.display = 'block';
+        }
+
+        // ======================================
 
         // 編輯品牌名稱
         function editBrand(oldName, index) {
@@ -10555,6 +10718,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 return `
                     <div class="${cardClass}" ${clickEvent}>
+                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : ''}
                         <div class="product-name">${product.name}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
@@ -10627,6 +10791,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 return `
                     <div class="${cardClass}" ${clickEvent}>
+                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : ''}
                         <div class="product-name">${product.name}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
@@ -10772,6 +10937,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 return `
                     <div class="${cardClass}" ${clickEvent}>
+                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : ''}
                         <div class="product-name">${product.name}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
@@ -12130,6 +12296,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                     <div class="product-edit-item" style="${isActive ? '' : 'opacity:0.6;'}">
                         <div class="product-edit-header">
+                            <div style="display:flex;align-items:center;gap:10px;flex:1;">
+                            ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-edit-thumb" loading="lazy">` : ''}
                             <div>
                                 <div class="product-edit-name">${product.name}${!isActive ? '<span class="status-badge-inactive">已下架</span>' : ''}</div>
                                 <div class="product-edit-info">
@@ -12145,6 +12313,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                     庫存: ${totalStock}
                                 </div>
                                 ${variantInfo}
+                            </div>
                             </div>
                             <div class="product-edit-actions" style="flex-direction:column;align-items:flex-end;gap:8px;">
                                 <label class="status-toggle" title="${isActive ? '上架中，點擊下架' : '已下架，點擊上架'}">
@@ -12528,6 +12697,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('newProductSku').value = product.sku || '';
             document.getElementById('newProductPrice').value = product.price;
             document.getElementById('newProductStock').value = product.stock !== undefined ? product.stock : '';
+            resetProductImageForm();
+            if (product.imageUrl) showProductImageInForm(product.imageUrl);
             
             // 載入規格
             const container = document.getElementById('variantGroupsContainer');
@@ -12663,6 +12834,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 products.splice(productIndex, 1);
             }
             
+            if (product.imageUrl) deleteProductImage(product.id);
             showNotification('✅ 商品已刪除');
             saveDataToLocalStorage();
             filterProductList(); // 更新商品編輯彈窗
@@ -12684,6 +12856,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             document.getElementById('newProductSku').value = '';
             document.getElementById('newProductPrice').value = '';
             document.getElementById('newProductStock').value = '';
+            resetProductImageForm();
             
             // 新增：動態生成品牌下拉選單
             const brandSelect = document.getElementById('newProductBrand');
@@ -12998,7 +13171,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         // 儲存新商品
-        function saveNewProduct() {
+        async function saveNewProduct() {
             const brand = document.getElementById('newProductBrand').value;
             const mainCategory = document.getElementById('newProductMainCategory').value;
             const subCategory = document.getElementById('newProductSubCategory').value;
@@ -13127,10 +13300,35 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
             }
 
-            // 判斷是編輯還是新增
-            if (currentEditingProductPath) {
+            // 判斷是編輯還是新增，先確定 ID（圖片上傳需要用到）
+            const isEditing = !!currentEditingProductPath;
+            const productId = isEditing
+                ? (currentEditingProductPath.productId || currentEditingProduct.id)
+                : generateProductId();
+            product.id = productId;
+
+            // 處理圖片上傳
+            if (pendingProductImageFile) {
+                try {
+                    showNotification('📷 圖片上傳中...');
+                    product.imageUrl = await uploadProductImage(productId, pendingProductImageFile);
+                } catch (e) {
+                    console.error('圖片上傳失敗:', e);
+                    showNotification('⚠️ 圖片上傳失敗，商品仍會儲存');
+                }
+                pendingProductImageFile = null;
+                productImageRemoved = false;
+            } else if (productImageRemoved) {
+                deleteProductImage(productId);
+                product.imageUrl = null;
+                productImageRemoved = false;
+            } else if (isEditing && currentEditingProduct.imageUrl) {
+                product.imageUrl = currentEditingProduct.imageUrl;
+            }
+
+            if (isEditing) {
                 // 編輯模式：更新商品的id和資料，保留建立時間
-                product.id = currentEditingProductPath.productId || currentEditingProduct.id;
+                // (product.id 已在上方設定)
                 product.createdAt = currentEditingProduct.createdAt || Date.now();
                 if (currentEditingProduct.status) product.status = currentEditingProduct.status;
                 
@@ -13179,8 +13377,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 currentEditingProduct = null;
                 currentEditingProductPath = null;
             } else {
-                // 新增模式：給予新ID並加入陣列（UUID，避免重複）
-                product.id = generateProductId();
+                // 新增模式：ID 已在上方設定（generateProductId）
                 product.createdAt = Date.now();
                 products.push(product);
                 
