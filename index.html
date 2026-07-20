@@ -10232,17 +10232,18 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             });
         }
 
-        async function uploadProductImage(productId, file) {
+        async function uploadProductImage(productId, file, sku) {
             const cloudName = systemConfig.cloudinaryCloudName || '';
             const uploadPreset = systemConfig.cloudinaryUploadPreset || '';
             if (!cloudName || !uploadPreset) {
                 throw new Error('尚未設定 Cloudinary。請到「系統設定」填入 Cloud Name 和 Upload Preset。');
             }
             const compressed = await compressImage(file);
+            const publicId = (sku && String(sku).trim()) ? String(sku).trim() : productId;
             const formData = new FormData();
             formData.append('file', compressed);
             formData.append('upload_preset', uploadPreset);
-            formData.append('public_id', productId);
+            formData.append('public_id', publicId);
             formData.append('use_filename', 'true');
             formData.append('unique_filename', 'false');
             const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
@@ -13431,7 +13432,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (pendingProductImageFile) {
                 try {
                     showNotification('📷 圖片上傳中...');
-                    product.imageUrl = await uploadProductImage(productId, pendingProductImageFile);
+                    product.imageUrl = await uploadProductImage(productId, pendingProductImageFile, product.sku);
                 } catch (e) {
                     console.error('圖片上傳失敗:', e);
                     showNotification('⚠️ ' + (e.message || '圖片上傳失敗') + '，商品仍會儲存');
