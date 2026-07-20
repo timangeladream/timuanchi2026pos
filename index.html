@@ -25,7 +25,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -4182,6 +4181,20 @@
                     <div class="hint-text">點擊可更換配色</div>
                 </div>
 
+                <div style="border-top:1px solid var(--border-color);margin:16px 0;padding-top:16px;">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text-secondary);">📷 Cloudinary 圖片上傳設定</div>
+                    <div class="form-group">
+                        <label>Cloud Name</label>
+                        <input type="text" id="config_cloudName" placeholder="例如：my-cloud-name" />
+                        <div class="hint-text">在 Cloudinary 主控台右上角可找到</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Preset（Unsigned）</label>
+                        <input type="text" id="config_uploadPreset" placeholder="例如：pos-products" />
+                        <div class="hint-text">Settings → Upload → Upload presets → 新增 Unsigned preset</div>
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 12px; margin-top: 24px;">
                     <button class="action-btn btn-flex-1" onclick="saveSystemConfig()">儲存設定</button>
                     <button class="action-btn btn-flex-1 btn-bg-gray" onclick="closeSystemConfig()">取消</button>
@@ -4381,14 +4394,26 @@
 
                     <div class="form-group">
                         <label>商品圖片</label>
-                        <div class="product-image-upload-area" onclick="document.getElementById('productImageInput').click()">
-                            <img id="productImagePreview" class="product-image-preview-img" style="display:none;">
-                            <div id="productImagePlaceholder">
-                                <div style="font-size:28px;">📷</div>
-                                <div style="font-size:12px;color:#999;margin-top:4px;">點擊上傳商品圖片</div>
+                        <div style="display:flex;gap:0;margin-bottom:8px;border:1px solid var(--border-color);border-radius:8px;overflow:hidden;">
+                            <button type="button" class="product-img-tab active" id="imgTabFile" onclick="switchImageTab('file')" style="flex:1;padding:7px;border:none;background:var(--primary-color);color:#fff;cursor:pointer;font-size:13px;">選擇檔案</button>
+                            <button type="button" class="product-img-tab" id="imgTabUrl" onclick="switchImageTab('url')" style="flex:1;padding:7px;border:none;background:transparent;color:var(--text-primary);cursor:pointer;font-size:13px;">貼上網址</button>
+                        </div>
+                        <div id="imageTabFileContent">
+                            <div class="product-image-upload-area" onclick="document.getElementById('productImageInput').click()">
+                                <img id="productImagePreview" class="product-image-preview-img" style="display:none;">
+                                <div id="productImagePlaceholder">
+                                    <div style="font-size:28px;">📷</div>
+                                    <div style="font-size:12px;color:#999;margin-top:4px;">點擊選擇圖片並上傳至 Cloudinary</div>
+                                </div>
+                            </div>
+                            <input type="file" id="productImageInput" accept="image/*" style="display:none" onchange="handleProductImageSelect(event)">
+                        </div>
+                        <div id="imageTabUrlContent" style="display:none;">
+                            <input type="text" id="productImageUrlInput" placeholder="貼上圖片網址，例如 https://res.cloudinary.com/..." oninput="handleProductImageUrlInput(this.value)" style="margin-bottom:8px;">
+                            <div id="productImageUrlPreviewBox" style="display:none;text-align:center;padding:8px;border:1px solid var(--border-color);border-radius:6px;">
+                                <img id="productImageUrlPreview" class="product-image-preview-img" style="max-height:120px;" onerror="this.style.display='none'">
                             </div>
                         </div>
-                        <input type="file" id="productImageInput" accept="image/*" style="display:none" onchange="handleProductImageSelect(event)">
                         <button type="button" id="productImageRemoveBtn" class="product-image-remove-btn" style="display:none" onclick="removeProductImagePreview()">移除圖片</button>
                     </div>
 
@@ -4581,14 +4606,13 @@ let currentUserRole = null; // 'admin' | 'cashier'
 let currentUserName = '';
 
 // Firebase 實例 (全域)
-let db, auth, storage;
+let db, auth;
 
 // 初始化 Firebase
 function initFirebase() {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     auth = firebase.auth();
-    storage = firebase.storage();
     
     // 監聽登入狀態
     auth.onAuthStateChanged(async (user) => {
@@ -4956,7 +4980,7 @@ async function loadDataFromFirestore() {
                 { id: 'culture_coin', name: '文化幣', enabled: true }
             ];
             migrateSystemSettings();
-            systemConfig = data.systemConfig || { systemName: '', theme: 'blue' };
+            systemConfig = data.systemConfig || { systemName: '', theme: 'blue', cloudinaryCloudName: '', cloudinaryUploadPreset: '' };
             renderPaymentMethodButtons();
             console.log('✅ 資料已從 Firebase 載入');
             return true;
@@ -5558,7 +5582,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         let brandFullNames = {};
         let brandOrder = []; // 品牌排序陣列（線上版新增，解決 Firestore 不保證順序問題）
         let disabledBrands = []; // 停用的品牌名稱陣列
-        let pendingProductImageFile = null; // 待上傳的商品圖片
+        let pendingProductImageFile = null; // 待上傳的商品圖片（選擇檔案）
+        let pendingProductImageUrl = '';    // 待儲存的商品圖片網址（貼上網址）
         let productImageRemoved = false;    // 編輯時是否移除了原有圖片
         
         // 分類資訊（僅用於篩選）
@@ -5657,8 +5682,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // 系統配置
         let systemConfig = {
-            systemName: '',      // 系統名稱
-            theme: 'blue'       // 預設主題：blue
+            systemName: '',           // 系統名稱
+            theme: 'blue',            // 預設主題：blue
+            cloudinaryCloudName: '',  // Cloudinary Cloud Name
+            cloudinaryUploadPreset: '' // Cloudinary Upload Preset
         };
 
         // 系統設定
@@ -7962,8 +7989,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 下載商品填寫範例
         function downloadProductExample() {
             // 欄位名稱
-            const headers = ['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號'];
-            
+            const headers = ['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '圖片網址'];
+
             // 紅色說明行
             const explanations = [
                 '必填',
@@ -7980,6 +8007,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 '必填，空白=不想覆蓋系統裡已有的價格',
                 '0=庫存設為0，空白=不想覆蓋系統裡已有的庫存',
                 '選填',
+                '選填，貼上圖片完整網址（如 Cloudinary 網址）',
                 '← 匯入資料前請把這行刪除以免出現錯誤'
             ];
             
@@ -8021,11 +8049,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 35}, // 價格
                 {wch: 35}, // 庫存
                 {wch: 15}, // 規格貨號
+                {wch: 45}, // 圖片網址
                 {wch: 35}  // 說明
             ];
-            
+
             XLSX.utils.book_append_sheet(wb, ws, '商品資料');
-            
+
             const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
             XLSX.writeFile(wb, `商品資料欄位說明_${timestamp}.xlsx`, {cellStyles: true});
         }
@@ -8033,14 +8062,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 下載商品空白範本
         function downloadProductTemplate() {
             // 只有欄位名稱
-            const headers = ['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號'];
-            
+            const headers = ['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '圖片網址'];
+
             const ws_data = [headers];
-            
+
             // 建立工作簿
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
-            
+
             // 設定欄寬
             ws['!cols'] = [
                 {wch: 12}, // 品牌
@@ -8056,7 +8085,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 12}, // 規格3
                 {wch: 10}, // 價格
                 {wch: 10}, // 庫存
-                {wch: 15}  // 規格貨號
+                {wch: 15}, // 規格貨號
+                {wch: 45}  // 圖片網址
             ];
             
             XLSX.utils.book_append_sheet(wb, ws, '商品資料');
@@ -8227,6 +8257,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 type: 'multi-variant',
                                 rowCount: rows.length
                             };
+                            const importedImageUrl = String(rows[0]['圖片網址'] || '').trim();
+                            if (importedImageUrl) product.imageUrl = importedImageUrl;
                             
                             // 收集規格維度和名稱
                             const variantDimensions = [];
@@ -8287,7 +8319,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             
                         } else if (hasVariants && rows.length === 1) {
                             console.warn(`商品「${productName}」只有1行但填了規格，視為單規格商品`);
-                            
+
                             const product = {
                                 brand,
                                 mainCategory,
@@ -8297,17 +8329,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 type: 'single',
                                 rowCount: 1
                             };
-                            
+
                             // 價格: 有填才設定
                             if (rows[0]['價格'] !== undefined && rows[0]['價格'] !== '') {
                                 product.price = rows[0]['價格'];
                             }
-                            
+
                             // 庫存: 有填才設定
                             if (rows[0]['庫存'] !== undefined && rows[0]['庫存'] !== '') {
                                 product.stock = rows[0]['庫存'];
                             }
-                            
+
+                            const importedImageUrl2 = String(rows[0]['圖片網址'] || '').trim();
+                            if (importedImageUrl2) product.imageUrl = importedImageUrl2;
+
                             processedProducts.push(product);
                             
                         } else {
@@ -8321,17 +8356,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 type: 'single',
                                 rowCount: 1
                             };
-                            
+
                             // 價格: 有填才設定
                             if (rows[0]['價格'] !== undefined && rows[0]['價格'] !== '') {
                                 product.price = rows[0]['價格'];
                             }
-                            
+
                             // 庫存: 有填才設定
                             if (rows[0]['庫存'] !== undefined && rows[0]['庫存'] !== '') {
                                 product.stock = rows[0]['庫存'];
                             }
-                            
+
+                            const importedImageUrl3 = String(rows[0]['圖片網址'] || '').trim();
+                            if (importedImageUrl3) product.imageUrl = importedImageUrl3;
+
                             processedProducts.push(product);
                         }
                     });
@@ -9403,12 +9441,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     const variantOptions = Object.values(product.variants);
                     const combinations = generateCombinations(variantOptions);
                     
-                    combinations.forEach(combo => {
+                    combinations.forEach((combo, comboIndex) => {
                         const comboKey = combo.join(',');
                         const variantPrice = product.variantPrices?.[comboKey] || product.price || 0;
                         const variantStock = product.variantStock?.[comboKey] || 0;
                         const variantSku = product.variantSkus?.[comboKey] || '';
-                        
+                        // 圖片網址只在第一行顯示
+                        const imageUrl = comboIndex === 0 ? (product.imageUrl || '') : '';
                         rows.push([
                             brandFullName,
                             product.mainCategory,
@@ -9423,7 +9462,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             combo[2] || '',         // 規格3
                             variantPrice,
                             variantStock,
-                            variantSku
+                            variantSku,
+                            imageUrl
                         ]);
                     });
                 } else {
@@ -9439,7 +9479,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         '', '', // 規格3名稱, 規格3
                         product.price || 0,
                         product.stock !== undefined ? product.stock : '',
-                        ''
+                        '',
+                        product.imageUrl || ''
                     ]);
                 }
                 
@@ -9464,7 +9505,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 12}, // 規格3
                 {wch: 10}, // 價格
                 {wch: 8},  // 庫存
-                {wch: 18}  // 規格貨號
+                {wch: 18}, // 規格貨號
+                {wch: 45}  // 圖片網址
             ];
             
             if (brandSelection === 'all') {
@@ -9482,7 +9524,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     console.log(`品牌 ${brand} 的商品數:`, brandProducts.length);
                     
                     if (brandProducts.length > 0) {
-                        const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號']];
+                        const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '圖片網址']];
                         
                         brandProducts.forEach(product => {
                             const rows = productToRows(product);
@@ -9511,7 +9553,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return;
                 }
                 
-                const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1', '規格2', '規格3', '價格', '庫存', '規格貨號']];
+                const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1', '規格2', '規格3', '價格', '庫存', '規格貨號', '圖片網址']];
                 
                 brandProducts.forEach(product => {
                     const rows = productToRows(product);
@@ -10191,22 +10233,54 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         async function uploadProductImage(productId, file) {
+            const cloudName = systemConfig.cloudinaryCloudName || '';
+            const uploadPreset = systemConfig.cloudinaryUploadPreset || '';
+            if (!cloudName || !uploadPreset) {
+                throw new Error('尚未設定 Cloudinary。請到「系統設定」填入 Cloud Name 和 Upload Preset。');
+            }
             const compressed = await compressImage(file);
-            const ref = storage.ref(`products/${productId}.jpg`);
-            await ref.put(compressed);
-            return await ref.getDownloadURL();
+            const formData = new FormData();
+            formData.append('file', compressed);
+            formData.append('upload_preset', uploadPreset);
+            formData.append('public_id', productId);
+            formData.append('use_filename', 'true');
+            formData.append('unique_filename', 'false');
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) throw new Error('Cloudinary 上傳失敗');
+            const data = await response.json();
+            return data.secure_url;
         }
 
         async function deleteProductImage(productId) {
-            try {
-                await storage.ref(`products/${productId}.jpg`).delete();
-            } catch (e) { /* 圖片不存在時忽略 */ }
+            // Cloudinary 刪除需要後端 API key，前端僅清除 URL 記錄即可
+        }
+
+        function switchImageTab(tab) {
+            const isFile = tab === 'file';
+            const fileTab = document.getElementById('imgTabFile');
+            const urlTab = document.getElementById('imgTabUrl');
+            if (fileTab) {
+                fileTab.style.background = isFile ? 'var(--primary-color)' : 'transparent';
+                fileTab.style.color = isFile ? '#fff' : 'var(--text-primary)';
+            }
+            if (urlTab) {
+                urlTab.style.background = !isFile ? 'var(--primary-color)' : 'transparent';
+                urlTab.style.color = !isFile ? '#fff' : 'var(--text-primary)';
+            }
+            const fileContent = document.getElementById('imageTabFileContent');
+            const urlContent = document.getElementById('imageTabUrlContent');
+            if (fileContent) fileContent.style.display = isFile ? '' : 'none';
+            if (urlContent) urlContent.style.display = isFile ? 'none' : '';
         }
 
         function handleProductImageSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
             pendingProductImageFile = file;
+            pendingProductImageUrl = '';
             productImageRemoved = false;
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -10219,37 +10293,77 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             reader.readAsDataURL(file);
         }
 
+        function handleProductImageUrlInput(url) {
+            pendingProductImageUrl = url.trim();
+            pendingProductImageFile = null;
+            productImageRemoved = false;
+            const previewBox = document.getElementById('productImageUrlPreviewBox');
+            const preview = document.getElementById('productImageUrlPreview');
+            const removeBtn = document.getElementById('productImageRemoveBtn');
+            if (pendingProductImageUrl) {
+                if (preview) { preview.src = pendingProductImageUrl; preview.style.display = 'block'; }
+                if (previewBox) previewBox.style.display = 'block';
+                if (removeBtn) removeBtn.style.display = 'block';
+            } else {
+                if (preview) preview.style.display = 'none';
+                if (previewBox) previewBox.style.display = 'none';
+                if (removeBtn) removeBtn.style.display = 'none';
+            }
+        }
+
         function removeProductImagePreview() {
             pendingProductImageFile = null;
+            pendingProductImageUrl = '';
             productImageRemoved = true;
-            document.getElementById('productImagePreview').style.display = 'none';
-            document.getElementById('productImagePlaceholder').style.display = 'flex';
+            // File tab
+            const preview = document.getElementById('productImagePreview');
+            if (preview) { preview.style.display = 'none'; }
+            const placeholder = document.getElementById('productImagePlaceholder');
+            if (placeholder) placeholder.style.display = 'flex';
+            const input = document.getElementById('productImageInput');
+            if (input) input.value = '';
+            // URL tab
+            const urlInput = document.getElementById('productImageUrlInput');
+            if (urlInput) urlInput.value = '';
+            const urlPreview = document.getElementById('productImageUrlPreview');
+            if (urlPreview) urlPreview.style.display = 'none';
+            const urlPreviewBox = document.getElementById('productImageUrlPreviewBox');
+            if (urlPreviewBox) urlPreviewBox.style.display = 'none';
+            // Shared remove button
             document.getElementById('productImageRemoveBtn').style.display = 'none';
-            document.getElementById('productImageInput').value = '';
         }
 
         function resetProductImageForm() {
             pendingProductImageFile = null;
+            pendingProductImageUrl = '';
             productImageRemoved = false;
             const preview = document.getElementById('productImagePreview');
-            if (preview) {
-                preview.src = '';
-                preview.style.display = 'none';
-            }
+            if (preview) { preview.src = ''; preview.style.display = 'none'; }
             const placeholder = document.getElementById('productImagePlaceholder');
             if (placeholder) placeholder.style.display = 'flex';
             const removeBtn = document.getElementById('productImageRemoveBtn');
             if (removeBtn) removeBtn.style.display = 'none';
             const input = document.getElementById('productImageInput');
             if (input) input.value = '';
+            const urlInput = document.getElementById('productImageUrlInput');
+            if (urlInput) urlInput.value = '';
+            const urlPreview = document.getElementById('productImageUrlPreview');
+            if (urlPreview) urlPreview.style.display = 'none';
+            const urlPreviewBox = document.getElementById('productImageUrlPreviewBox');
+            if (urlPreviewBox) urlPreviewBox.style.display = 'none';
+            switchImageTab('file');
         }
 
         function showProductImageInForm(imageUrl) {
             if (!imageUrl) return;
-            const preview = document.getElementById('productImagePreview');
-            preview.src = imageUrl;
-            preview.style.display = 'block';
-            document.getElementById('productImagePlaceholder').style.display = 'none';
+            switchImageTab('url');
+            const urlInput = document.getElementById('productImageUrlInput');
+            if (urlInput) urlInput.value = imageUrl;
+            pendingProductImageUrl = imageUrl;
+            const urlPreview = document.getElementById('productImageUrlPreview');
+            if (urlPreview) { urlPreview.src = imageUrl; urlPreview.style.display = 'block'; }
+            const urlPreviewBox = document.getElementById('productImageUrlPreviewBox');
+            if (urlPreviewBox) urlPreviewBox.style.display = 'block';
             document.getElementById('productImageRemoveBtn').style.display = 'block';
         }
 
@@ -10503,6 +10617,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 打開系統配置彈窗
         function openSystemConfig() {
             document.getElementById('config_systemName').value = systemConfig.systemName || '';
+            document.getElementById('config_cloudName').value = systemConfig.cloudinaryCloudName || '';
+            document.getElementById('config_uploadPreset').value = systemConfig.cloudinaryUploadPreset || '';
             updateCurrentThemeDisplay();
             document.getElementById('systemConfigModal').classList.add('show');
         }
@@ -10515,6 +10631,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 儲存系統配置
         function saveSystemConfig() {
             systemConfig.systemName = document.getElementById('config_systemName').value.trim();
+            systemConfig.cloudinaryCloudName = document.getElementById('config_cloudName').value.trim();
+            systemConfig.cloudinaryUploadPreset = document.getElementById('config_uploadPreset').value.trim();
             
             saveDataToLocalStorage();
             updateSystemTitle();
@@ -11480,7 +11598,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     migrateSystemSettings();
                     systemConfig = data.systemConfig || {
                         systemName: '',
-                        theme: 'blue'
+                        theme: 'blue',
+                        cloudinaryCloudName: '',
+                        cloudinaryUploadPreset: ''
                     };
                     salesHistory = data.salesHistory || [];
                     console.log('已載入保存的資料');
@@ -13307,19 +13427,22 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 : generateProductId();
             product.id = productId;
 
-            // 處理圖片上傳
+            // 處理圖片
             if (pendingProductImageFile) {
                 try {
                     showNotification('📷 圖片上傳中...');
                     product.imageUrl = await uploadProductImage(productId, pendingProductImageFile);
                 } catch (e) {
                     console.error('圖片上傳失敗:', e);
-                    showNotification('⚠️ 圖片上傳失敗，商品仍會儲存');
+                    showNotification('⚠️ ' + (e.message || '圖片上傳失敗') + '，商品仍會儲存');
                 }
                 pendingProductImageFile = null;
                 productImageRemoved = false;
+            } else if (pendingProductImageUrl) {
+                product.imageUrl = pendingProductImageUrl;
+                pendingProductImageUrl = '';
+                productImageRemoved = false;
             } else if (productImageRemoved) {
-                deleteProductImage(productId);
                 product.imageUrl = null;
                 productImageRemoved = false;
             } else if (isEditing && currentEditingProduct.imageUrl) {
