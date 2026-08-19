@@ -5337,19 +5337,6 @@ async function toggleUserRole(uid, currentRole) {
 }
 
 // ============================================================
-// 覆寫原本的 saveDataToLocalStorage / loadDataFromLocalStorage
-// ============================================================
-
-function saveDataToLocalStorage() {
-    // 非同步儲存到 Firebase (不阻塞 UI)
-    saveDataToFirestore().catch(e => console.error('背景儲存失敗:', e));
-}
-
-function loadDataFromLocalStorage() {
-    // 這個函數在 init() 中被同步呼叫，但實際資料已在 initApp() 中非同步載入
-    return false;
-}
-
 // ============================================================
 // 資料遷移：cashier → salesPerson 欄位名稱統一
 // ============================================================
@@ -7787,17 +7774,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         }
 
         // 重置折扣表單
-
-        // 初始化預設商品資料
-        function initDefaultProducts() {
-            // 完全空白的初始化，不建立任何品牌
-            productData = {};
-            categories = {
-                brands: [],
-                mainCategories: {},
-                subCategories: {}
-            };
-        }
 
         // === 匯入匯出功能 ===
         
@@ -11585,39 +11561,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             });
         }
 
-        // 從 localStorage 載入資料（線上版：由 Firebase 處理，此函數僅作備用）
+        // 從 localStorage 載入資料（線上版：由 Firebase 處理，此函數不執行）
         function loadDataFromLocalStorage() {
-            // 線上版：資料由 initApp() 透過 Firebase 載入，此函數不執行
-            return false;
-            try {
-                const savedData = localStorage.getItem('jewelryPosData_DISABLED');
-                if (savedData) {
-                    const data = JSON.parse(savedData);
-                    
-                    // 載入資料 (相容所有版本)
-                    products = data.products || [];
-                    productData = data.productData || {};
-                    categories = data.categories || { brands: [], mainCategories: {}, subCategories: {} };
-                    nextProductId = data.nextProductId || 1;
-                    discountButtons = data.discountButtons || [];
-                    giftRules = data.giftRules || [];
-                    saleLocations = (data.saleLocations || []).map(l => typeof l === 'string' ? {name: l, enabled: true} : l);
-                    addOnItems = data.addOnItems || [];
-                    systemSettings = data.systemSettings || {};
-                    migrateSystemSettings();
-                    systemConfig = data.systemConfig || {
-                        systemName: '',
-                        theme: 'blue',
-                        cloudinaryCloudName: '',
-                        cloudinaryUploadPreset: ''
-                    };
-                    salesHistory = data.salesHistory || [];
-                    console.log('已載入保存的資料');
-                    return true;
-                }
-            } catch (error) {
-                console.error('載入資料失敗:', error);
-            }
             return false;
         }
         
@@ -11684,27 +11629,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             console.log(`已遷移 ${products.length} 個商品到新格式`);
         }
         
-        // 轉換新格式回舊格式（向下相容）
-        function convertToLegacyFormat() {
-            // 從 productData 初始化，包含所有品牌
-            const legacy = {};
-            Object.keys(productData).forEach(brand => {
-                legacy[brand] = {};
-            });
-            
-            products.forEach(product => {
-                const { id, brand, mainCategory, subCategory, ...productData } = product;
-                
-                if (!legacy[brand]) legacy[brand] = {};
-                if (!legacy[brand][mainCategory]) legacy[brand][mainCategory] = {};
-                if (!legacy[brand][mainCategory][subCategory]) legacy[brand][mainCategory][subCategory] = [];
-                
-                legacy[brand][mainCategory][subCategory].push(productData);
-            });
-            
-            return legacy;
-        }
-
         // 清除所有保存的資料
         // 確認清除商品資料
         function confirmClearProducts() {
@@ -16738,11 +16662,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
         }
         
-        function normalizeAllProducts() {
-            products.forEach(p => normalizeProductVariants(p));
-        }
-
-
         // ===== QR Code / 條碼掃描功能 =====
         let scannerStream = null;
         let scannerInterval = null;
