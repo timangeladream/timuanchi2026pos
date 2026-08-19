@@ -853,6 +853,14 @@
             display: block;
         }
 
+        .product-card-img-placeholder {
+            width: 100%;
+            height: 90px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            background: var(--bg-secondary, #f0f0f0);
+        }
+
         .product-image-upload-area {
             border: 2px dashed var(--border-color);
             border-radius: 8px;
@@ -10053,7 +10061,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
                 return `
                     <div class="${cardClass}" ${clickEvent}>
-                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : ''}
+                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : '<div class="product-card-img-placeholder"></div>'}
                         <div class="product-name">${product.name}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
@@ -10837,7 +10845,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 return `
                     <div class="${cardClass}" ${clickEvent}>
-                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : ''}
+                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : '<div class="product-card-img-placeholder"></div>'}
                         <div class="product-name">${product.name}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
@@ -10910,7 +10918,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 return `
                     <div class="${cardClass}" ${clickEvent}>
-                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : ''}
+                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : '<div class="product-card-img-placeholder"></div>'}
                         <div class="product-name">${product.name}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
@@ -11056,7 +11064,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 return `
                     <div class="${cardClass}" ${clickEvent}>
-                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : ''}
+                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : '<div class="product-card-img-placeholder"></div>'}
                         <div class="product-name">${product.name}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
