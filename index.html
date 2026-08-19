@@ -4922,12 +4922,8 @@ function saveDataToFirestore() {
 async function _doSaveDataToFirestore() {
     if (!db || !currentUser) return;
     try {
-        const batch = db.batch();
-        
-        // 儲存設定 (settings 集合)
-        batch.set(db.collection('settings').doc('system'), {
-            productData: encodeProductDataKeys(productData),
-            products,
+        // 儲存設定（不含商品，商品獨立存放於 products collection）
+        await db.collection('settings').doc('system').set({
             categories: encodeCategories(categories),
             brandFullNames,
             brandOrder,
@@ -4941,14 +4937,22 @@ async function _doSaveDataToFirestore() {
             systemConfig,
             paymentMethods,
             lastSaved: firebase.firestore.FieldValue.serverTimestamp(),
-            version: 3
+            version: 4
         });
-        
-        await batch.commit();
+
+        // 儲存商品到 products collection（每筆商品各自一個文件，分批避免超過 500 上限）
+        const BATCH_SIZE = 400;
+        for (let i = 0; i < products.length; i += BATCH_SIZE) {
+            const batch = db.batch();
+            products.slice(i, i + BATCH_SIZE).forEach(p => {
+                batch.set(db.collection('products').doc(String(p.id)), p);
+            });
+            await batch.commit();
+        }
+
         console.log('✅ 資料已儲存到 Firebase');
     } catch (e) {
         console.error('Firebase 儲存失敗:', e);
-        // fallback to localStorage
         try {
             localStorage.setItem('jewelryPosData_backup', JSON.stringify({
                 productData, products, categories, brandFullNames, nextProductId,
@@ -4966,13 +4970,13 @@ async function loadDataFromFirestore() {
         const doc = await db.collection('settings').doc('system').get();
         if (doc.exists) {
             const data = doc.data();
-            productData = decodeProductDataKeys(data.productData || {});
-            products = data.products || [];
+
+            // 載入設定
             categories = decodeCategories(data.categories) || { brands: [], mainCategories: {}, subCategories: {} };
-            nextProductId = data.nextProductId || 1;
-            // 載入品牌順序，若無則用 productData 的 key 順序
-            brandOrder = data.brandOrder || Object.keys(data.productData || {});
+            brandFullNames = data.brandFullNames || {};
+            brandOrder = data.brandOrder || [];
             disabledBrands = data.disabledBrands || [];
+            nextProductId = data.nextProductId || 1;
             discountButtons = data.discountButtons || [];
             giftRules = data.giftRules || [];
             saleLocations = (data.saleLocations || []).map(l => typeof l === 'string' ? {name: l, enabled: true} : l);
@@ -4989,6 +4993,29 @@ async function loadDataFromFirestore() {
             ];
             migrateSystemSettings();
             systemConfig = data.systemConfig || { systemName: '', theme: 'blue', cloudinaryCloudName: '', cloudinaryUploadPreset: '' };
+
+            // 偵測舊格式 → 自動遷移
+            if (data.productData) {
+                console.log('🔄 偵測到舊格式，開始遷移商品資料...');
+                await migrateProductsToCollection(data.products || []);
+                console.log('✅ 商品資料遷移完成');
+            } else {
+                // 新格式：從 products collection 載入
+                const snap = await db.collection('products').get();
+                products = [];
+                snap.forEach(d => products.push(d.data()));
+
+                // 重建 productData
+                productData = {};
+                products.forEach(p => {
+                    const b = p.brand || '', mc = p.mainCategory || '', sc = p.subCategory || '';
+                    if (!productData[b]) productData[b] = {};
+                    if (!productData[b][mc]) productData[b][mc] = {};
+                    if (!productData[b][mc][sc]) productData[b][mc][sc] = [];
+                    productData[b][mc][sc].push(p);
+                });
+            }
+
             renderPaymentMethodButtons();
             console.log('✅ 資料已從 Firebase 載入');
             return true;
@@ -4997,6 +5024,37 @@ async function loadDataFromFirestore() {
         console.error('Firebase 載入失敗:', e);
     }
     return false;
+}
+
+// 一次性遷移：將舊 settings/system 的 products 搬移至 products collection
+async function migrateProductsToCollection(allProducts) {
+    // 分批寫入 products collection
+    const BATCH_SIZE = 400;
+    for (let i = 0; i < allProducts.length; i += BATCH_SIZE) {
+        const batch = db.batch();
+        allProducts.slice(i, i + BATCH_SIZE).forEach(p => {
+            if (p.id) batch.set(db.collection('products').doc(String(p.id)), p);
+        });
+        await batch.commit();
+    }
+
+    // 從 settings/system 刪除舊欄位
+    await db.collection('settings').doc('system').update({
+        productData: firebase.firestore.FieldValue.delete(),
+        products: firebase.firestore.FieldValue.delete(),
+        version: 4
+    });
+
+    // 更新記憶體
+    products = allProducts;
+    productData = {};
+    products.forEach(p => {
+        const b = p.brand || '', mc = p.mainCategory || '', sc = p.subCategory || '';
+        if (!productData[b]) productData[b] = {};
+        if (!productData[b][mc]) productData[b][mc] = {};
+        if (!productData[b][mc][sc]) productData[b][mc][sc] = [];
+        productData[b][mc][sc].push(p);
+    });
 }
 
 // 儲存單筆銷售記錄到 Firestore
@@ -12888,6 +12946,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
             
             if (product.imageUrl) deleteProductImage(product.id);
+
+            // 從 products collection 刪除該商品文件
+            if (db && currentUser) {
+                db.collection('products').doc(String(productId)).delete()
+                    .catch(e => console.error('Firestore 商品文件刪除失敗:', e));
+            }
+
             showNotification('✅ 商品已刪除');
             saveDataToLocalStorage();
             filterProductList(); // 更新商品編輯彈窗
