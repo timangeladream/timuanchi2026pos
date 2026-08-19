@@ -5023,6 +5023,8 @@ async function loadDataFromFirestore() {
                         if (!productData[b][mc][sc]) productData[b][mc][sc] = [];
                         productData[b][mc][sc].push(p);
                     });
+                    // 確保 brandOrder 裡沒有商品的品牌也保留在 productData
+                    brandOrder.forEach(b => { if (!productData[b]) productData[b] = {}; });
                 } catch (loadErr) {
                     console.error('❌ 載入 products collection 失敗（請檢查 Firestore 規則）:', loadErr);
                 }
@@ -5067,6 +5069,8 @@ async function migrateProductsToCollection(allProducts) {
         if (!productData[b][mc][sc]) productData[b][mc][sc] = [];
         productData[b][mc][sc].push(p);
     });
+    // 確保 brandOrder 裡沒有商品的品牌也保留在 productData
+    brandOrder.forEach(b => { if (!productData[b]) productData[b] = {}; });
 }
 
 // 儲存單筆銷售記錄到 Firestore
