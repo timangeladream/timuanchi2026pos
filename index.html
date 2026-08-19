@@ -4997,23 +4997,35 @@ async function loadDataFromFirestore() {
             // 偵測舊格式 → 自動遷移
             if (data.productData) {
                 console.log('🔄 偵測到舊格式，開始遷移商品資料...');
-                await migrateProductsToCollection(data.products || []);
-                console.log('✅ 商品資料遷移完成');
+                try {
+                    await migrateProductsToCollection(data.products || []);
+                    console.log('✅ 商品資料遷移完成');
+                } catch (migErr) {
+                    console.warn('⚠️ 遷移失敗，使用舊格式載入（請檢查 Firestore 規則是否允許 products collection）:', migErr);
+                    // 退回舊格式
+                    productData = decodeProductDataKeys(data.productData || {});
+                    products = data.products || [];
+                    if (!brandOrder.length) brandOrder = Object.keys(productData);
+                }
             } else {
                 // 新格式：從 products collection 載入
-                const snap = await db.collection('products').get();
-                products = [];
-                snap.forEach(d => products.push(d.data()));
+                try {
+                    const snap = await db.collection('products').get();
+                    products = [];
+                    snap.forEach(d => products.push(d.data()));
 
-                // 重建 productData
-                productData = {};
-                products.forEach(p => {
-                    const b = p.brand || '', mc = p.mainCategory || '', sc = p.subCategory || '';
-                    if (!productData[b]) productData[b] = {};
-                    if (!productData[b][mc]) productData[b][mc] = {};
-                    if (!productData[b][mc][sc]) productData[b][mc][sc] = [];
-                    productData[b][mc][sc].push(p);
-                });
+                    // 重建 productData
+                    productData = {};
+                    products.forEach(p => {
+                        const b = p.brand || '', mc = p.mainCategory || '', sc = p.subCategory || '';
+                        if (!productData[b]) productData[b] = {};
+                        if (!productData[b][mc]) productData[b][mc] = {};
+                        if (!productData[b][mc][sc]) productData[b][mc][sc] = [];
+                        productData[b][mc][sc].push(p);
+                    });
+                } catch (loadErr) {
+                    console.error('❌ 載入 products collection 失敗（請檢查 Firestore 規則）:', loadErr);
+                }
             }
 
             renderPaymentMethodButtons();
