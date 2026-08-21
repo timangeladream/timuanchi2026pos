@@ -8047,7 +8047,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 下載商品填寫範例
         function downloadProductExample() {
             // 欄位名稱
-            const headers = ['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '圖片網址'];
+            const headers = ['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '圖片網址', '是否上架', '略過'];
 
             // 紅色說明行
             const explanations = [
@@ -8066,6 +8066,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 '0=庫存設為0，空白=不想覆蓋系統裡已有的庫存',
                 '選填',
                 '選填，貼上圖片完整網址（如 Cloudinary 網址）',
+                '上架／下架，空白=新商品預設上架，更新商品保留原狀態',
+                '此欄有任何內容即跳過此列不匯入，空白=正常匯入',
                 '← 匯入資料前請把這行刪除以免出現錯誤'
             ];
             
@@ -8108,6 +8110,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 35}, // 庫存
                 {wch: 15}, // 規格貨號
                 {wch: 45}, // 圖片網址
+                {wch: 38}, // 是否上架
+                {wch: 38}, // 略過
                 {wch: 35}  // 說明
             ];
 
@@ -8120,7 +8124,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 下載商品空白範本
         function downloadProductTemplate() {
             // 只有欄位名稱
-            const headers = ['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '圖片網址'];
+            const headers = ['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '圖片網址', '是否上架', '略過'];
 
             const ws_data = [headers];
 
@@ -8144,7 +8148,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 10}, // 價格
                 {wch: 10}, // 庫存
                 {wch: 15}, // 規格貨號
-                {wch: 45}  // 圖片網址
+                {wch: 45}, // 圖片網址
+                {wch: 12}, // 是否上架
+                {wch: 10}  // 略過
             ];
             
             XLSX.utils.book_append_sheet(wb, ws, '商品資料');
@@ -8187,26 +8193,36 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
-                    
+
                     // 讀取第一個工作表
                     const sheetName = workbook.SheetNames[0];
                     const sheet = workbook.Sheets[sheetName];
-                    
+
                     console.log('工作表名稱:', sheetName);
-                    
+
                     if (!sheet) {
                         alert('❌ 無法讀取工作表！\n請確認 Excel 檔案格式正確。');
                         return;
                     }
-                    
-                    const jsonData = XLSX.utils.sheet_to_json(sheet);
-                    console.log('讀取行數:', jsonData.length);
-                    
-                    if (jsonData.length === 0) {
+
+                    const rawData = XLSX.utils.sheet_to_json(sheet);
+                    console.log('讀取行數:', rawData.length);
+
+                    if (rawData.length === 0) {
                         alert('❌ Excel 檔案沒有資料！');
                         return;
                     }
-                    
+
+                    // 過濾「略過」欄有內容的列
+                    const skippedCount = rawData.filter(row => String(row['略過'] ?? '').trim() !== '').length;
+                    const jsonData = rawData.filter(row => String(row['略過'] ?? '').trim() === '');
+                    if (skippedCount > 0) console.log(`略過 ${skippedCount} 列（略過欄有內容）`);
+
+                    if (jsonData.length === 0) {
+                        alert('❌ Excel 檔案沒有可匯入的資料！');
+                        return;
+                    }
+
                     // 驗證資料
                     const errors = [];
                     const warnings = [];
@@ -8251,15 +8267,17 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         console.warn('警告:', warnings);
                     }
                     
-                    alert('✅ 階段 1 完成: 資料驗證通過！\n\n' +
-                          `共 ${jsonData.length} 行資料\n` +
-                          `錯誤: ${errors.length}\n` +
-                          `警告: ${warnings.length}\n\n` +
-                          '請查看 Console 以了解詳細資訊。');
                     
                     // === 階段 2: 資料預處理 ===
                     console.log('\n=== 階段 2: 資料預處理 ===');
-                    
+
+                    const parseImportStatus = val => {
+                        const v = String(val ?? '').trim().toLowerCase();
+                        if (['上架','是','y','1','true'].includes(v)) return 'active';
+                        if (['下架','否','n','0','false'].includes(v)) return 'inactive';
+                        return null; // 空白或無效 → 呼叫端自行決定
+                    };
+
                     const productGroups = {};
                     
                     jsonData.forEach(row => {
@@ -8317,6 +8335,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             };
                             const importedImageUrl = String(rows[0]['圖片網址'] || '').trim();
                             if (importedImageUrl) product.imageUrl = importedImageUrl;
+                            const importedStatus = parseImportStatus(rows[0]['是否上架']);
+                            if (importedStatus) product.status = importedStatus;
                             
                             // 收集規格維度和名稱
                             const variantDimensions = [];
@@ -8400,9 +8420,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
                             const importedImageUrl2 = String(rows[0]['圖片網址'] || '').trim();
                             if (importedImageUrl2) product.imageUrl = importedImageUrl2;
+                            const importedStatus2 = parseImportStatus(rows[0]['是否上架']);
+                            if (importedStatus2) product.status = importedStatus2;
 
                             processedProducts.push(product);
-                            
+
                         } else {
                             // 無規格商品
                             const product = {
@@ -8427,6 +8449,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
                             const importedImageUrl3 = String(rows[0]['圖片網址'] || '').trim();
                             if (importedImageUrl3) product.imageUrl = importedImageUrl3;
+                            const importedStatus3 = parseImportStatus(rows[0]['是否上架']);
+                            if (importedStatus3) product.status = importedStatus3;
 
                             processedProducts.push(product);
                         }
@@ -8438,11 +8462,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     console.log('- 單規格商品:', processedProducts.filter(p => p.type === 'single').length);
                     console.log('商品列表:', processedProducts);
                     
-                    alert('✅ 階段 2 完成: 資料預處理完成！\n\n' +
-                          `總商品數: ${processedProducts.length}\n` +
-                          `多規格: ${processedProducts.filter(p => p.type === 'multi-variant').length}\n` +
-                          `單規格: ${processedProducts.filter(p => p.type === 'single').length}\n\n` +
-                          '請查看 Console 以了解詳細資訊。');
                     
                     // === 階段 3: 比對現有商品 ===
                     console.log('\n=== 階段 3: 比對現有商品 ===');
@@ -8502,11 +8521,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     console.log('- 要新增:', toAdd.length, toAdd);
                     console.log('- 要保留:', toKeep.length);
                     
-                    alert('✅ 階段 3 完成: 比對完成！\n\n' +
-                          `要更新: ${toUpdate.length} 個商品\n` +
-                          `要新增: ${toAdd.length} 個商品\n` +
-                          `要保留: ${toKeep.length} 個商品\n\n` +
-                          '請查看 Console 以了解詳細資訊。');
                     
                     // === 階段 4: 執行匯入 ===
                     console.log('\n=== 階段 4: 執行匯入 ===');
@@ -8588,7 +8602,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         const { brand, mainCategory, subCategory } = product;
 
                         // 確保結構存在
-                        if (!productData[brand]) productData[brand] = {};
+                        if (!productData[brand]) {
+                            productData[brand] = {};
+                            if (!brandOrder.includes(brand)) brandOrder.push(brand);
+                        }
                         if (!productData[brand][mainCategory]) productData[brand][mainCategory] = {};
                         if (!productData[brand][mainCategory][subCategory]) {
                             productData[brand][mainCategory][subCategory] = [];
@@ -8597,6 +8614,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         // 分配 ID（UUID，避免重複）
                         product.id = generateProductId();
                         product.createdAt = importBaseTime + importIndex;
+                        if (!product.status) product.status = 'active'; // 新商品預設上架
 
                         productData[brand][mainCategory][subCategory].push(product);
                         addCount++;
@@ -8628,9 +8646,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     loadProducts();
                     closeImportModal();
                     
-                    alert('✅ 匯入完成！\n\n' +
-                          `已更新: ${updateCount} 個商品\n` +
-                          `已新增: ${addCount} 個商品`);
+                    showNotification(`✅ 匯入完成！已更新 ${updateCount} 個、新增 ${addCount} 個商品`);
                     
                 } catch (error) {
                     console.error('讀取錯誤:', error);
