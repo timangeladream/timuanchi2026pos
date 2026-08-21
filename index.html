@@ -4922,20 +4922,27 @@ function saveDataToFirestore() {
 async function _doSaveDataToFirestore() {
     if (!db || !currentUser) return;
     try {
-        // 儲存設定（不含商品，商品獨立存放於 products collection）
+        // 管理員才能寫的設定 → adminConfig
+        if (currentUserRole === 'admin') {
+            await db.collection('settings').doc('adminConfig').set({
+                categories: encodeCategories(categories),
+                brandFullNames,
+                brandOrder,
+                disabledBrands,
+                nextProductId,
+                discountButtons,
+                saleLocations,
+                systemSettings,
+                systemConfig,
+                paymentMethods,
+                lastSaved: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        // 收銀員也需要寫的設定（加購品/贈品庫存） → system
         await db.collection('settings').doc('system').set({
-            categories: encodeCategories(categories),
-            brandFullNames,
-            brandOrder,
-            disabledBrands,
-            nextProductId,
-            discountButtons,
             giftRules,
-            saleLocations,
             addOnItems,
-            systemSettings,
-            systemConfig,
-            paymentMethods,
             lastSaved: firebase.firestore.FieldValue.serverTimestamp(),
             version: 4
         });
@@ -4967,22 +4974,49 @@ async function _doSaveDataToFirestore() {
 async function loadDataFromFirestore() {
     if (!db || !currentUser) return false;
     try {
-        const doc = await db.collection('settings').doc('system').get();
-        if (doc.exists) {
-            const data = doc.data();
+        let [systemDoc, adminDoc] = await Promise.all([
+            db.collection('settings').doc('system').get(),
+            db.collection('settings').doc('adminConfig').get()
+        ]);
 
-            // 載入設定
-            categories = decodeCategories(data.categories) || { brands: [], mainCategories: {}, subCategories: {} };
-            brandFullNames = data.brandFullNames || {};
-            brandOrder = data.brandOrder || [];
-            disabledBrands = data.disabledBrands || [];
-            nextProductId = data.nextProductId || 1;
-            discountButtons = data.discountButtons || [];
-            giftRules = data.giftRules || [];
-            saleLocations = (data.saleLocations || []).map(l => typeof l === 'string' ? {name: l, enabled: true} : l);
-            addOnItems = data.addOnItems || [];
-            systemSettings = data.systemSettings || {};
-            paymentMethods = data.paymentMethods || [
+        if (!systemDoc.exists && !adminDoc.exists) return false;
+
+        // adminConfig 不存在時（首次升級），從 system 讀取管理員設定並執行遷移
+        let adminData = adminDoc.exists ? adminDoc.data() : null;
+        if (!adminData && systemDoc.exists) {
+            adminData = systemDoc.data();
+            if (currentUserRole === 'admin') {
+                console.log('🔄 遷移設定資料至 adminConfig...');
+                await db.collection('settings').doc('adminConfig').set({
+                    categories: adminData.categories || null,
+                    brandFullNames: adminData.brandFullNames || {},
+                    brandOrder: adminData.brandOrder || [],
+                    disabledBrands: adminData.disabledBrands || [],
+                    nextProductId: adminData.nextProductId || 1,
+                    discountButtons: adminData.discountButtons || [],
+                    saleLocations: adminData.saleLocations || [],
+                    systemSettings: adminData.systemSettings || {},
+                    systemConfig: adminData.systemConfig || {},
+                    paymentMethods: adminData.paymentMethods || [],
+                    lastSaved: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('✅ 設定遷移完成');
+            }
+        }
+
+        // 載入管理員設定
+        if (adminData) {
+            categories = decodeCategories(adminData.categories) || { brands: [], mainCategories: {}, subCategories: {} };
+            brandFullNames = adminData.brandFullNames || {};
+            brandOrder = adminData.brandOrder || [];
+            disabledBrands = adminData.disabledBrands || [];
+            nextProductId = adminData.nextProductId || 1;
+            discountButtons = adminData.discountButtons || [];
+            saleLocations = (adminData.saleLocations || []).map(l => typeof l === 'string' ? {name: l, enabled: true} : l);
+            systemSettings = adminData.systemSettings || {};
+            migrateSystemSettings();
+            systemConfig = adminData.systemConfig || { systemName: '', theme: 'blue', cloudinaryCloudName: '', cloudinaryUploadPreset: '' };
+            paymentMethods = adminData.paymentMethods || [
                 { id: 'cash', name: '現金', enabled: true },
                 { id: 'credit_card', name: '信用卡', enabled: true },
                 { id: 'line_pay', name: 'LINE Pay', enabled: true },
@@ -4991,10 +5025,15 @@ async function loadDataFromFirestore() {
                 { id: 'easycard', name: '悠遊付', enabled: true },
                 { id: 'culture_coin', name: '文化幣', enabled: true }
             ];
-            migrateSystemSettings();
-            systemConfig = data.systemConfig || { systemName: '', theme: 'blue', cloudinaryCloudName: '', cloudinaryUploadPreset: '' };
+        }
 
-            // 偵測舊格式 → 自動遷移
+        // 載入共用設定（收銀員也可寫）
+        if (systemDoc.exists) {
+            const data = systemDoc.data();
+            giftRules = data.giftRules || [];
+            addOnItems = data.addOnItems || [];
+
+            // 偵測舊格式 → 自動遷移商品
             if (data.productData) {
                 console.log('🔄 偵測到舊格式，開始遷移商品資料...');
                 try {
@@ -5002,7 +5041,6 @@ async function loadDataFromFirestore() {
                     console.log('✅ 商品資料遷移完成');
                 } catch (migErr) {
                     console.warn('⚠️ 遷移失敗，使用舊格式載入（請檢查 Firestore 規則是否允許 products collection）:', migErr);
-                    // 退回舊格式
                     productData = decodeProductDataKeys(data.productData || {});
                     products = data.products || [];
                     if (!brandOrder.length) brandOrder = Object.keys(productData);
@@ -5014,7 +5052,6 @@ async function loadDataFromFirestore() {
                     products = [];
                     snap.forEach(d => products.push(d.data()));
 
-                    // 重建 productData
                     productData = {};
                     products.forEach(p => {
                         const b = p.brand || '', mc = p.mainCategory || '', sc = p.subCategory || '';
@@ -5029,11 +5066,11 @@ async function loadDataFromFirestore() {
                     console.error('❌ 載入 products collection 失敗（請檢查 Firestore 規則）:', loadErr);
                 }
             }
-
-            renderPaymentMethodButtons();
-            console.log('✅ 資料已從 Firebase 載入');
-            return true;
         }
+
+        renderPaymentMethodButtons();
+        console.log('✅ 資料已從 Firebase 載入');
+        return true;
     } catch (e) {
         console.error('Firebase 載入失敗:', e);
     }
@@ -11609,7 +11646,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         async function savePaymentMethodsNow() {
             try {
-                await db.collection('settings').doc('system').update({ paymentMethods });
+                await db.collection('settings').doc('adminConfig').update({ paymentMethods });
                 renderPaymentMethodButtons();
             } catch(e) {
                 showNotification('❌ 儲存失敗，請重試');
@@ -12008,6 +12045,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 try {
                     // 清除 settings
                     await db.collection('settings').doc('system').delete();
+                    await db.collection('settings').doc('adminConfig').delete();
 
                     // 清除所有銷售記錄
                     const salesSnap = await db.collection('sales').get();
