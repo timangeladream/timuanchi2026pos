@@ -4826,6 +4826,25 @@ async function logInitialStock(product, note = '初始建立') {
 // Firebase CRUD 函數 — 取代 localStorage
 // ============================================================
 
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function escapeAttrStr(str) {
+    return String(str ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 // Firestore 不允許空字串作為 field key
 // categories.subCategories 結構：{ brand: { mainCat: [subCats] } }，mainCat 可能是空字串
 function encodeCategories(cats) {
@@ -5248,21 +5267,21 @@ async function loadUserList() {
             <div id="user-row-${u.id}" style="padding:12px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <div>
-                        <div id="user-name-display-${u.id}" style="font-weight:600;font-size:12px;">${u.name || '未設定姓名'}</div>
-                        <div style="font-size:10px;color:#666;">${u.email}</div>
+                        <div id="user-name-display-${u.id}" style="font-weight:600;font-size:12px;">${escapeHtml(u.name) || '未設定姓名'}</div>
+                        <div style="font-size:10px;color:#666;">${escapeHtml(u.email)}</div>
                         <div style="font-size:10px;color:${u.role === 'admin' ? '#D4AF37' : '#28a745'};">
                             ${u.role === 'admin' ? '👑 管理員' : '💰 銷售員'}
                         </div>
                     </div>
                     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-                        <button onclick="startEditUserName('${u.id}','${(u.name || '').replace(/'/g, "\'")}')" style="padding:2px 4px;background:#6c757d;color:white;border:none;border-radius:3px;cursor:pointer;font-size:10px;">
+                        <button onclick="startEditUserName('${u.id}','${escapeAttrStr(u.name || '')}')" style="padding:2px 4px;background:#6c757d;color:white;border:none;border-radius:3px;cursor:pointer;font-size:10px;">
                             改名
                         </button>
                         ${u.id !== currentUser.uid ? `
                         <button onclick="toggleUserRole('${u.id}','${u.role}')" style="padding:2px 4px;background:var(--secondary-color);color:white;border:none;border-radius:3px;cursor:pointer;font-size:10px;">
                             切換角色
                         </button>
-                        <button onclick="deleteUser('${u.id}','${u.name || u.email}')" style="padding:2px 4px;background:#dc3545;color:white;border:none;border-radius:3px;cursor:pointer;font-size:10px;">
+                        <button onclick="deleteUser('${u.id}','${escapeAttrStr(u.name || u.email)}')" style="padding:2px 4px;background:#dc3545;color:white;border:none;border-radius:3px;cursor:pointer;font-size:10px;">
                             刪除
                         </button>
                         ` : '<span style="font-size:10px;color:#999;">(目前帳號)</span>'}
@@ -5610,7 +5629,7 @@ function showWelcomeModal() {
     const userName = currentUserName || currentUser?.email || '';
 
     const msgEl = document.getElementById('welcomeMessage');
-    msgEl.innerHTML = `嗨，${userName}，今天依舊要麻煩您了<br><br>提醒您目前使用的店家名稱為：<br><strong style="font-size:18px;color:var(--primary-color);">「${shopLabel}」</strong>`;
+    msgEl.innerHTML = `嗨，${escapeHtml(userName)}，今天依舊要麻煩您了<br><br>提醒您目前使用的店家名稱為：<br><strong style="font-size:18px;color:var(--primary-color);">「${escapeHtml(shopLabel)}」</strong>`;
 
     const shopKeys = Object.keys(systemSettings.shops || {});
     const switchBtn = document.getElementById('welcomeSwitchBtn');
@@ -5633,7 +5652,7 @@ function showWelcomeShopList() {
         const s = shops[id];
         const isActive = id === currentId;
         return `<div onclick="selectWelcomeShop('${id}')" style="padding:12px 16px;margin-bottom:8px;border:2px solid ${isActive ? 'var(--primary-color)' : '#ddd'};border-radius:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:${isActive ? 'rgba(11,79,124,0.05)' : 'white'};">
-            <span style="font-weight:${isActive ? '600' : '400'};">${s.label || s.shopName || '未命名'}</span>
+            <span style="font-weight:${isActive ? '600' : '400'};">${escapeHtml(s.label || s.shopName || '未命名')}</span>
             ${isActive ? '<span style="color:var(--primary-color);font-weight:600;">目前使用</span>' : ''}
         </div>`;
     }).join('');
@@ -5650,7 +5669,7 @@ async function selectWelcomeShop(shopId) {
     const shopLabel = shop.label || shop.shopName || '未設定';
     const userName = currentUserName || currentUser?.email || '';
 
-    document.getElementById('welcomeMessage').innerHTML = `嗨，${userName}，今天依舊要麻煩您了<br><br>提醒您目前使用的店家名稱為：<br><strong style="font-size:18px;color:var(--primary-color);">「${shopLabel}」</strong>`;
+    document.getElementById('welcomeMessage').innerHTML = `嗨，${escapeHtml(userName)}，今天依舊要麻煩您了<br><br>提醒您目前使用的店家名稱為：<br><strong style="font-size:18px;color:var(--primary-color);">「${escapeHtml(shopLabel)}」</strong>`;
 
     showWelcomeShopList();
 }
@@ -6121,7 +6140,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div class="top-item">
                         <div class="top-rank ${rankClass}">${index + 1}</div>
                         <div class="top-info">
-                            <div class="top-name">${product.name}</div>
+                            <div class="top-name">${escapeHtml(product.name)}</div>
                             ${variantInfo}
                             ${skuInfo}
                             <div class="top-details">銷量：${product.quantity} 件</div>
@@ -6161,7 +6180,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             container.innerHTML = discounts.map(([name, stats]) => `
                 <div class="discount-item">
-                    <div class="discount-name">${name}</div>
+                    <div class="discount-name">${escapeHtml(name)}</div>
                     <div class="discount-stats">
                         <div class="discount-stat-item">
                             <div class="discount-stat-label">使用次數</div>
@@ -6196,7 +6215,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             container.innerHTML = locations.map(([name, stats]) => `
                 <div class="location-item">
-                    <div class="location-name">${name}</div>
+                    <div class="location-name">${escapeHtml(name)}</div>
                     <div class="location-stats">
                         <div class="location-stat-item">
                             <div class="location-stat-label">訂單數</div>
@@ -6236,7 +6255,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             container.innerHTML = cashiers.map(([name, stats]) => `
                 <div class="location-item">
-                    <div class="location-name">${name}</div>
+                    <div class="location-name">${escapeHtml(name)}</div>
                     <div class="location-stats">
                         <div class="location-stat-item">
                             <div class="location-stat-label">訂單數</div>
@@ -6504,23 +6523,24 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
                 
                 // 設定 onclick
+                const _btnName = escapeAttrStr(btn.name);
                 if (btn.type === 'percent') {
-                    onclick = `applyPercentDiscount('${btn.id}', '${btn.name}', ${btn.value})`;
+                    onclick = `applyPercentDiscount('${btn.id}', '${_btnName}', ${btn.value})`;
                 } else if (btn.type === 'fixed') {
-                    onclick = `applyFixedDiscount('${btn.id}', '${btn.name}', ${btn.value})`;
+                    onclick = `applyFixedDiscount('${btn.id}', '${_btnName}', ${btn.value})`;
                 } else if (btn.type === 'minAmountPercent') {
-                    onclick = `applyMinAmountPercentDiscount('${btn.id}', '${btn.name}', ${btn.minAmount}, ${btn.value})`;
+                    onclick = `applyMinAmountPercentDiscount('${btn.id}', '${_btnName}', ${btn.minAmount}, ${btn.value})`;
                 } else if (btn.type === 'minAmountFixed') {
-                    onclick = `applyMinAmountFixedDiscount('${btn.id}', '${btn.name}', ${btn.minAmount}, ${btn.value})`;
+                    onclick = `applyMinAmountFixedDiscount('${btn.id}', '${_btnName}', ${btn.minAmount}, ${btn.value})`;
                 } else if (btn.type === 'buyNPercent') {
-                    onclick = `applyBuyNPercentDiscount('${btn.id}', '${btn.name}', ${btn.count}, ${btn.value})`;
+                    onclick = `applyBuyNPercentDiscount('${btn.id}', '${_btnName}', ${btn.count}, ${btn.value})`;
                 } else if (btn.type === 'buyNFixed') {
-                    onclick = `applyBuyNFixedDiscount('${btn.id}', '${btn.name}', ${btn.count}, ${btn.discount})`;
+                    onclick = `applyBuyNFixedDiscount('${btn.id}', '${_btnName}', ${btn.count}, ${btn.discount})`;
                 } else if (btn.type === 'buyN') {
-                    onclick = `applyBuyNDiscount('${btn.id}', '${btn.name}', ${btn.count}, ${btn.discount})`;
+                    onclick = `applyBuyNDiscount('${btn.id}', '${_btnName}', ${btn.count}, ${btn.discount})`;
                 }
-                
-                return `<button class="${btnClass}" onclick="${onclick}" ${!isEligible ? 'disabled' : ''}>${btn.name}${statusText}</button>`;
+
+                return `<button class="${btnClass}" onclick="${onclick}" ${!isEligible ? 'disabled' : ''}>${escapeHtml(btn.name)}${statusText}</button>`;
             }).join('');
         }
 
@@ -6656,7 +6676,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                     <div class="discount-item-manage" style="${isActive ? '' : 'opacity:0.6;'}">
                         <div class="discount-item-info-manage">
-                            <div class="discount-item-name-manage">${gift.name}${!isActive ? '<span class="status-badge-inactive">已下架</span>' : ''}</div>
+                            <div class="discount-item-name-manage">${escapeHtml(gift.name)}${!isActive ? '<span class="status-badge-inactive">已下架</span>' : ''}</div>
                             <div class="discount-item-desc">${description}${skuInfo}${stockInfo}</div>
                         </div>
                         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
@@ -6666,7 +6686,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             </label>
                             <div class="manage-action-row">
                                 <button class="gift-edit-btn" onclick="editGift(${originalIndex})">編輯</button>
-                                <button class="stock-log-btn" onclick="openProductStockLog('${gift.id}', '${(gift.giftName || gift.name).replace(/'/g, "\\'")}')" >📋</button>
+                                <button class="stock-log-btn" onclick="openProductStockLog('${gift.id}', '${escapeAttrStr(gift.giftName || gift.name)}')" >📋</button>
                                 <button class="gift-delete-btn" onclick="deleteGift(${originalIndex})">刪除</button>
                             </div>
                         </div>
@@ -7316,7 +7336,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                     <div class="discount-item-manage" style="${enabled ? '' : 'opacity:0.5;'}">
                         <div class="discount-item-info-manage">
-                            <div class="discount-item-name-manage">${btn.name}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
+                            <div class="discount-item-name-manage">${escapeHtml(btn.name)}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
                             <div class="discount-item-desc">${description}</div>
                         </div>
                         <div class="manage-action-row">
@@ -10223,7 +10243,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                     <div class="${cardClass}" ${clickEvent}>
                         ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : '<div class="product-card-img-placeholder"></div>'}
-                        <div class="product-name">${product.name}</div>
+                        <div class="product-name">${escapeHtml(product.name)}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
                         ${stockInfo}
@@ -11007,12 +11027,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                     <div class="${cardClass}" ${clickEvent}>
                         ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : '<div class="product-card-img-placeholder"></div>'}
-                        <div class="product-name">${product.name}</div>
+                        <div class="product-name">${escapeHtml(product.name)}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
                         ${stockInfo}
                         ${variantInfo}
-                        
+
                         ${soldOutLabel}
                     </div>
                 `;
@@ -11080,12 +11100,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                     <div class="${cardClass}" ${clickEvent}>
                         ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : '<div class="product-card-img-placeholder"></div>'}
-                        <div class="product-name">${product.name}</div>
+                        <div class="product-name">${escapeHtml(product.name)}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
                         ${stockInfo}
                         ${variantInfo}
-                        
+
                         ${soldOutLabel}
                     </div>
                 `;
@@ -11226,10 +11246,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                     <div class="${cardClass}" ${clickEvent}>
                         ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : '<div class="product-card-img-placeholder"></div>'}
-                        <div class="product-name">${product.name}</div>
+                        <div class="product-name">${escapeHtml(product.name)}</div>
                         ${skuInfo}
                         <div class="product-price">${priceDisplay}</div>
-                        <div style="font-size: 12px; color: var(--primary-color); margin-top: 4px;">${product.brandName || product.brand}</div>
+                        <div style="font-size: 12px; color: var(--primary-color); margin-top: 4px;">${escapeHtml(product.brandName || product.brand)}</div>
                         ${stockInfo}
                         ${variantInfo}
                         ${soldOutLabel}
@@ -11455,7 +11475,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 const enabled = location.enabled !== false;
                 return `
                 <div class="location-item" id="location-row-${index}" style="${enabled ? '' : 'opacity:0.5;'}">
-                    <div class="location-item-name">${location.name}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
+                    <div class="location-item-name">${escapeHtml(location.name)}${!enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
                     <div class="manage-action-row">
                         <label class="status-toggle" title="${enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
                             <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleLocation(${index}, this.checked)">
@@ -11605,8 +11625,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const enabled = paymentMethods.filter(m => m.enabled);
             grid.innerHTML = enabled.map(m => `
                 <button class="payment-section-btn${selectedPaymentMethod?.id === m.id ? ' selected' : ''}"
-                    onclick="selectPaymentMethod('${m.id}', '${m.name.replace(/'/g, "\\'")}')">
-                    ${m.name}
+                    onclick="selectPaymentMethod('${m.id}', '${escapeAttrStr(m.name)}')">
+                    ${escapeHtml(m.name)}
                 </button>
             `).join('');
         }
@@ -11631,7 +11651,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const container = document.getElementById('paymentMethodList');
             container.innerHTML = paymentMethods.map((m, i) => `
                 <div class="payment-item" style="${m.enabled ? '' : 'opacity:0.5;'}">
-                    <div class="payment-item-name">${m.name}${!m.enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
+                    <div class="payment-item-name">${escapeHtml(m.name)}${!m.enabled ? '<span class="status-badge-inactive">已停用</span>' : ''}</div>
                     <div class="manage-action-row">
                         <label class="status-toggle" title="${m.enabled ? '啟用中，點擊停用' : '已停用，點擊啟用'}">
                             <input type="checkbox" ${m.enabled ? 'checked' : ''} onchange="togglePaymentMethod(${i}, this.checked)">
@@ -12538,7 +12558,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             <div style="display:flex;align-items:center;gap:10px;flex:1;">
                             ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-edit-thumb" loading="lazy">` : ''}
                             <div>
-                                <div class="product-edit-name">${product.name}${!isActive ? '<span class="status-badge-inactive">已下架</span>' : ''}</div>
+                                <div class="product-edit-name">${escapeHtml(product.name)}${!isActive ? '<span class="status-badge-inactive">已下架</span>' : ''}</div>
                                 <div class="product-edit-info">
                                     貨號: ${product.sku || '無'}
                                 </div>
@@ -12561,7 +12581,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 </label>
                                 <div class="product-action-row">
                                     <button class="product-edit-btn" onclick="editProductById('${product.id}')">編輯</button>
-                                    <button class="stock-log-btn" onclick="openProductStockLog('${product.id}', '${product.name.replace(/'/g, "\\'")}')" >📋</button>
+                                    <button class="stock-log-btn" onclick="openProductStockLog('${product.id}', '${escapeAttrStr(product.name)}')" >📋</button>
                                     <button class="product-delete-btn" onclick="deleteProductById('${product.id}')">刪除</button>
                                 </div>
                             </div>
@@ -14224,7 +14244,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 <div class="order-item" style="background: #f0f9ff;">
                                     <div class="order-item-info">
                                         <div class="order-item-name">
-                                            <span style="color: #4CAF50; font-weight: 600;">【贈品】</span>${item.name}
+                                            <span style="color: #4CAF50; font-weight: 600;">【贈品】</span>${escapeHtml(item.name)}
                                         </div>
                                         ${giftVariantInfo}
                                         ${skuInfo}
@@ -14265,7 +14285,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         return `
                             <div class="order-item">
                                 <div class="order-item-info">
-                                    <div class="order-item-name">${addonLabel}${item.name}</div>
+                                    <div class="order-item-name">${addonLabel}${escapeHtml(item.name)}</div>
                                     ${variantInfo}
                                     ${skuInfo}
                                     ${brandInfo}
@@ -15059,25 +15079,25 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 優先使用訂單快照的店家資訊，否則用當前選中的
             const shop = shopOverride || getActiveShop();
             let shopInfoLines = [];
-            shopInfoLines.push(`${orderInfo.saleLocation || '未指定'}`);
+            shopInfoLines.push(escapeHtml(orderInfo.saleLocation || '未指定'));
 
             if (shop.showTaxId && shop.taxId) {
-                shopInfoLines.push(`${shop.taxId}`);
+                shopInfoLines.push(escapeHtml(shop.taxId));
             }
             if (shop.showPhone && shop.phone) {
-                shopInfoLines.push(`${shop.phone}`);
+                shopInfoLines.push(escapeHtml(shop.phone));
             }
             if (shop.showAddress && shop.address) {
-                shopInfoLines.push(`${shop.address}`);
+                shopInfoLines.push(escapeHtml(shop.address));
             }
             if (shop.showWebsite && shop.website) {
-                shopInfoLines.push(`${shop.website}`);
+                shopInfoLines.push(escapeHtml(shop.website));
             }
 
             // 加入社群連結（只顯示內容）
             if (shop.showSocial && shop.socialLinks && shop.socialLinks.length > 0) {
                 shop.socialLinks.forEach(link => {
-                    shopInfoLines.push(`${link.value}`);
+                    shopInfoLines.push(escapeHtml(link.value));
                 });
             }
 
@@ -15085,7 +15105,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
             return `
                 <div class="receipt-header">
-                    <div class="receipt-title">${shop.shopName || 'TimuAnchi 銷售系統'}</div>
+                    <div class="receipt-title">${escapeHtml(shop.shopName || 'TimuAnchi 銷售系統')}</div>
                     <div class="receipt-shop-info">
                         ${shopInfoHTML}
                     </div>
@@ -15104,13 +15124,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     ${orderInfo.salesPerson ? `
                     <div class="receipt-info-row">
                         <span class="receipt-info-label">服務人員：</span>
-                        <span class="receipt-info-value">${orderInfo.salesPerson}</span>
+                        <span class="receipt-info-value">${escapeHtml(orderInfo.salesPerson)}</span>
                     </div>
                     ` : ''}
                     ${orderInfo.paymentMethodName ? `
                     <div class="receipt-info-row">
                         <span class="receipt-info-label">付款方式：</span>
-                        <span class="receipt-info-value">${orderInfo.paymentMethodName}</span>
+                        <span class="receipt-info-value">${escapeHtml(orderInfo.paymentMethodName)}</span>
                     </div>
                     ` : ''}
                 </div>
@@ -15121,19 +15141,19 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; font-size: 10px;">
                         <div class="receipt-info-row">
                             <span class="receipt-info-label">官網會員帳號：</span>
-                            <span class="receipt-info-value">${orderInfo.memberAccount || ''}</span>
+                            <span class="receipt-info-value">${escapeHtml(orderInfo.memberAccount || '')}</span>
                         </div>
                         <div class="receipt-info-row">
                             <span class="receipt-info-label">顧客姓名：</span>
-                            <span class="receipt-info-value">${orderInfo.memberName || ''}</span>
+                            <span class="receipt-info-value">${escapeHtml(orderInfo.memberName || '')}</span>
                         </div>
                         <div class="receipt-info-row">
                             <span class="receipt-info-label">聯絡電話：</span>
-                            <span class="receipt-info-value">${orderInfo.memberPhone || ''}</span>
+                            <span class="receipt-info-value">${escapeHtml(orderInfo.memberPhone || '')}</span>
                         </div>
                         <div class="receipt-info-row">
                             <span class="receipt-info-label">電子信箱：</span>
-                            <span class="receipt-info-value">${orderInfo.memberEmail || ''}</span>
+                            <span class="receipt-info-value">${escapeHtml(orderInfo.memberEmail || '')}</span>
                         </div>
                     </div>
                 </div>
@@ -15163,10 +15183,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         return `
                         <div class="receipt-item" style="font-size: 12px;">
                             <div class="receipt-item-name">
-                                ${addonLabel}${item.name}
+                                ${addonLabel}${escapeHtml(item.name)}
                                 ${variantInfo}
                                 ${item.sku ? `<br><span style="font-size: 10px; color: #000;">貨號: ${item.sku}</span>` : ''}
-                                ${(item.brandName || item.brand) ? `<br><span style="font-size: 10px; color: #000;">${item.brandName || item.brand}</span>` : ''}
+                                ${(item.brandName || item.brand) ? `<br><span style="font-size: 10px; color: #000;">${escapeHtml(item.brandName || item.brand)}</span>` : ''}
                                 <br><span style="font-size: 10px; color: #000;">單價: NT$ ${item.price}</span>
                             </div>
                             <div class="receipt-item-qty">x ${item.quantity}</div>
@@ -15183,7 +15203,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     </div>
                     ${discountAmount > 0 ? discountList.map(d => `
                     <div class="receipt-item" style="font-size: 12px;">
-                        <div class="receipt-item-name">${d.name}</div>
+                        <div class="receipt-item-name">${escapeHtml(d.name)}</div>
                         <div class="receipt-item-qty">${(d.times && d.times > 1) ? `×${d.times}` : ''}</div>
                         <div class="receipt-item-price">- NT$ ${d.amount || 0}</div>
                     </div>
@@ -15206,7 +15226,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         return `
                     <div class="receipt-item" style="background: #fff; font-size: 12px;">
                         <div class="receipt-item-name">
-                            <span style="font-weight: 600;">【贈品】</span>${item.name}
+                            <span style="font-weight: 600;">【贈品】</span>${escapeHtml(item.name)}
                             ${giftVariantLine}
                             ${item.sku ? `<br><span style="font-size: 10px; color: #000;">貨號: ${item.sku}</span>` : ''}
                             <br><span style="font-size: 10px; color: #000;">${item.giftRuleName || ''}</span>
@@ -15221,7 +15241,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 <div class="receipt-section" style="margin-top: 16px;">
                     <div class="receipt-info-row">
                         <span class="receipt-info-label">訂單備註：</span>
-                        <span class="receipt-info-value">${orderInfo.orderNote || ''}</span>
+                        <span class="receipt-info-value">${escapeHtml(orderInfo.orderNote || '')}</span>
                     </div>
                 </div>
 
@@ -15438,7 +15458,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                     <div class="${cardClass}" ${clickEvent} style="position: relative;">
                         ${soldOutLabel}
-                        <div class="addon-section-card-name">${item.name}</div>
+                        <div class="addon-section-card-name">${escapeHtml(item.name)}</div>
                         ${skuInfo}
                         <div class="addon-section-card-price">${priceDisplay}</div>
                         ${stockInfo}
@@ -16406,7 +16426,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `
                     <div class="discount-item-manage" style="${isActive ? '' : 'opacity:0.6;'}">
                         <div>
-                            <div style="font-weight: 600; margin-bottom: 4px;">${item.name}${!isActive ? '<span class="status-badge-inactive">已下架</span>' : ''}</div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(item.name)}${!isActive ? '<span class="status-badge-inactive">已下架</span>' : ''}</div>
                             ${item.sku ? `<div style="font-size: 12px; color: #999;">${item.sku}</div>` : ''}
                             <div style="font-size: 13px; color: #666; margin-top: 2px;">${priceDisplay}</div>
                             <div style="font-size: 12px; color: ${stockColor}; margin-top: 2px;">庫存: ${totalStock}</div>
@@ -16419,7 +16439,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             </label>
                             <div class="manage-action-row">
                                 <button class="addon-edit-btn" onclick="editAddon(${originalIndex})">編輯</button>
-                                <button class="stock-log-btn" onclick="openProductStockLog('${item.id}', '${item.name.replace(/'/g, "\\'")}')" >📋</button>
+                                <button class="stock-log-btn" onclick="openProductStockLog('${item.id}', '${escapeAttrStr(item.name)}')" >📋</button>
                                 <button class="addon-delete-btn" onclick="removeAddon(${originalIndex})">刪除</button>
                             </div>
                         </div>
@@ -17031,7 +17051,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
                         const statusEl = document.getElementById('scannerStatus');
                         if (statusEl) {
-                            statusEl.innerHTML = `✅ <span style="font-size:11px;">${product.name}${variantDesc} 數量+1</span>`;
+                            statusEl.innerHTML = `✅ <span style="font-size:11px;">${escapeHtml(product.name)}${escapeHtml(variantDesc)} 數量+1</span>`;
                             statusEl.style.color = '#4CAF50';
                         }
                         setTimeout(() => openScanner(), 1200);
@@ -17074,7 +17094,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 
                 const statusEl = document.getElementById('scannerStatus');
                 if (statusEl) {
-                    statusEl.innerHTML = `✅ <span style="font-size:11px;">${product.name}${variantText} 已加入</span>`;
+                    statusEl.innerHTML = `✅ <span style="font-size:11px;">${escapeHtml(product.name)}${escapeHtml(variantText)} 已加入</span>`;
                     statusEl.style.color = '#4CAF50';
                 }
                 setTimeout(() => openScanner(), 1200);
@@ -17347,7 +17367,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return `<div style="border-bottom:1px solid #eee;">
                         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;">
                             <div>
-                                <div style="font-weight:600;font-size:13px;">${g.giftName || g.name || ''}</div>
+                                <div style="font-weight:600;font-size:13px;">${escapeHtml(g.giftName || g.name || '')}</div>
                                 <div style="font-size:11px;color:#999;margin-top:2px;">${g.giftSku || ''} ｜ ${stock !== null ? '現有庫存：' + stock : '未設定庫存上限'}</div>
                             </div>
                             ${stock !== null
@@ -17414,8 +17434,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div onclick="toggleRestockExpand('${p.id}')" 
                         style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer;${isExpanded ? 'background:#f0f4ff;' : ''}">
                         <div>
-                            <div style="font-weight:600;font-size:13px;">${p.name}</div>
-                            <div style="font-size:11px;color:#999;margin-top:2px;">${p.sku || ''} ｜ ${p.brand || ''} ｜ 總庫存：${totalStock}</div>
+                            <div style="font-weight:600;font-size:13px;">${escapeHtml(p.name)}</div>
+                            <div style="font-size:11px;color:#999;margin-top:2px;">${escapeHtml(p.sku || '')} ｜ ${escapeHtml(p.brand || '')} ｜ 總庫存：${totalStock}</div>
                         </div>
                         <span style="font-size:16px;color:#999;">${isExpanded ? '▲' : '▶'}</span>
                     </div>
@@ -17607,12 +17627,12 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return `<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;${deleted ? 'opacity:0.7;' : ''}">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                         <div style="flex:1;">
-                            <div style="font-weight:600;font-size:13px;">${m.productName || ''}${deleted ? '<span class="status-badge-inactive" style="background:#c0392b;">已刪除</span>' : ''}</div>
+                            <div style="font-weight:600;font-size:13px;">${escapeHtml(m.productName || '')}${deleted ? '<span class="status-badge-inactive" style="background:#c0392b;">已刪除</span>' : ''}</div>
                             <div style="font-size:11px;color:#999;margin-top:2px;">
-                                ${m.variantKey ? m.variantKey + ' ｜ ' : ''}${(m.variantSku || m.productSku) ? (m.variantSku || m.productSku) + ' ｜ ' : ''}${dateStr}
+                                ${m.variantKey ? escapeHtml(m.variantKey) + ' ｜ ' : ''}${(m.variantSku || m.productSku) ? escapeHtml(m.variantSku || m.productSku) + ' ｜ ' : ''}${dateStr}
                             </div>
-                            ${m.note ? `<div style="font-size:11px;color:#666;margin-top:2px;">備註：${m.note}</div>` : ''}
-                            <div style="font-size:11px;color:#999;margin-top:2px;">操作人員：${m.operator || ''}</div>
+                            ${m.note ? `<div style="font-size:11px;color:#666;margin-top:2px;">備註：${escapeHtml(m.note)}</div>` : ''}
+                            <div style="font-size:11px;color:#999;margin-top:2px;">操作人員：${escapeHtml(m.operator || '')}</div>
                         </div>
                         <div style="text-align:right;margin-left:12px;">
                             <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:${typeColor[m.type] || '#999'};color:white;margin-bottom:4px;">${m.type}</span>
@@ -17720,10 +17740,10 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return `<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;">
                         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                             <div style="flex:1;">
-                                ${m.variantKey ? `<div style="font-size:12px;color:#666;font-weight:600;">${m.variantKey}</div>` : ''}
+                                ${m.variantKey ? `<div style="font-size:12px;color:#666;font-weight:600;">${escapeHtml(m.variantKey)}</div>` : ''}
                                 <div style="font-size:12px;color:#999;margin-top:2px;">${dateStr}</div>
-                                ${m.note ? `<div style="font-size:11px;color:#666;margin-top:2px;">備註：${m.note}</div>` : ''}
-                                <div style="font-size:11px;color:#999;">操作：${m.operator || ''}</div>
+                                ${m.note ? `<div style="font-size:11px;color:#666;margin-top:2px;">備註：${escapeHtml(m.note)}</div>` : ''}
+                                <div style="font-size:11px;color:#999;">操作：${escapeHtml(m.operator || '')}</div>
                             </div>
                             <div style="text-align:right;margin-left:12px;">
                                 <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;background:${typeColor[m.type] || '#999'};color:white;margin-bottom:4px;">${m.type}</span>
@@ -17948,8 +17968,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             container.innerHTML = pageData.map(c => `
                 <div style="padding:10px 12px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
                     <div onclick="openCustomerDetail('${c.id}')" style="flex:1;cursor:pointer;">
-                        <div style="font-size:12px;font-weight:600;">${c.name || '未填姓名'}</div>
-                        <div style="font-size:12px;color:#666;margin-top:2px;">${c.phone || '未填電話'}</div>
+                        <div style="font-size:12px;font-weight:600;">${escapeHtml(c.name || '未填姓名')}</div>
+                        <div style="font-size:12px;color:#666;margin-top:2px;">${escapeHtml(c.phone || '未填電話')}</div>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
                         <div style="text-align:right;">
@@ -18477,11 +18497,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             document.getElementById('customerDetailContent').innerHTML = `
                 <div style="padding:16px;background:#f0f7ff;border-radius:12px;margin-bottom:20px;">
-                    <div style="font-size:14px;font-weight:700;margin-bottom:8px;">${c.name || '未填姓名'}</div>
+                    <div style="font-size:14px;font-weight:700;margin-bottom:8px;">${escapeHtml(c.name || '未填姓名')}</div>
                     <div style="font-size:12px;color:#555;margin-bottom:4px;">
-                        ${c.phone ? `聯絡電話：${c.phone}` : ''}${c.phone && c.account ? '｜' : ''}${c.account ? `官網會員帳號：${c.account}` : ''}
+                        ${c.phone ? `聯絡電話：${escapeHtml(c.phone)}` : ''}${c.phone && c.account ? '｜' : ''}${c.account ? `官網會員帳號：${escapeHtml(c.account)}` : ''}
                     </div>
-                    ${c.email ? `<div style="font-size:12px;color:#555;">電子信箱：${c.email}</div>` : ''}
+                    ${c.email ? `<div style="font-size:12px;color:#555;">電子信箱：${escapeHtml(c.email)}</div>` : ''}
                     
                     <div style="border-top:1px solid #ffffff;margin:12px 0;"></div>
                     
@@ -18514,8 +18534,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         <div onclick="openCustomerOrderDetail(${idx})" class="cust-order-row">
                             <div class="cust-order-row-inner">
                                 <div>
-                                    <div class="cust-order-number">${o.orderNumber || ''}</div>
-                                    <div class="cust-order-date">${o.timestampDisplay || ''} ${o.saleLocation ? '｜' + o.saleLocation : ''}</div>
+                                    <div class="cust-order-number">${escapeHtml(o.orderNumber || '')}</div>
+                                    <div class="cust-order-date">${escapeHtml(o.timestampDisplay || '')} ${o.saleLocation ? '｜' + escapeHtml(o.saleLocation) : ''}</div>
                                 </div>
                                 <div class="cust-order-right">
                                     <div class="cust-order-total">NT$ ${(o.total || 0).toLocaleString()}</div>
@@ -18724,9 +18744,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 list.innerHTML = results.map(c => `
                     <div onclick="selectCustomerForOrder('${c.id}')" style="padding:12px 14px;border-bottom:1px solid var(--border-color);cursor:pointer;transition:background 0.1s;"
                          onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background='white'">
-                        <div style="font-size:14px;font-weight:600;color:var(--text-dark);">${c.name || '未填姓名'}</div>
+                        <div style="font-size:14px;font-weight:600;color:var(--text-dark);">${escapeHtml(c.name || '未填姓名')}</div>
                         <div style="font-size:12px;color:#888;margin-top:2px;">
-                            ${c.phone || ''} ${c.email ? '｜' + c.email : ''}
+                            ${escapeHtml(c.phone || '')} ${c.email ? '｜' + escapeHtml(c.email) : ''}
                         </div>
                     </div>
                 `).join('');
