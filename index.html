@@ -7897,8 +7897,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 下載贈品填寫範例
         function downloadGiftExample() {
             // 欄位名稱
-            const headers = ['贈品活動名稱', '條件類型', '條件值', '贈品名稱', '贈品數量', '贈品貨號', '贈品庫存數量'];
-            
+            const headers = ['贈品活動名稱', '條件類型', '條件值', '贈品名稱', '贈品數量', '贈品貨號', '贈品庫存數量', '是否上架', '略過'];
+
             // 說明行
             const explanations = [
                 '必填',
@@ -7908,6 +7908,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 '必填',
                 '選填',
                 '0=庫存設為0，空白=不想覆蓋系統裡已有的庫存',
+                '上架／下架，空白=新贈品預設上架，更新贈品保留原狀態',
+                '此欄有任何內容即跳過此列不匯入，空白=正常匯入',
                 '← 匯入資料前請把這行刪除以免出現錯誤'
             ];
             
@@ -7926,11 +7928,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 12}, // 贈品數量
                 {wch: 15}, // 贈品貨號
                 {wch: 40}, // 贈品庫存數量
+                {wch: 38}, // 是否上架
+                {wch: 38}, // 略過
                 {wch: 35}  // 說明
             ];
-            
+
             XLSX.utils.book_append_sheet(wb, ws, '贈品資料');
-            
+
             const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
             XLSX.writeFile(wb, `贈品資料欄位說明_${timestamp}.xlsx`, {cellStyles: true});
         }
@@ -7938,7 +7942,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 下載贈品空白範本
         function downloadGiftTemplate() {
             // 只有欄位名稱
-            const headers = ['贈品活動名稱', '條件類型', '條件值', '贈品名稱', '贈品數量', '贈品貨號', '贈品庫存數量'];
+            const headers = ['贈品活動名稱', '條件類型', '條件值', '贈品名稱', '贈品數量', '贈品貨號', '贈品庫存數量', '是否上架', '略過'];
             
             const ws_data = [headers];
             
@@ -7954,7 +7958,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 15}, // 贈品名稱
                 {wch: 12}, // 贈品數量
                 {wch: 15}, // 贈品貨號
-                {wch: 15}  // 贈品庫存數量
+                {wch: 15}, // 贈品庫存數量
+                {wch: 12}, // 是否上架
+                {wch: 10}  // 略過
             ];
             
             XLSX.utils.book_append_sheet(wb, ws, '贈品資料');
@@ -7966,8 +7972,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 下載加購項目填寫範例
         function downloadAddonExample() {
             // 欄位名稱
-            const headers = ['項目名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號'];
-            
+            const headers = ['項目名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '是否上架', '略過'];
+
             // 說明行
             const explanations = [
                 '必填',
@@ -7981,6 +7987,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 '必填，空白=不想覆蓋系統裡已有的價格',
                 '0=庫存設為0，空白=不想覆蓋系統裡已有的庫存',
                 '選填',
+                '上架／下架，空白=新項目預設上架，更新項目保留原狀態',
+                '此欄有任何內容即跳過此列不匯入，空白=正常匯入',
                 '← 匯入資料前請把這行刪除以免出現錯誤'
             ];
             
@@ -8003,9 +8011,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 35}, // 價格
                 {wch: 40}, // 庫存
                 {wch: 15}, // 規格貨號
+                {wch: 38}, // 是否上架
+                {wch: 38}, // 略過
                 {wch: 35}  // 說明
             ];
-            
+
             XLSX.utils.book_append_sheet(wb, ws, '加購項目');
             
             const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -8015,14 +8025,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         // 下載加購項目空白範本
         function downloadAddonTemplate() {
             // 只有欄位名稱
-            const headers = ['項目名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號'];
-            
+            const headers = ['項目名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '是否上架', '略過'];
+
             const ws_data = [headers];
-            
+
             // 建立工作簿
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
-            
+
             // 設定欄寬
             ws['!cols'] = [
                 {wch: 15}, // 項目名稱
@@ -8035,7 +8045,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 12}, // 規格3
                 {wch: 10}, // 價格
                 {wch: 10}, // 庫存
-                {wch: 15}  // 規格貨號
+                {wch: 15}, // 規格貨號
+                {wch: 12}, // 是否上架
+                {wch: 10}  // 略過
             ];
             
             XLSX.utils.book_append_sheet(wb, ws, '加購項目');
@@ -8791,38 +8803,52 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         return;
                     }
                     
-                    const jsonData = XLSX.utils.sheet_to_json(sheet);
-                    console.log('讀取行數:', jsonData.length);
-                    
-                    if (jsonData.length === 0) {
+                    const rawData = XLSX.utils.sheet_to_json(sheet);
+                    console.log('讀取行數:', rawData.length);
+
+                    if (rawData.length === 0) {
                         alert('❌ Excel 檔案沒有資料！');
                         return;
                     }
-                    
+
+                    // 過濾「略過」欄有內容的列
+                    const addonSkippedCount = rawData.filter(row => String(row['略過'] ?? '').trim() !== '').length;
+                    const jsonData = rawData.filter(row => String(row['略過'] ?? '').trim() === '');
+                    if (addonSkippedCount > 0) console.log(`略過 ${addonSkippedCount} 列（略過欄有內容）`);
+
+                    if (jsonData.length === 0) {
+                        alert('❌ Excel 檔案沒有可匯入的資料！');
+                        return;
+                    }
+
                     // 驗證資料
                     const errors = [];
-                    
+
                     jsonData.forEach((row, index) => {
                         const rowNum = index + 2;
-                        
                         if (!row['項目名稱']) {
                             errors.push(`第 ${rowNum} 行: 項目名稱為空`);
                         }
                     });
-                    
+
                     console.log('驗證完成 - 錯誤:', errors.length);
-                    
+
                     if (errors.length > 0) {
                         const errorMsg = '❌ 發現以下錯誤:\n\n' + errors.slice(0, 10).join('\n');
                         alert(errorMsg);
                         return;
                     }
-                    
-                    alert(`✅ 階段 1 完成: 資料驗證通過！\n\n共 ${jsonData.length} 行資料`);
-                    
+
+                    const parseAddonStatus = val => {
+                        const v = String(val ?? '').trim().toLowerCase();
+                        if (['上架','是','y','1','true'].includes(v)) return 'active';
+                        if (['下架','否','n','0','false'].includes(v)) return 'inactive';
+                        return null;
+                    };
+
                     // === 階段 2: 資料預處理 ===
                     console.log('\n=== 階段 2: 資料預處理 ===');
-                    
+
                     const addonGroups = {};
                     
                     jsonData.forEach(row => {
@@ -8912,6 +8938,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 }
                             });
                             
+                            const addonStatus = parseAddonStatus(rows[0]['是否上架']);
+                            if (addonStatus) addon.status = addonStatus;
                             processedAddons.push(addon);
                         } else {
                             // 單規格
@@ -8920,22 +8948,22 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                                 sku: mainSku,
                                 type: 'custom'
                             };
-                            
+
                             if (rows[0]['價格'] !== undefined && rows[0]['價格'] !== '') {
                                 addon.price = rows[0]['價格'];
                             }
                             if (rows[0]['庫存'] !== undefined && rows[0]['庫存'] !== '') {
                                 addon.stock = rows[0]['庫存'];
                             }
-                            
+                            const addonStatus2 = parseAddonStatus(rows[0]['是否上架']);
+                            if (addonStatus2) addon.status = addonStatus2;
+
                             processedAddons.push(addon);
                         }
                     });
-                    
+
                     console.log('處理完成 - 總數:', processedAddons.length);
-                    
-                    alert(`✅ 階段 2 完成: 資料預處理完成！\n\n總數: ${processedAddons.length}`);
-                    
+
                     // === 階段 3: 比對現有項目 ===
                     console.log('\n=== 階段 3: 比對現有項目 ===');
                     
@@ -8965,9 +8993,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     });
                     
                     console.log('比對結果 - 更新:', toUpdate.length, '新增:', toAdd.length);
-                    
-                    alert(`✅ 階段 3 完成: 比對完成！\n\n更新: ${toUpdate.length}\n新增: ${toAdd.length}`);
-                    
+
                     // === 階段 4: 執行匯入 ===
                     console.log('\n=== 階段 4: 執行匯入 ===');
                     
@@ -9021,15 +9047,16 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     // 新增
                     toAdd.forEach(addon => {
                         addon.id = 'addon_' + Date.now() + '_' + Math.random();
+                        if (!addon.status) addon.status = 'active';
                         addOnItems.push(addon);
                         addCount++;
                     });
-                    
+
                     saveDataToLocalStorage();
                     loadAddonItems();
                     closeImportModal();
-                    
-                    alert(`✅ 匯入完成！\n\n已更新: ${updateCount}\n已新增: ${addCount}`);
+
+                    showNotification(`✅ 匯入完成！已更新 ${updateCount} 個、新增 ${addCount} 個加購項目`);
                     
                 } catch (error) {
                     console.error('匯入錯誤:', error);
@@ -9208,13 +9235,30 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         return;
                     }
                     
-                    const jsonData = XLSX.utils.sheet_to_json(sheet);
-                    
-                    if (jsonData.length === 0) {
+                    const rawGiftData = XLSX.utils.sheet_to_json(sheet);
+
+                    if (rawGiftData.length === 0) {
                         alert('❌ Excel 檔案沒有資料！');
                         return;
                     }
-                    
+
+                    // 過濾「略過」欄有內容的列
+                    const giftSkippedCount = rawGiftData.filter(row => String(row['略過'] ?? '').trim() !== '').length;
+                    const jsonData = rawGiftData.filter(row => String(row['略過'] ?? '').trim() === '');
+                    if (giftSkippedCount > 0) console.log(`略過 ${giftSkippedCount} 列（略過欄有內容）`);
+
+                    if (jsonData.length === 0) {
+                        alert('❌ Excel 檔案沒有可匯入的資料！');
+                        return;
+                    }
+
+                    const parseGiftStatus = val => {
+                        const v = String(val ?? '').trim().toLowerCase();
+                        if (['上架','是','y','1','true'].includes(v)) return 'active';
+                        if (['下架','否','n','0','false'].includes(v)) return 'inactive';
+                        return null;
+                    };
+
                     const errors = [];
                     jsonData.forEach((row, index) => {
                         const rowNum = index + 2;
@@ -9247,7 +9291,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         };
                         if (row['贈品貨號']) gift.giftSku = row['贈品貨號'];
                         if (row['贈品庫存數量'] !== undefined && row['贈品庫存數量'] !== '') gift.giftStock = row['贈品庫存數量'];
-                        
+                        const giftStatus = parseGiftStatus(row['是否上架']);
+                        if (giftStatus) gift.status = giftStatus;
+
                         const existing = giftRules.find(g => g.name === gift.name);
                         if (existing) {
                             toUpdate.push({ existing, new: gift });
@@ -9271,13 +9317,14 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     
                     toAdd.forEach(gift => {
                         gift.id = 'gift_' + Date.now() + '_' + Math.random();
+                        if (!gift.status) gift.status = 'active';
                         giftRules.push(gift);
                     });
-                    
+
                     saveDataToLocalStorage();
                     loadGiftButtons();
                     closeImportModal();
-                    alert(`✅ 完成！\n\n更新: ${toUpdate.length}\n新增: ${toAdd.length}`);
+                    showNotification(`✅ 匯入完成！已更新 ${toUpdate.length} 個、新增 ${toAdd.length} 個贈品`);
                     
                 } catch (error) {
                     console.error(error);
@@ -9520,8 +9567,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         const variantPrice = product.variantPrices?.[comboKey] || product.price || 0;
                         const variantStock = product.variantStock?.[comboKey] || 0;
                         const variantSku = product.variantSkus?.[comboKey] || '';
-                        // 圖片網址只在第一行顯示
+                        // 圖片網址和是否上架只在第一行顯示
                         const imageUrl = comboIndex === 0 ? (product.imageUrl || '') : '';
+                        const statusVal = comboIndex === 0 ? (product.status === 'inactive' ? '下架' : '上架') : '';
                         rows.push([
                             brandFullName,
                             product.mainCategory,
@@ -9537,7 +9585,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             variantPrice,
                             variantStock,
                             variantSku,
-                            imageUrl
+                            imageUrl,
+                            statusVal
                         ]);
                     });
                 } else {
@@ -9554,7 +9603,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         product.price || 0,
                         product.stock !== undefined ? product.stock : '',
                         '',
-                        product.imageUrl || ''
+                        product.imageUrl || '',
+                        product.status === 'inactive' ? '下架' : '上架'
                     ]);
                 }
                 
@@ -9580,7 +9630,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 {wch: 10}, // 價格
                 {wch: 8},  // 庫存
                 {wch: 18}, // 規格貨號
-                {wch: 45}  // 圖片網址
+                {wch: 45}, // 圖片網址
+                {wch: 10}  // 是否上架
             ];
             
             if (brandSelection === 'all') {
@@ -9598,7 +9649,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     console.log(`品牌 ${brand} 的商品數:`, brandProducts.length);
                     
                     if (brandProducts.length > 0) {
-                        const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '圖片網址']];
+                        const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '圖片網址', '是否上架']];
                         
                         brandProducts.forEach(product => {
                             const rows = productToRows(product);
@@ -9627,7 +9678,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return;
                 }
                 
-                const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1', '規格2', '規格3', '價格', '庫存', '規格貨號', '圖片網址']];
+                const ws_data = [['品牌', '大分類', '小分類', '商品名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '圖片網址', '是否上架']];
                 
                 brandProducts.forEach(product => {
                     const rows = productToRows(product);
@@ -9665,7 +9716,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
 
             // Excel 欄位標題 (加入規格名稱)
-            const ws_data = [['項目名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號']];
+            const ws_data = [['項目名稱', '主貨號', '規格1名稱', '規格1', '規格2名稱', '規格2', '規格3名稱', '規格3', '價格', '庫存', '規格貨號', '是否上架']];
             
             addOnItems.forEach(item => {
                 // 檢查是否有多規格
@@ -9691,12 +9742,13 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     const combinations = generateCombinations(variantOptions);
                     
                     // 輸出每個規格組合 (加入規格名稱)
-                    combinations.forEach(combo => {
+                    combinations.forEach((combo, comboIndex) => {
                         const comboKey = combo.join(',');
                         const variantPrice = item.variantPrices?.[comboKey] || item.price || 0;
                         const variantStock = item.variantStock?.[comboKey] || 0;
                         const variantSku = item.variantSkus?.[comboKey] || '';
-                        
+                        const statusVal = comboIndex === 0 ? (item.status === 'inactive' ? '下架' : '上架') : '';
+
                         ws_data.push([
                             item.name,
                             item.sku || '',
@@ -9708,7 +9760,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             combo[2] || '',         // 規格3
                             variantPrice,
                             variantStock,
-                            variantSku
+                            variantSku,
+                            statusVal
                         ]);
                     });
                 } else {
@@ -9721,7 +9774,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         '', '', // 規格3名稱, 規格3
                         item.price || 0,
                         item.stock !== undefined ? item.stock : '',
-                        ''   // 規格貨號（無規格時為空）
+                        '',   // 規格貨號（無規格時為空）
+                        item.status === 'inactive' ? '下架' : '上架'
                     ]);
                 }
             });
@@ -9732,17 +9786,20 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             
             // 設定欄寬
             ws['!cols'] = [
-                {wch: 15}, // ID
-                {wch: 25}, // 項目名稱
+                {wch: 15}, // 項目名稱
                 {wch: 15}, // 主貨號
+                {wch: 12}, // 規格1名稱
                 {wch: 12}, // 規格1
+                {wch: 12}, // 規格2名稱
                 {wch: 12}, // 規格2
+                {wch: 12}, // 規格3名稱
                 {wch: 12}, // 規格3
                 {wch: 10}, // 價格
                 {wch: 8},  // 庫存
-                {wch: 18}  // 規格貨號
+                {wch: 18}, // 規格貨號
+                {wch: 10}  // 是否上架
             ];
-            
+
             XLSX.utils.book_append_sheet(wb, ws, '加購項目');
             XLSX.writeFile(wb, `加購項目_${new Date().toLocaleDateString()}.xlsx`);
             
@@ -9768,7 +9825,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }
 
             // Excel 欄位標題
-            const ws_data = [['贈品活動名稱', '條件類型', '條件值', '贈品名稱', '贈品數量', '贈品貨號', '贈品庫存數量']];
+            const ws_data = [['贈品活動名稱', '條件類型', '條件值', '贈品名稱', '贈品數量', '贈品貨號', '贈品庫存數量', '是否上架']];
             
             giftRules.forEach(gift => {
                 // 條件類型轉換為中文
@@ -9788,7 +9845,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     gift.giftName,
                     gift.giftQty || 1,
                     gift.giftSku || '',
-                    gift.giftStock !== undefined ? gift.giftStock : ''
+                    gift.giftStock !== undefined ? gift.giftStock : '',
+                    gift.status === 'inactive' ? '下架' : '上架'
                 ]);
             });
 
