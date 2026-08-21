@@ -3068,17 +3068,17 @@
             <p>請登入以繼續</p>
         </div>
         <div id="loginError" class="login-error"></div>
+        <form autocomplete="off" onsubmit="doLogin(); return false;">
         <div class="login-field">
             <label>電子郵件</label>
-            <input type="email" id="loginEmail" placeholder="example@email.com" 
-                   onkeypress="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+            <input type="email" id="loginEmail" placeholder="example@email.com" autocomplete="off">
         </div>
         <div class="login-field">
             <label>密碼</label>
-            <input type="password" id="loginPassword" placeholder="請輸入密碼"
-                   onkeypress="if(event.key==='Enter')doLogin()">
+            <input type="password" id="loginPassword" placeholder="請輸入密碼" autocomplete="off">
         </div>
-        <button class="login-btn" id="loginBtn" onclick="doLogin()">登入</button>
+        <button type="submit" class="login-btn" id="loginBtn">登入</button>
+        </form>
     </div>
 </div>
 
@@ -18713,17 +18713,18 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             <button class="modal-close" onclick="closeAddAccountModal()">×</button>
         </div>
         <div class="modal-body">
+            <form autocomplete="off" onsubmit="createNewUser(); return false;">
             <div class="form-group">
                 <label style="font-size:12px;">姓名 *</label>
-                <input type="text" id="newUserName" placeholder="例如：小安" />
+                <input type="text" id="newUserName" placeholder="例如：小安" autocomplete="off" />
             </div>
             <div class="form-group">
                 <label style="font-size:12px;">電子郵件 *</label>
-                <input type="email" id="newUserEmail" placeholder="example@email.com" />
+                <input type="email" id="newUserEmail" placeholder="example@email.com" autocomplete="off" />
             </div>
             <div class="form-group">
                 <label style="font-size:12px;">密碼 *</label>
-                <input type="password" id="newUserPassword" placeholder="請輸入密碼（至少 6 個字元）" />
+                <input type="password" id="newUserPassword" placeholder="請輸入密碼（至少 6 個字元）" autocomplete="new-password" />
             </div>
             <div class="form-group" style="display:flex;align-items:center;gap:8px;">
                 <label style="font-size:12px;white-space:nowrap;margin:0;">角色 *</label>
@@ -18733,8 +18734,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 </select>
             </div>
             <div class="user-form-actions">
-                <button onclick="createNewUser()" class="user-create-btn">建立帳號</button>
+                <button type="submit" class="user-create-btn">建立帳號</button>
             </div>
+            </form>
         </div>
     </div>
     
