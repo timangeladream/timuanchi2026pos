@@ -17162,7 +17162,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                             selectedVariants: item.selectedVariants || null,
                             variantKeyOrder: item.variantKeyOrder || (item.selectedVariants ? Object.keys(item.selectedVariants) : null),
                             sku: item.sku || '',
-                            brand: item.brand || ''
+                            brand: item.brand || '',
+                            imageUrl: item.imageUrl || ''
                         })),
                         discounts: discounts.map(d => ({
                             name: d.name,
