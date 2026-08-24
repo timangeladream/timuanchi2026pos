@@ -10398,7 +10398,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // ============ 商品圖片功能 ============
 
-        async function compressImage(file, maxWidth = 1000, quality = 0.8) {
+        async function compressImage(file, maxHeight = 1000, quality = 1) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -10406,9 +10406,9 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         let { width, height } = img;
-                        if (width > maxWidth) {
-                            height = Math.round(height * maxWidth / width);
-                            width = maxWidth;
+                        if (height > maxHeight) {
+                            width = Math.round(width * maxHeight / height);
+                            height = maxHeight;
                         }
                         canvas.width = width;
                         canvas.height = height;
