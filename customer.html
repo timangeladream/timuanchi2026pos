@@ -344,9 +344,11 @@
                     ? '<span class="item-tag tag-gift">贈品</span>'
                     : '';
             const safeUrl = (item.imageUrl || '').replace(/"/g, '%22');
-            const imgHtml = safeUrl
-                ? `<div class="item-img"><img src="${safeUrl}" alt="" onerror="this.parentElement.innerHTML='<span class=\\'item-img-placeholder\\'>無照片</span>'"></div>`
-                : `<div class="item-img"><span class="item-img-placeholder">無照片</span></div>`;
+            const imgHtml = (!item.isAddon && !item.isGift)
+                ? (safeUrl
+                    ? `<div class="item-img"><img src="${safeUrl}" alt="" onerror="this.parentElement.innerHTML='<span class=\\'item-img-placeholder\\'>無照片</span>'"></div>`
+                    : `<div class="item-img"><span class="item-img-placeholder">無照片</span></div>`)
+                : '';
             return `
                 <div class="order-item">
                     ${imgHtml}
@@ -420,13 +422,8 @@
                         .filter(k => item.selectedVariants[k]);
                     variantText = keys.map(k => `${k}: ${item.selectedVariants[k]}`).join(' | ');
                 }
-                const safeUrl = (item.imageUrl || '').replace(/"/g, '%22');
-                const imgHtml = safeUrl
-                    ? `<div class="item-img"><img src="${safeUrl}" alt="" onerror="this.parentElement.innerHTML='<span class=\\'item-img-placeholder\\'>無照片</span>'"></div>`
-                    : `<div class="item-img"><span class="item-img-placeholder">無照片</span></div>`;
                 return `
                 <div class="order-item" style="background:#ebf5fb;">
-                    ${imgHtml}
                     <div class="item-left">
                         <div class="item-name"><span class="item-tag tag-gift">贈品</span>${item.name}</div>
                         ${variantText ? `<div class="item-variant">${variantText}</div>` : ''}
