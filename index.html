@@ -10469,18 +10469,54 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
         function handleProductImageSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
-            pendingProductImageFile = file;
-            pendingProductImageUrl = '';
-            productImageRemoved = false;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const preview = document.getElementById('productImagePreview');
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-                document.getElementById('productImagePlaceholder').style.display = 'none';
-                document.getElementById('productImageRemoveBtn').style.display = 'block';
+
+            // 檔案大小上限 10MB
+            if (file.size > 10 * 1024 * 1024) {
+                alert('圖片檔案過大（' + (file.size / 1024 / 1024).toFixed(1) + 'MB），請選擇 10MB 以內的圖片。');
+                event.target.value = '';
+                return;
+            }
+
+            // MIME type 白名單（第一道過濾）
+            const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                alert('不支援此檔案格式，請選擇 JPG、PNG、WebP 或 GIF 圖片。');
+                event.target.value = '';
+                return;
+            }
+
+            // 魔術字節驗證（讀取開頭 12 bytes 確認真正的檔案格式）
+            const magicReader = new FileReader();
+            magicReader.onload = (e) => {
+                const bytes = new Uint8Array(e.target.result);
+                const isJPEG = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+                const isPNG  = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47;
+                const isGIF  = bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38;
+                const isWebP = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46
+                            && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+                // HEIC/HEIF 開頭不固定，允許 MIME type 通過即可
+                const isHEIC = file.type === 'image/heic' || file.type === 'image/heif';
+
+                if (!isJPEG && !isPNG && !isGIF && !isWebP && !isHEIC) {
+                    alert('檔案內容不是有效的圖片格式，請重新選擇。');
+                    event.target.value = '';
+                    return;
+                }
+
+                pendingProductImageFile = file;
+                pendingProductImageUrl = '';
+                productImageRemoved = false;
+                const reader = new FileReader();
+                reader.onload = (e2) => {
+                    const preview = document.getElementById('productImagePreview');
+                    preview.src = e2.target.result;
+                    preview.style.display = 'block';
+                    document.getElementById('productImagePlaceholder').style.display = 'none';
+                    document.getElementById('productImageRemoveBtn').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
             };
-            reader.readAsDataURL(file);
+            magicReader.readAsArrayBuffer(file.slice(0, 12));
         }
 
         function handleProductImageUrlInput(url) {
