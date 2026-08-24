@@ -4258,7 +4258,7 @@
                     </div>
                     <div class="form-group">
                         <label>聯絡電話</label>
-                        <input type="text" id="setting_phone" placeholder="例如：(02) 1234-5678" />
+                        <input type="text" id="setting_phone" placeholder="例如：（02）1234-5678" />
                     </div>
                     <div class="form-group">
                         <label>店家地址</label>
@@ -5201,7 +5201,7 @@ async function loadSalesFromFirestore() {
     } catch (e) {
         console.error('❌ 載入銷售記錄失敗:', e);
         if (e.code === 'failed-precondition') {
-            alert('⚠️ 銷售記錄載入失敗：缺少 Firestore 索引\n\n請打開瀏覽器開發者工具(F12)切換到 Console，找到錯誤訊息裡的連結並點擊建立索引，等候幾分鐘後重新整理頁面即可。');
+            alert('⚠️ 銷售記錄載入失敗：缺少 Firestore 索引\n\n請打開瀏覽器開發者工具（F12）切換到 Console，找到錯誤訊息裡的連結並點擊建立索引，等候幾分鐘後重新整理頁面即可。');
         } else {
             showNotification('⚠️ 銷售記錄載入失敗，請重新整理頁面');
         }
@@ -5358,7 +5358,7 @@ async function createNewUser() {
         await loadUserList();
     } catch (e) {
         console.error(e);
-        alert('建立帳號失敗: ' + e.message);
+        alert('建立帳號失敗：' + e.message);
     }
 }
 
@@ -7240,7 +7240,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (type === 'percent') {
                 const value = parseFloat(document.getElementById('addDiscountValue')?.value);
                 if (!value || value <= 0 || value > 1) {
-                    alert('請輸入有效的折扣率 (0.1 - 1.0)');
+                    alert('請輸入有效的折扣率（0.1 - 1.0）');
                     return;
                 }
                 discountButtons.push({ id: newId, name, type, value });
@@ -7259,7 +7259,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return;
                 }
                 if (!value || value <= 0 || value > 1) {
-                    alert('請輸入有效的折扣率 (0.1 - 1.0)');
+                    alert('請輸入有效的折扣率（0.1 - 1.0）');
                     return;
                 }
                 discountButtons.push({ id: newId, name, type, minAmount, value });
@@ -7283,7 +7283,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     return;
                 }
                 if (!value || value <= 0 || value > 1) {
-                    alert('請輸入有效的折扣率 (0.1 - 1.0)');
+                    alert('請輸入有效的折扣率（0.1 - 1.0）');
                     return;
                 }
                 discountButtons.push({ id: newId, name, type, count, value });
@@ -7415,7 +7415,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (type === 'percent') {
                 const value = parseFloat(document.getElementById('discountValue')?.value);
                 if (!value || value <= 0 || value > 1) {
-                    alert('請輸入有效的折扣率 (0.1 - 1.0)');
+                    alert('請輸入有效的折扣率（0.1 - 1.0）');
                     return;
                 }
                 discountButtons.push({ name, type, value });
@@ -7836,7 +7836,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             if (type === 'percent') {
                 const value = parseFloat(document.getElementById('editDiscountValue')?.value);
                 if (!value || value <= 0 || value > 1) {
-                    alert('請輸入有效的折扣率 (0.1 - 1.0)');
+                    alert('請輸入有效的折扣率（0.1 - 1.0）');
                     return;
                 }
                 updatedDiscount.value = value;
@@ -7869,7 +7869,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 const count = parseInt(document.getElementById('editBuyCount')?.value);
                 const value = parseFloat(document.getElementById('editDiscountValue')?.value);
                 if (!count || count <= 0 || !value || value <= 0 || value > 1) {
-                    alert('請輸入有效的購買數量和折扣率 (0.1 - 1.0)');
+                    alert('請輸入有效的購買數量和折扣率（0.1 - 1.0）');
                     return;
                 }
                 updatedDiscount.count = count;
@@ -7878,7 +7878,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 const minAmount = parseInt(document.getElementById('editMinAmount')?.value);
                 const value = parseFloat(document.getElementById('editDiscountValue')?.value);
                 if (!minAmount || minAmount <= 0 || !value || value <= 0 || value > 1) {
-                    alert('請輸入有效的最低消費金額和折扣率 (0.1 - 1.0)');
+                    alert('請輸入有效的最低消費金額和折扣率（0.1 - 1.0）');
                     return;
                 }
                 updatedDiscount.minAmount = minAmount;
@@ -9331,7 +9331,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     });
                     
                     if (errors.length > 0) {
-                        alert('❌ 發現錯誤:\n\n' + errors.slice(0, 10).join('\n'));
+                        alert('❌ 發現錯誤：\n\n' + errors.slice(0, 10).join('\n'));
                         return;
                     }
                     
@@ -9359,7 +9359,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                         }
                     });
                     
-                    const confirmed = confirm(`確定匯入？\n\n更新: ${toUpdate.length}\n新增: ${toAdd.length}`);
+                    const confirmed = confirm(`確定匯入？\n\n更新：${toUpdate.length}\n新增：${toAdd.length}`);
                     if (!confirmed) {
                         alert('❌ 已取消');
                         return;
@@ -13241,7 +13241,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const groupHtml = `
                 <div class="variant-group-builder" id="variantGroup${groupId}">
                     <div class="variant-group-header">
-                        <input type="text" placeholder="規格名稱 (例如：配件顏色)" id="variantGroupName${groupId}" />
+                        <input type="text" placeholder="規格名稱（例如：配件顏色）" id="variantGroupName${groupId}" />
                         <button class="remove-variant-group-btn" onclick="removeVariantGroup(${groupId})">刪除</button>
                     </div>
                     <div class="variant-options-builder" id="variantOptions${groupId}">
@@ -15759,7 +15759,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     const groupHtml = `
                         <div class="variant-group-builder" id="addonVariantGroup${groupId}">
                             <div class="variant-group-header">
-                                <input type="text" placeholder="規格名稱 (例如：尺寸)" id="addonVariantGroupName${groupId}" value="${variantName}" />
+                                <input type="text" placeholder="規格名稱（例如：尺寸）" id="addonVariantGroupName${groupId}" value="${variantName}" />
                                 <button class="remove-variant-group-btn" onclick="removeAddonVariantGroup(${groupId})">刪除</button>
                             </div>
                             <div class="variant-options-builder" id="addonVariantOptions${groupId}">
@@ -15824,7 +15824,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const groupHtml = `
                 <div class="variant-group-builder" id="addonVariantGroup${groupId}">
                     <div class="variant-group-header">
-                        <input type="text" placeholder="規格名稱 (例如：尺寸)" id="addonVariantGroupName${groupId}" />
+                        <input type="text" placeholder="規格名稱（例如：尺寸）" id="addonVariantGroupName${groupId}" />
                         <button class="remove-variant-group-btn" onclick="removeAddonVariantGroup(${groupId})">刪除</button>
                     </div>
                     <div class="variant-options-builder" id="addonVariantOptions${groupId}">
@@ -16002,7 +16002,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const groupHtml = `
                 <div class="variant-group-builder" id="addGiftVariantGroup${groupId}">
                     <div class="variant-group-header">
-                        <input type="text" placeholder="規格名稱 (例如：顏色)" id="addGiftVariantGroupName${groupId}" />
+                        <input type="text" placeholder="規格名稱（例如：顏色）" id="addGiftVariantGroupName${groupId}" />
                         <button class="remove-variant-group-btn" onclick="removeGiftVariantGroup(${groupId})">刪除</button>
                     </div>
                     <div class="variant-options-builder" id="addGiftVariantOptions${groupId}">
@@ -16102,7 +16102,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const groupHtml = `
                 <div class="variant-group-builder" id="editGiftVariantGroup${groupId}">
                     <div class="variant-group-header">
-                        <input type="text" placeholder="規格名稱 (例如：顏色)" id="editGiftVariantGroupName${groupId}" />
+                        <input type="text" placeholder="規格名稱（例如：顏色）" id="editGiftVariantGroupName${groupId}" />
                         <button class="remove-variant-group-btn" onclick="removeEditGiftVariantGroup(${groupId})">刪除</button>
                     </div>
                     <div class="variant-options-builder" id="editGiftVariantOptions${groupId}">
@@ -18317,7 +18317,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 renderOrderManagementList();
             } catch (e) {
                 console.error('查詢日期區間訂單失敗:', e);
-                alert('查詢失敗，可能需要在 Firestore 建立索引。請打開瀏覽器開發者工具(F12)查看 Console 錯誤訊息，裡面會有建立索引的連結，點擊後等候幾分鐘即可。');
+                alert('查詢失敗，可能需要在 Firestore 建立索引。請打開瀏覽器開發者工具（F12）查看 Console 錯誤訊息，裡面會有建立索引的連結，點擊後等候幾分鐘即可。');
                 renderOrderManagementList();
             }
         }
@@ -18357,7 +18357,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 renderOrderManagementList();
             } catch (e) {
                 console.error('搜尋全部歷史訂單失敗:', e);
-                alert('搜尋失敗，可能需要在 Firestore 建立索引。請打開瀏覽器開發者工具(F12)查看 Console 錯誤訊息，裡面會有建立索引的連結，點擊後等候幾分鐘即可。');
+                alert('搜尋失敗，可能需要在 Firestore 建立索引。請打開瀏覽器開發者工具（F12）查看 Console 錯誤訊息，裡面會有建立索引的連結，點擊後等候幾分鐘即可。');
             }
         }
 
