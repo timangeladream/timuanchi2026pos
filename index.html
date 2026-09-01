@@ -11338,34 +11338,29 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             loadProducts();
         }
 
-        function loadProducts() {
-            const container = document.getElementById('productsGrid');
-            
-            // 使用新結構：依標籤篩選
+        function getFilteredProducts() {
             let filteredProducts;
-            
             if (!currentMainCategory) {
-                // 沒選大分類：顯示品牌所有商品
                 filteredProducts = products.filter(p => p.brand === currentBrand);
             } else if (!currentSubCategory) {
-                // 選了大分類但沒選小分類：顯示有大分類標籤的商品
-                filteredProducts = products.filter(p => 
+                filteredProducts = products.filter(p =>
                     p.brand === currentBrand && p.mainCategory === currentMainCategory
                 );
             } else {
-                // 選了小分類：顯示有小分類標籤的商品
-                filteredProducts = products.filter(p => 
-                    p.brand === currentBrand && 
-                    p.mainCategory === currentMainCategory && 
+                filteredProducts = products.filter(p =>
+                    p.brand === currentBrand &&
+                    p.mainCategory === currentMainCategory &&
                     p.subCategory === currentSubCategory
                 );
             }
-            
-            // 過濾掉已下架商品（銷售頁面不顯示）
             filteredProducts = filteredProducts.filter(p => p.status !== 'inactive');
-            
-            // 依新增時間降序排列（新的在上面）
             filteredProducts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            return filteredProducts;
+        }
+
+        function loadProducts() {
+            const container = document.getElementById('productsGrid');
+            const filteredProducts = getFilteredProducts();
             
             // 計算分頁
             const totalProducts = filteredProducts.length;
@@ -13862,16 +13857,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         // ===== 圖卡畫廊 =====
         function openGalleryView() {
-            let filteredProducts;
-            if (!currentMainCategory) {
-                filteredProducts = products.filter(p => p.brand === currentBrand);
-            } else if (!currentSubCategory) {
-                filteredProducts = products.filter(p => p.brand === currentBrand && p.mainCategory === currentMainCategory);
-            } else {
-                filteredProducts = products.filter(p => p.brand === currentBrand && p.mainCategory === currentMainCategory && p.subCategory === currentSubCategory);
-            }
-            filteredProducts = filteredProducts.filter(p => p.status !== 'inactive');
-            filteredProducts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            const filteredProducts = getFilteredProducts();
 
             const brandLabel = categories[currentBrand]?.name || currentBrand || '';
             const catLabel = currentMainCategory ? ` › ${currentMainCategory}` : '';
@@ -13908,9 +13894,11 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                     <div class="gallery-card${isSoldOut ? ' sold-out' : ''}" ${clickAttr}>
                         <div class="gallery-card-img-wrap">${imgContent}</div>
                         <div class="gallery-card-info">
-                            <div class="gallery-card-name">${escapeHtml(product.name)}</div>
-                            <div class="gallery-card-price">${priceDisplay}</div>
-                            <div class="gallery-card-stock" style="color:${stockColor};">庫存: ${totalStock}</div>
+                            <div class="product-name">${escapeHtml(product.name)}</div>
+                            ${product.sku ? `<div class="product-sku">${escapeHtml(product.sku)}</div>` : ''}
+                            <div class="product-price">${priceDisplay}</div>
+                            <div class="product-stock" style="color:${stockColor};">庫存: ${totalStock}</div>
+                            ${product.variants && Object.keys(product.variants).length > 0 ? '<div class="product-variants">有多規格</div>' : ''}
                         </div>
                         ${isSoldOut ? '<div class="gallery-sold-out-badge">售罄</div>' : ''}
                     </div>`;
@@ -13967,7 +13955,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             `; }).join('');
             
             document.getElementById('variantModal').classList.add('show');
-            
+            bringModalToFront('variantModal');
+
             // 初始化時不做庫存篩選，讓使用者先選第一個規格
         }
 
