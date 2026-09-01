@@ -931,7 +931,7 @@
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.5);
-            z-index: 20000;
+            z-index: 10000;
             align-items: center;
             justify-content: center;
         }
@@ -13905,6 +13905,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             }).join('');
 
             document.getElementById('galleryViewModal').classList.add('show');
+            bringModalToFront('galleryViewModal');
         }
 
         function closeGalleryView() {
