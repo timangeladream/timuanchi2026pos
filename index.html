@@ -11338,6 +11338,47 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             loadProducts();
         }
 
+        function renderProductCard(product) {
+            let priceDisplay = '';
+            if (product.variantPrices && Object.keys(product.variantPrices).length > 0) {
+                const prices = Object.values(product.variantPrices);
+                const min = Math.min(...prices), max = Math.max(...prices);
+                priceDisplay = min !== max ? `NT$ ${min}–${max}` : `NT$ ${min}`;
+            } else if (product.price && product.price > 0) {
+                priceDisplay = `NT$ ${product.price}`;
+            } else {
+                priceDisplay = '請設定價格';
+            }
+
+            let totalStock = 0;
+            if (product.variantStock) {
+                totalStock = Object.values(product.variantStock).reduce((s, v) => s + v, 0);
+            } else if (product.stock !== undefined) {
+                totalStock = product.stock;
+            }
+            const stockColor = totalStock <= 0 ? '#d32f2f' : totalStock <= 5 ? '#f57c00' : '#388e3c';
+            const isSoldOut = totalStock <= 0;
+            const clickAttr = isSoldOut
+                ? `onclick="alert('此商品已售罄')"`
+                : `onclick='selectProduct(${JSON.stringify(product)})'`;
+            const safeUrl = (product.imageUrl || '').replace(/"/g, '%22');
+            const imgHtml = safeUrl
+                ? `<img src="${safeUrl}" class="product-card-img" loading="lazy" onerror="this.outerHTML='<div class=\\'product-card-img-placeholder\\'></div>'">`
+                : `<div class="product-card-img-placeholder"></div>`;
+
+            return `
+                <div class="product-card${isSoldOut ? ' sold-out' : ''}" ${clickAttr}>
+                    ${imgHtml}
+                    <div class="product-name">${escapeHtml(product.name)}</div>
+                    ${product.sku ? `<div class="product-sku">${escapeHtml(product.sku)}</div>` : ''}
+                    <div class="product-price">${priceDisplay}</div>
+                    <div style="font-size:12px;color:var(--primary-color);margin-top:4px;">${escapeHtml(product.brandName || product.brand)}</div>
+                    <div class="product-stock" style="color:${stockColor};">庫存: ${totalStock}</div>
+                    ${product.variants && Object.keys(product.variants).length > 0 ? '<div class="product-variants">有多規格</div>' : ''}
+                    ${isSoldOut ? '<div class="sold-out-label">售罄</div>' : ''}
+                </div>`;
+        }
+
         function getFilteredProducts() {
             let filteredProducts;
             if (!currentMainCategory) {
@@ -11375,68 +11416,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 return;
             }
             
-            container.innerHTML = paginatedProducts.map((product, index) => {
-                const variantInfo = product.variants ? '<div class="product-variants">有多規格</div>' : '';
-                const skuInfo = product.sku ? `<div class="product-sku">${product.sku}</div>` : '';
-                
-                // 計算價格範圍
-                let priceDisplay = '';
-                if (product.variantPrices && Object.keys(product.variantPrices).length > 0) {
-                    const prices = Object.values(product.variantPrices);
-                    const minPrice = Math.min(...prices);
-                    const maxPrice = Math.max(...prices);
-                    if (minPrice !== maxPrice) {
-                        priceDisplay = `NT$ ${minPrice}-${maxPrice}`;
-                    } else {
-                        priceDisplay = `NT$ ${minPrice}`;
-                    }
-                } else if (product.price && product.price > 0) {
-                    priceDisplay = `NT$ ${product.price}`;
-                } else {
-                    priceDisplay = '請設定價格';
-                }
-                
-                // 計算庫存總和
-                let totalStock = 0;
-                if (product.variantStock) {
-                    // 有規格：計算各規格庫存總和
-                    totalStock = Object.values(product.variantStock).reduce((sum, stock) => sum + stock, 0);
-                } else if (product.stock !== undefined) {
-                    // 無規格：使用商品庫存
-                    totalStock = product.stock;
-                }
-                
-                // 庫存顯示
-                let stockInfo = '';
-                if (totalStock !== undefined && totalStock !== null) {
-                    let stockColor = '#388e3c';
-                    if (totalStock <= 0) {
-                        stockColor = '#d32f2f';
-                    } else if (totalStock <= 5) {
-                        stockColor = '#f57c00';
-                    }
-                    stockInfo = `<div class="product-stock" style="color: ${stockColor};">庫存: ${totalStock}</div>`;
-                }
-                
-                // 檢查是否售罄
-                const isSoldOut = totalStock <= 0;
-                const cardClass = isSoldOut ? 'product-card sold-out' : 'product-card';
-                const clickEvent = isSoldOut ? 'onclick="alert(\'此商品已售罄\')"' : `onclick='selectProduct(${JSON.stringify(product)})'`;
-                const soldOutLabel = isSoldOut ? '<div class="sold-out-label">售罄</div>' : '';
-                
-                return `
-                    <div class="${cardClass}" ${clickEvent}>
-                        ${product.imageUrl ? `<img src="${product.imageUrl}" class="product-card-img" loading="lazy">` : '<div class="product-card-img-placeholder"></div>'}
-                        <div class="product-name">${escapeHtml(product.name)}</div>
-                        ${skuInfo}
-                        <div class="product-price">${priceDisplay}</div>
-                        <div style="font-size: 12px; color: var(--primary-color); margin-top: 4px;">${escapeHtml(product.brandName || product.brand)}</div>
-                        ${stockInfo}
-                        ${variantInfo}
-                        ${soldOutLabel}
-                    </div>
-                `;
-            }).join('');
+            container.innerHTML = paginatedProducts.map(product => renderProductCard(product)).join('');
             
             // 更新分頁控制
             updateMainProductPagination(totalPages, totalProducts);
@@ -13864,45 +13844,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             const subLabel = currentSubCategory ? ` › ${currentSubCategory}` : '';
             document.getElementById('galleryViewTitle').textContent = `🖼 ${brandLabel}${catLabel}${subLabel}（${filteredProducts.length} 件）`;
 
-            document.getElementById('galleryGrid').innerHTML = filteredProducts.map(product => {
-                let priceDisplay = '';
-                if (product.variantPrices && Object.keys(product.variantPrices).length > 0) {
-                    const prices = Object.values(product.variantPrices);
-                    const min = Math.min(...prices), max = Math.max(...prices);
-                    priceDisplay = min !== max ? `NT$ ${min}–${max}` : `NT$ ${min}`;
-                } else if (product.price > 0) {
-                    priceDisplay = `NT$ ${product.price}`;
-                }
-
-                let totalStock = 0;
-                if (product.variantStock) {
-                    totalStock = Object.values(product.variantStock).reduce((s, v) => s + v, 0);
-                } else if (product.stock !== undefined) {
-                    totalStock = product.stock;
-                }
-                const isSoldOut = totalStock <= 0;
-                const stockColor = totalStock <= 0 ? '#d32f2f' : totalStock <= 5 ? '#f57c00' : '#388e3c';
-                const clickAttr = isSoldOut
-                    ? `onclick="alert('此商品已售罄')"`
-                    : `onclick='gallerySelectProduct(${JSON.stringify(product)})'`;
-                const safeUrl = (product.imageUrl || '').replace(/"/g, '%22');
-                const imgContent = safeUrl
-                    ? `<img src="${safeUrl}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\\'gallery-card-no-img\\'>無照片</span>'">`
-                    : `<span class="gallery-card-no-img">無照片</span>`;
-
-                return `
-                    <div class="gallery-card${isSoldOut ? ' sold-out' : ''}" ${clickAttr}>
-                        <div class="gallery-card-img-wrap">${imgContent}</div>
-                        <div class="gallery-card-info">
-                            <div class="product-name">${escapeHtml(product.name)}</div>
-                            ${product.sku ? `<div class="product-sku">${escapeHtml(product.sku)}</div>` : ''}
-                            <div class="product-price">${priceDisplay}</div>
-                            <div class="product-stock" style="color:${stockColor};">庫存: ${totalStock}</div>
-                            ${product.variants && Object.keys(product.variants).length > 0 ? '<div class="product-variants">有多規格</div>' : ''}
-                        </div>
-                        ${isSoldOut ? '<div class="gallery-sold-out-badge">售罄</div>' : ''}
-                    </div>`;
-            }).join('');
+            document.getElementById('galleryGrid').innerHTML = filteredProducts.map(product => renderProductCard(product)).join('');
 
             document.getElementById('galleryViewModal').classList.add('show');
             bringModalToFront('galleryViewModal');
@@ -13910,10 +13852,6 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
 
         function closeGalleryView() {
             document.getElementById('galleryViewModal').classList.remove('show');
-        }
-
-        function gallerySelectProduct(product) {
-            selectProduct(product);
         }
 
         // 選擇商品（檢查是否有規格）
