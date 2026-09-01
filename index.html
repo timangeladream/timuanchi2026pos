@@ -925,6 +925,128 @@
             font-weight: 600;
         }
 
+        /* ===== 圖卡畫廊 Modal ===== */
+        .gallery-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg-main);
+            z-index: 20000;
+            flex-direction: column;
+        }
+        .gallery-modal-overlay.show { display: flex; }
+        .gallery-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-light);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .gallery-modal-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .gallery-modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .gallery-modal-close:hover { background: var(--border-color); }
+        .gallery-grid-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+        }
+        .gallery-card {
+            background: var(--bg-light);
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            transition: transform 0.15s, box-shadow 0.15s;
+            position: relative;
+        }
+        .gallery-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .gallery-card.sold-out { opacity: 0.55; cursor: default; }
+        .gallery-card-img-wrap {
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            overflow: hidden;
+            background: #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gallery-card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-card-no-img {
+            font-size: 12px;
+            color: #aaa;
+        }
+        .gallery-card-info {
+            padding: 6px 8px 8px;
+        }
+        .gallery-card-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 3px;
+        }
+        .gallery-card-price {
+            font-size: 12px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        .gallery-card-stock {
+            font-size: 11px;
+            margin-top: 2px;
+        }
+        .gallery-sold-out-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: var(--danger-color);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .gallery-view-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .gallery-view-btn:hover { background: var(--border-color); }
+
         .product-name {
             font-size: 12px;
             font-weight: 600;
@@ -3341,7 +3463,10 @@
 
     <div class="products-section">
         <div class="products-section-header">
-            <div class="products-title">◼ 商品列表</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div class="products-title">◼ 商品列表</div>
+                <button class="gallery-view-btn" onclick="openGalleryView()" title="圖卡瀏覽">🖼 圖卡</button>
+            </div>
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                 <!-- 主畫面商品分頁控制（縮小版） -->
                 <div id="mainProductPaginationContainer" class="pagination-container main-pagination">
@@ -4533,6 +4658,17 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- 圖卡畫廊 -->
+    <div id="galleryViewModal" class="gallery-modal-overlay">
+        <div class="gallery-modal-header">
+            <span class="gallery-modal-title" id="galleryViewTitle">圖卡瀏覽</span>
+            <button class="gallery-modal-close" onclick="closeGalleryView()">✕</button>
+        </div>
+        <div class="gallery-grid-container">
+            <div class="gallery-grid" id="galleryGrid"></div>
         </div>
     </div>
 
@@ -13708,6 +13844,73 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             loadCategories();
             loadSubCategories();
             loadProducts();
+        }
+
+        // ===== 圖卡畫廊 =====
+        function openGalleryView() {
+            let filteredProducts;
+            if (!currentMainCategory) {
+                filteredProducts = products.filter(p => p.brand === currentBrand);
+            } else if (!currentSubCategory) {
+                filteredProducts = products.filter(p => p.brand === currentBrand && p.mainCategory === currentMainCategory);
+            } else {
+                filteredProducts = products.filter(p => p.brand === currentBrand && p.mainCategory === currentMainCategory && p.subCategory === currentSubCategory);
+            }
+            filteredProducts = filteredProducts.filter(p => p.status !== 'inactive');
+            filteredProducts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            const brandLabel = categories[currentBrand]?.name || currentBrand || '';
+            const catLabel = currentMainCategory ? ` › ${currentMainCategory}` : '';
+            const subLabel = currentSubCategory ? ` › ${currentSubCategory}` : '';
+            document.getElementById('galleryViewTitle').textContent = `🖼 ${brandLabel}${catLabel}${subLabel}（${filteredProducts.length} 件）`;
+
+            document.getElementById('galleryGrid').innerHTML = filteredProducts.map(product => {
+                let priceDisplay = '';
+                if (product.variantPrices && Object.keys(product.variantPrices).length > 0) {
+                    const prices = Object.values(product.variantPrices);
+                    const min = Math.min(...prices), max = Math.max(...prices);
+                    priceDisplay = min !== max ? `NT$ ${min}–${max}` : `NT$ ${min}`;
+                } else if (product.price > 0) {
+                    priceDisplay = `NT$ ${product.price}`;
+                }
+
+                let totalStock = 0;
+                if (product.variantStock) {
+                    totalStock = Object.values(product.variantStock).reduce((s, v) => s + v, 0);
+                } else if (product.stock !== undefined) {
+                    totalStock = product.stock;
+                }
+                const isSoldOut = totalStock <= 0;
+                const stockColor = totalStock <= 0 ? '#d32f2f' : totalStock <= 5 ? '#f57c00' : '#388e3c';
+                const clickAttr = isSoldOut
+                    ? `onclick="alert('此商品已售罄')"`
+                    : `onclick='gallerySelectProduct(${JSON.stringify(product)})'`;
+                const safeUrl = (product.imageUrl || '').replace(/"/g, '%22');
+                const imgContent = safeUrl
+                    ? `<img src="${safeUrl}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\\'gallery-card-no-img\\'>無照片</span>'">`
+                    : `<span class="gallery-card-no-img">無照片</span>`;
+
+                return `
+                    <div class="gallery-card${isSoldOut ? ' sold-out' : ''}" ${clickAttr}>
+                        <div class="gallery-card-img-wrap">${imgContent}</div>
+                        <div class="gallery-card-info">
+                            <div class="gallery-card-name">${escapeHtml(product.name)}</div>
+                            <div class="gallery-card-price">${priceDisplay}</div>
+                            <div class="gallery-card-stock" style="color:${stockColor};">庫存: ${totalStock}</div>
+                        </div>
+                        ${isSoldOut ? '<div class="gallery-sold-out-badge">售罄</div>' : ''}
+                    </div>`;
+            }).join('');
+
+            document.getElementById('galleryViewModal').classList.add('show');
+        }
+
+        function closeGalleryView() {
+            document.getElementById('galleryViewModal').classList.remove('show');
+        }
+
+        function gallerySelectProduct(product) {
+            selectProduct(product);
         }
 
         // 選擇商品（檢查是否有規格）
