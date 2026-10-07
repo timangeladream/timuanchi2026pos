@@ -5088,6 +5088,55 @@ function saveDataToFirestore() {
     });
 }
 
+// 結帳專用：只更新賣掉商品的庫存，避免整批覆蓋
+async function saveCheckoutStockToFirestore(soldItems) {
+    if (!db || !currentUser) return;
+    try {
+        const productUpdates = [];
+        let hasGiftOrAddon = false;
+
+        soldItems.forEach(item => {
+            if (item.isDiscount) return;
+            if (item.isGift || item.isAddon) { hasGiftOrAddon = true; return; }
+
+            const productRef = db.collection('products').doc(String(item.id));
+            if (item.selectedVariants && Object.keys(item.selectedVariants).length > 0) {
+                const targetProduct = products.find(p => p.id === item.id);
+                if (targetProduct) {
+                    const orderedKeys = (targetProduct.variantKeyOrder || []).filter(k => (targetProduct.variants || {})[k]);
+                    Object.keys(targetProduct.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
+                    const variantKey = orderedKeys.map(key => item.selectedVariants[key]).join(',');
+                    productUpdates.push({ ref: productRef, data: { [`variantStock.${variantKey}`]: firebase.firestore.FieldValue.increment(-item.quantity) } });
+                }
+            } else {
+                productUpdates.push({ ref: productRef, data: { stock: firebase.firestore.FieldValue.increment(-item.quantity) } });
+            }
+        });
+
+        // 批次原子更新商品庫存
+        const BATCH_SIZE = 400;
+        for (let i = 0; i < productUpdates.length; i += BATCH_SIZE) {
+            const batch = db.batch();
+            productUpdates.slice(i, i + BATCH_SIZE).forEach(({ ref, data }) => batch.update(ref, data));
+            await batch.commit();
+        }
+
+        // 贈品/加購品存在陣列裡，只能寫整個 system 文件
+        if (hasGiftOrAddon) {
+            await db.collection('settings').doc('system').set({
+                giftRules,
+                addOnItems,
+                lastSaved: firebase.firestore.FieldValue.serverTimestamp(),
+                version: 4
+            });
+        }
+
+        console.log('✅ 庫存已更新到 Firebase');
+    } catch (e) {
+        console.error('❌ 庫存更新失敗:', e);
+    }
+}
+
 async function _doSaveDataToFirestore() {
     if (!db || !currentUser) return;
     try {
@@ -15096,8 +15145,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 }
             });
             
-            // 加購項目庫存有規格的情況也用 variantKeyOrder 確保 key 正確
-            // （上方 variantKey 生成已使用 variantKeyOrder，這裡不需額外處理）
+            // 結帳完成後只更新賣掉商品的庫存（不整批覆蓋）
+            const soldItemsSnapshot = JSON.parse(JSON.stringify(orderItems));
             
             // 儲存銷售記錄到 Firebase（含店家快照）
             const shopSnapshot = JSON.parse(JSON.stringify(getActiveShop()));
@@ -15153,8 +15202,8 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
             // 清空顧客顯示畫面
             clearActiveOrder();
             
-            // 儲存商品庫存變動到 Firebase
-            saveDataToLocalStorage();
+            // 只更新賣掉商品的庫存，不整批覆蓋
+            saveCheckoutStockToFirestore(soldItemsSnapshot).catch(e => console.error('庫存儲存失敗:', e));
         }
 
         // === 列印預覽功能 ===
