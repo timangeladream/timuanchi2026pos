@@ -9823,7 +9823,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (product.variants && Object.keys(product.variants).length > 0) {
                     // 多規格商品
                     const variantNames = (() => { const vk = (product.variantKeyOrder||[]).filter(k=>product.variants[k]); Object.keys(product.variants).forEach(k=>{if(!vk.includes(k))vk.push(k);}); return vk; })();
-                    const variantOptions = Object.values(product.variants);
+                    const variantOptions = variantNames.map(name => product.variants[name]);
                     const combinations = generateCombinations(variantOptions);
                     
                     combinations.forEach((combo, comboIndex) => {
@@ -9989,7 +9989,7 @@ const _originalCheckout = typeof checkout !== 'undefined' ? checkout : null;
                 if (hasVariants) {
                     // 多規格項目 - 展開所有規格組合
                     const variantNames = (() => { const vk = (item.variantKeyOrder||[]).filter(k=>item.variants[k]); Object.keys(item.variants).forEach(k=>{if(!vk.includes(k))vk.push(k);}); return vk; })();
-                    const variantOptions = Object.values(item.variants);
+                    const variantOptions = variantNames.map(name => item.variants[name]);
                     
                     // 生成所有規格組合的輔助函數
                     function generateCombinations(arrays, prefix = []) {
