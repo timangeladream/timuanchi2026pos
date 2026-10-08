@@ -5106,7 +5106,8 @@ async function saveCheckoutStockToFirestore(soldItems) {
                     const orderedKeys = (targetProduct.variantKeyOrder || []).filter(k => (targetProduct.variants || {})[k]);
                     Object.keys(targetProduct.variants || {}).forEach(k => { if (!orderedKeys.includes(k)) orderedKeys.push(k); });
                     const variantKey = orderedKeys.map(key => item.selectedVariants[key]).join(',');
-                    productUpdates.push({ ref: productRef, data: { [`variantStock.${variantKey}`]: firebase.firestore.FieldValue.increment(-item.quantity) } });
+                    // 用 FieldPath 避免 variantKey 含「.」時被誤判為巢狀路徑
+                    productUpdates.push({ ref: productRef, fieldPath: new firebase.firestore.FieldPath('variantStock', variantKey), value: firebase.firestore.FieldValue.increment(-item.quantity) });
                 }
             } else {
                 productUpdates.push({ ref: productRef, data: { stock: firebase.firestore.FieldValue.increment(-item.quantity) } });
@@ -5117,7 +5118,13 @@ async function saveCheckoutStockToFirestore(soldItems) {
         const BATCH_SIZE = 400;
         for (let i = 0; i < productUpdates.length; i += BATCH_SIZE) {
             const batch = db.batch();
-            productUpdates.slice(i, i + BATCH_SIZE).forEach(({ ref, data }) => batch.update(ref, data));
+            productUpdates.slice(i, i + BATCH_SIZE).forEach(({ ref, data, fieldPath, value }) => {
+                if (fieldPath) {
+                    batch.update(ref, fieldPath, value);
+                } else {
+                    batch.update(ref, data);
+                }
+            });
             await batch.commit();
         }
 
@@ -5134,6 +5141,7 @@ async function saveCheckoutStockToFirestore(soldItems) {
         console.log('✅ 庫存已更新到 Firebase');
     } catch (e) {
         console.error('❌ 庫存更新失敗:', e);
+        showNotification('⚠️ 庫存更新失敗，請通知管理員重新整理後確認庫存');
     }
 }
 
